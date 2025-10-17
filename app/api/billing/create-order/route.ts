@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     createdAt: new Date(),
   } as any)
 
-  return NextResponse.json({ order })
+  return NextResponse.json({ order, keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID })
 }
 
 

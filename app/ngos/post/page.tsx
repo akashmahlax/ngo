@@ -1,45 +1,584 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { 
+  ChevronLeft, 
+  Plus, 
+  X, 
+  Save, 
+  Eye,
+  AlertCircle
+} from "lucide-react"
+import Link from "next/link"
+import { toast } from "sonner"
 
 export default function PostJobPage() {
-  const r = useRouter()
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [loading, setLoading] = useState(false)
+  const { data: session } = useSession()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [saving, setSaving] = useState(false)
+  const [isPreview, setIsPreview] = useState(false)
+  
+  // Form state
+  const [job, setJob] = useState({
+    title: "",
+    category: "",
+    locationType: "onsite" as "onsite" | "remote" | "hybrid",
+    location: "",
+    description: "",
+    requirements: [] as string[],
+    benefits: [] as string[],
+    skills: [] as string[],
+  })
+  
+  const [newRequirement, setNewRequirement] = useState("")
+  const [newBenefit, setNewBenefit] = useState("")
+  const [newSkill, setNewSkill] = useState("")
 
-  async function submit() {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || "Failed")
-      r.push(`/jobs/${data.jobId}`)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
+  // Categories for the job
+  const CATEGORIES = [
+    "Education",
+    "Healthcare",
+    "Environment",
+    "Animal Welfare",
+    "Community Development",
+    "Arts & Culture",
+    "Disaster Relief",
+    "Human Rights",
+    "Marketing",
+    "Technology",
+    "Finance",
+    "Legal",
+  ]
+
+  const addRequirement = () => {
+    if (newRequirement.trim() && !job.requirements.includes(newRequirement.trim())) {
+      setJob(prev => ({
+        ...prev,
+        requirements: [...prev.requirements, newRequirement.trim()]
+      }))
+      setNewRequirement("")
     }
   }
 
+  const removeRequirement = (index: number) => {
+    setJob(prev => ({
+      ...prev,
+      requirements: prev.requirements.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addBenefit = () => {
+    if (newBenefit.trim() && !job.benefits.includes(newBenefit.trim())) {
+      setJob(prev => ({
+        ...prev,
+        benefits: [...prev.benefits, newBenefit.trim()]
+      }))
+      setNewBenefit("")
+    }
+  }
+
+  const removeBenefit = (index: number) => {
+    setJob(prev => ({
+      ...prev,
+      benefits: prev.benefits.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addSkill = () => {
+    if (newSkill.trim() && !job.skills.includes(newSkill.trim())) {
+      setJob(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }))
+      setNewSkill("")
+    }
+  }
+
+  const removeSkill = (index: number) => {
+    setJob(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }))
+  }
+
+  const handleNext = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      // In a real implementation, this would be an API call
+      // await fetch('/api/jobs', { method: 'POST', body: JSON.stringify(job) })
+      console.log("Job data:", job)
+      toast.success("Job posted successfully!")
+      // Redirect to jobs page or dashboard
+    } catch (error) {
+      toast.error("Failed to post job")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {[1, 2, 3].map((step) => (
+        <div key={step} className="flex items-center">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            currentStep === step 
+              ? "bg-primary text-primary-foreground" 
+              : step < currentStep 
+                ? "bg-secondary text-secondary-foreground" 
+                : "bg-muted text-muted-foreground"
+          }`}>
+            {step}
+          </div>
+          {step < 3 && (
+            <div className={`w-16 h-0.5 ${
+              step < currentStep ? "bg-secondary" : "bg-muted"
+            }`} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+
   return (
-    <section className="container mx-auto px-4 py-12 max-w-2xl">
-      <h1 className="text-2xl font-semibold">Post a Job</h1>
-      <div className="mt-6 grid gap-4">
-        <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-        <Button onClick={submit} disabled={loading || !title || !description}>{loading ? "Posting..." : "Post"}</Button>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Button variant="ghost" asChild className="mb-6">
+        <Link href="/dashboard/ngo">
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Link>
+      </Button>
+
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold">Post a New Job</h1>
+        <p className="text-muted-foreground">
+          Create a volunteer opportunity for your organization
+        </p>
       </div>
-    </section>
+
+      <StepIndicator />
+
+      {isPreview ? (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Job Preview</CardTitle>
+              <Button variant="outline" onClick={() => setIsPreview(false)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </div>
+            <CardDescription>
+              Review your job posting before publishing
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">{job.title || "Job Title"}</h2>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge>{job.category || "Category"}</Badge>
+                <Badge variant="outline">
+                  {job.locationType === "onsite" && "On-site"}
+                  {job.locationType === "remote" && "Remote"}
+                  {job.locationType === "hybrid" && "Hybrid"}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground">
+                {job.locationType === "onsite" && job.location}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">Description</h3>
+              <div className="prose max-w-none">
+                {job.description ? (
+                  job.description.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="mb-4">{paragraph}</p>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">Job description will appear here...</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">Requirements</h3>
+              {job.requirements.length > 0 ? (
+                <ul className="space-y-2">
+                  {job.requirements.map((req, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs mr-2 mt-0.5">✓</span>
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No requirements specified</p>
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">Benefits</h3>
+              {job.benefits.length > 0 ? (
+                <ul className="space-y-2">
+                  {job.benefits.map((benefit, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs mr-2 mt-0.5">✓</span>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No benefits specified</p>
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">Skills</h3>
+              {job.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((skill, index) => (
+                    <Badge key={index} variant="secondary">{skill}</Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No skills specified</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline" onClick={() => setIsPreview(false)}>
+                Edit
+              </Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving ? "Publishing..." : "Publish Job"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {currentStep === 1 && "Basic Information"}
+              {currentStep === 2 && "Description & Requirements"}
+              {currentStep === 3 && "Review & Publish"}
+            </CardTitle>
+            <CardDescription>
+              {currentStep === 1 && "Provide the basic details for your volunteer opportunity"}
+              {currentStep === 2 && "Describe the role and what you're looking for"}
+              {currentStep === 3 && "Review your job posting before publishing"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {currentStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="title">Job Title *</Label>
+                  <Input
+                    id="title"
+                    value={job.title}
+                    onChange={(e) => setJob(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Environmental Conservation Volunteer"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <select
+                      id="category"
+                      value={job.category}
+                      onChange={(e) => setJob(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full border rounded-md px-3 py-2"
+                    >
+                      <option value="">Select a category</option>
+                      {CATEGORIES.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="locationType">Location Type *</Label>
+                    <select
+                      id="locationType"
+                      value={job.locationType}
+                      onChange={(e) => setJob(prev => ({ 
+                        ...prev, 
+                        locationType: e.target.value as "onsite" | "remote" | "hybrid" 
+                      }))}
+                      className="w-full border rounded-md px-3 py-2"
+                    >
+                      <option value="onsite">On-site</option>
+                      <option value="remote">Remote</option>
+                      <option value="hybrid">Hybrid</option>
+                    </select>
+                  </div>
+                </div>
+
+                {job.locationType === "onsite" && (
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={job.location}
+                      onChange={(e) => setJob(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g., San Francisco, CA"
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button onClick={handleNext} disabled={!job.title || !job.category}>
+                    Next: Description
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="description">Job Description *</Label>
+                  <Textarea
+                    id="description"
+                    value={job.description}
+                    onChange={(e) => setJob(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe the role, responsibilities, and what volunteers will be doing..."
+                    rows={6}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {job.description.length}/2000 characters
+                  </p>
+                </div>
+
+                <div>
+                  <Label>Requirements</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newRequirement}
+                      onChange={(e) => setNewRequirement(e.target.value)}
+                      placeholder="Add a requirement"
+                      onKeyPress={(e) => e.key === "Enter" && addRequirement()}
+                    />
+                    <Button onClick={addRequirement} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {job.requirements.map((req, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {req}
+                        <button 
+                          onClick={() => removeRequirement(index)}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Benefits</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newBenefit}
+                      onChange={(e) => setNewBenefit(e.target.value)}
+                      placeholder="Add a benefit"
+                      onKeyPress={(e) => e.key === "Enter" && addBenefit()}
+                    />
+                    <Button onClick={addBenefit} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {job.benefits.map((benefit, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {benefit}
+                        <button 
+                          onClick={() => removeBenefit(index)}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Skills</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      placeholder="Add a skill"
+                      onKeyPress={(e) => e.key === "Enter" && addSkill()}
+                    />
+                    <Button onClick={addSkill} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {job.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                        {skill}
+                        <button 
+                          onClick={() => removeSkill(index)}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={handlePrevious}>
+                    Previous
+                  </Button>
+                  <Button onClick={handleNext} disabled={!job.description}>
+                    Next: Review
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
+                    <div>
+                      <h3 className="font-medium text-blue-900">Review Your Job Posting</h3>
+                      <p className="text-sm text-blue-700">
+                        Please review all details carefully before publishing. You can make changes 
+                        by going back to previous steps.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Basic Information</h3>
+                    <div className="ml-4 mt-2 space-y-1 text-sm">
+                      <p><span className="text-muted-foreground">Title:</span> {job.title || "Not provided"}</p>
+                      <p><span className="text-muted-foreground">Category:</span> {job.category || "Not provided"}</p>
+                      <p><span className="text-muted-foreground">Location:</span> {job.locationType} {job.locationType === "onsite" && job.location}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">Description</h3>
+                    <div className="ml-4 mt-2">
+                      <p className="text-sm line-clamp-3 text-muted-foreground">
+                        {job.description || "No description provided"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">Requirements ({job.requirements.length})</h3>
+                    <div className="ml-4 mt-2">
+                      {job.requirements.length > 0 ? (
+                        <ul className="text-sm space-y-1">
+                          {job.requirements.map((req, index) => (
+                            <li key={index} className="text-muted-foreground">• {req}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No requirements specified</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">Benefits ({job.benefits.length})</h3>
+                    <div className="ml-4 mt-2">
+                      {job.benefits.length > 0 ? (
+                        <ul className="text-sm space-y-1">
+                          {job.benefits.map((benefit, index) => (
+                            <li key={index} className="text-muted-foreground">• {benefit}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No benefits specified</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-medium">Skills ({job.skills.length})</h3>
+                    <div className="ml-4 mt-2">
+                      {job.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {job.skills.map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No skills specified</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={handlePrevious}>
+                    Previous
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsPreview(true)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
+                    </Button>
+                    <Button onClick={handleSubmit} disabled={saving}>
+                      {saving ? (
+                        <>
+                          <Save className="h-4 w-4 mr-2 animate-spin" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Publish Job
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
-
-

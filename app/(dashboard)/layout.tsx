@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
 import {
   LayoutDashboard,
   FileText,
@@ -26,44 +27,54 @@ import {
   Settings,
   Crown,
   Menu,
-  LogOut,
   Bell,
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-const navigation = {
+interface NavItem {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+interface NavItems {
+  volunteer: NavItem[]
+  ngo: NavItem[]
+}
+
+const navItems: NavItems = {
   volunteer: [
     {
       name: "Dashboard",
-      href: "/dashboard/volunteer",
+      href: "/volunteer",
       icon: LayoutDashboard,
     },
     {
       name: "Applications",
-      href: "/dashboard/volunteer/applications",
+      href: "/volunteer/applications",
       icon: FileText,
     },
     {
       name: "Profile",
-      href: "/dashboard/volunteer/profile",
+      href: "/volunteer/profile",
       icon: User,
     },
     {
       name: "Settings",
-      href: "/dashboard/volunteer/settings",
+      href: "/volunteer/settings",
       icon: Settings,
     },
   ],
   ngo: [
     {
       name: "Dashboard",
-      href: "/dashboard/ngo",
+      href: "/ngo",
       icon: LayoutDashboard,
     },
     {
       name: "Jobs",
-      href: "/dashboard/ngo/jobs",
+      href: "/ngo/jobs",
       icon: FileText,
     },
     {
@@ -73,12 +84,12 @@ const navigation = {
     },
     {
       name: "Profile",
-      href: "/dashboard/ngo/profile",
+      href: "/ngo/profile",
       icon: User,
     },
     {
       name: "Settings",
-      href: "/dashboard/ngo/settings",
+      href: "/ngo/settings",
       icon: Settings,
     },
   ],
@@ -95,13 +106,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!session?.user) return null
 
-  const role = (session as any).role || "volunteer"
-  const plan = (session as any).plan
+  const role = session.role || "volunteer"
+  const plan = session.plan
   const isPlus = plan?.includes("plus")
-  const isExpired = (session as any).planExpiresAt && 
-    new Date((session as any).planExpiresAt) < new Date()
+  const isExpired = session.planExpiresAt && new Date(session.planExpiresAt) < new Date()
 
-  const navItems = navigation[role as keyof typeof navigation] || navigation.volunteer
+  const userNavItems = navItems[role as keyof typeof navItems] || navItems.volunteer
 
   const Sidebar = () => (
     <div className="flex h-full flex-col">
@@ -116,7 +126,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       
       <div className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          {navItems.map((item) => {
+          {userNavItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
@@ -125,8 +135,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-green-600 text-white"
+                    : "text-muted-foreground hover:bg-green-50 hover:text-green-700"
                 )}
                 onClick={() => setSidebarOpen(false)}
               >
@@ -144,10 +154,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {!isPlus && (
           <Link
             href="/upgrade"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent"
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
             onClick={() => setSidebarOpen(false)}
           >
-            <Crown className="h-4 w-4" />
+            <Crown className="h-4 w-4 text-green-600" />
             Upgrade Plan
           </Link>
         )}
@@ -193,9 +203,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Header */}
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold">
-              {navItems.find(item => item.href === pathname)?.name || "Dashboard"}
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-semibold">
+                {userNavItems.find((item) => item.href === pathname)?.name || "Dashboard"}
+              </h1>
+              <nav className="text-sm text-muted-foreground">
+                <Link href={getDashboardBase(role)} className="hover:underline">
+                  {role === "ngo" ? "NGO Dashboard" : "Volunteer Dashboard"}
+                </Link>
+              </nav>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
@@ -209,14 +226,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={(session.user as any).avatarUrl} />
+                    <AvatarImage src={session.user.avatarUrl || session.user.image || undefined} />
                     <AvatarFallback>
                       {session.user.name?.slice(0, 2).toUpperCase() || "ME"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
@@ -237,13 +254,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/volunteer/profile">
+                  <Link href={getDashboardProfilePath(role)}>
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/volunteer/settings">
+                  <Link href={role === "ngo" ? "/ngo/settings" : "/volunteer/settings"}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>

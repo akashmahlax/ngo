@@ -24,10 +24,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Menu, ChevronDown, Search, Bell, Globe, CommandIcon } from "lucide-react"
+import { Menu, Search, CommandIcon } from "lucide-react"
 import { useSession } from "next-auth/react"
+import { usePathname } from "next/navigation"
 import SignIn from "@/components/auth/sign-in"
 import SignOut from "@/components/auth/sign-out"
+import { getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
@@ -36,7 +38,6 @@ const navItems = [
     items: [
       { label: "Browse Jobs", href: "/jobs" },
       { label: "Categories", href: "/jobs/categories" },
-      { label: "Saved Jobs", href: "/jobs/saved" },
       { label: "How It Works", href: "/jobs/how-it-works" },
     ],
   },
@@ -73,7 +74,10 @@ export function SiteNavbar() {
   const [open, setOpen] = React.useState(false)
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const { data: session } = useSession()
-
+  const pathname = usePathname()
+  // Use the synchronous window location when available so the navbar can
+  // decide to hide immediately on first client render (avoids duplicate header)
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : pathname
   React.useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -84,6 +88,28 @@ export function SiteNavbar() {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
+
+  // Small typed helpers to avoid using `any` directly
+  const role = (session as unknown as { role?: string })?.role
+  const userObj = session as unknown as { user?: { avatarUrl?: string; name?: string; email?: string } }
+
+  // Hide the site-wide navbar on dashboard routes to avoid duplicate headers.
+  // Our dashboards are available under multiple host paths (app router parallel/
+  // segmentized routes). Also hide on top-level '/volunteer' and '/ngo' paths
+  // which render dashboard layouts for each role.
+  if (
+    currentPath &&
+    (
+      currentPath.startsWith("/dashboard") ||
+      currentPath.startsWith("/(dashboard)") ||
+      currentPath === "/volunteer" ||
+      currentPath.startsWith("/volunteer/") ||
+      currentPath === "/ngo" ||
+      currentPath.startsWith("/ngo/")
+    )
+  ) {
+    return null
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -174,18 +200,18 @@ export function SiteNavbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src={(session.user as any).avatarUrl || undefined} />
-                  <AvatarFallback>{session.user.name?.slice(0,2)?.toUpperCase() || "ME"}</AvatarFallback>
+                  <AvatarImage src={userObj.user?.avatarUrl || undefined} />
+                  <AvatarFallback>{userObj.user?.name?.slice(0,2)?.toUpperCase() || "ME"}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-48">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={(session as any).role === "ngo" ? "/(dashboard)/ngo" : "/(dashboard)/volunteer"}>Dashboard</Link>
+                  <Link href={getDashboardBase(role)}>Dashboard</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={(session as any).role === "ngo" ? "/(dashboard)/ngo/profile" : "/(dashboard)/volunteer/profile"}>Profile</Link>
+                  <Link href={getDashboardProfilePath(role)}>Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>

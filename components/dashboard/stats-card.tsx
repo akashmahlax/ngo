@@ -1,14 +1,15 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { LucideIcon } from "lucide-react"
+import * as Icons from "lucide-react"
+import React from "react"
 import { cn } from "@/lib/utils"
 
 interface StatsCardProps {
   title: string
   value: string | number
   description?: string
-  icon: LucideIcon
+  iconName: keyof typeof Icons
   trend?: {
     value: number
     label: string
@@ -22,11 +23,15 @@ export function StatsCard({
   title, 
   value, 
   description, 
-  icon: Icon, 
+  iconName, 
   trend, 
   className,
   onClick 
 }: StatsCardProps) {
+  const Icon = Icons[iconName]
+  // Cast to a React component type so TS understands this is renderable
+  const IconComponent = Icon as unknown as React.ComponentType<React.SVGProps<SVGSVGElement>>
+
   return (
     <Card 
       className={cn(
@@ -40,7 +45,7 @@ export function StatsCard({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <IconComponent className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>

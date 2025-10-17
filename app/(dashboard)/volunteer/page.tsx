@@ -6,16 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  TrendingUp, 
-  Plus,
-  ExternalLink,
-  Calendar
-} from "lucide-react"
+import { Plus, ExternalLink, Calendar, FileText, Clock, CheckCircle, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { ObjectId } from "mongodb"
 
@@ -23,13 +14,12 @@ export default async function VolunteerDashboard() {
   const session = await auth()
   if (!session?.user) return null
 
-  const { applications, jobs, users } = await getCollections()
-  const userId = new ObjectId((session as any).userId)
+  const { applications, users } = await getCollections()
+  const userId = new ObjectId(session.userId)
   
   // Get user data
-  const user = await users.findOne({ _id: userId } as any)
-  const plan = (session as any).plan
-  const isPlus = plan?.includes("plus")
+  const user = await users.findOne({ _id: userId })
+  const isPlus = session.plan?.includes("plus")
   const monthlyQuota = isPlus ? null : user?.monthlyApplicationCount || 0
   const quotaLimit = 1
 
@@ -138,27 +128,27 @@ export default async function VolunteerDashboard() {
           title="Total Applications"
           value={totalApplications}
           description="All time applications"
-          icon={FileText}
+          iconName="FileText"
           trend={totalApplications > 0 ? { value: 12, label: "from last month", isPositive: true } : undefined}
         />
         <StatsCard
           title="Pending Review"
           value={pendingApplications}
           description="Awaiting response"
-          icon={Clock}
+          iconName="Clock"
         />
         <StatsCard
           title="Accepted Offers"
           value={acceptedApplications}
           description="Successful applications"
-          icon={CheckCircle}
+          iconName="CheckCircle"
           trend={acceptedApplications > 0 ? { value: 8, label: "from last month", isPositive: true } : undefined}
         />
         <StatsCard
           title="This Month"
           value={monthlyQuota || 0}
           description={`${isPlus ? "Unlimited" : `${quotaLimit} limit`} applications`}
-          icon={TrendingUp}
+          iconName="TrendingUp"
         />
       </div>
 
@@ -177,7 +167,9 @@ export default async function VolunteerDashboard() {
                 <CardTitle>Application Status</CardTitle>
               </CardHeader>
               <CardContent className="p-8 text-center">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <div className="h-12 w-12 mx-auto mb-4">
+                  <FileText className="w-full h-full text-muted-foreground" />
+                </div>
                 <p className="text-muted-foreground">No applications yet</p>
                 <Button asChild className="mt-4">
                   <Link href="/jobs">Start Applying</Link>
@@ -229,7 +221,9 @@ export default async function VolunteerDashboard() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <div className="h-12 w-12 mx-auto mb-4">
+                    <FileText className="w-full h-full text-muted-foreground" />
+                  </div>
                   <h3 className="font-medium mb-2">No applications yet</h3>
                   <p className="text-muted-foreground mb-4">
                     Start your volunteering journey by applying to jobs
@@ -253,13 +247,17 @@ export default async function VolunteerDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Button asChild variant="outline" className="h-auto p-4 flex-col">
               <Link href="/jobs">
-                <FileText className="h-6 w-6 mb-2" />
+                <div className="h-6 w-6 mb-2">
+                  <FileText className="w-full h-full" />
+                </div>
                 Browse Jobs
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-auto p-4 flex-col">
               <Link href="/dashboard/volunteer/applications">
-                <Clock className="h-6 w-6 mb-2" />
+                <div className="h-6 w-6 mb-2">
+                  <Clock className="w-full h-full" />
+                </div>
                 My Applications
               </Link>
             </Button>
@@ -272,7 +270,9 @@ export default async function VolunteerDashboard() {
             {!isPlus && (
               <Button asChild variant="outline" className="h-auto p-4 flex-col">
                 <Link href="/upgrade">
-                  <TrendingUp className="h-6 w-6 mb-2" />
+                  <div className="h-6 w-6 mb-2">
+                    <TrendingUp className="w-full h-full" />
+                  </div>
                   Upgrade Plan
                 </Link>
               </Button>

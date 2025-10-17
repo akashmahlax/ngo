@@ -171,26 +171,26 @@ export default async function NgoDashboard() {
           title="Active Jobs"
           value={activeJobsCount}
           description={`${isPlus ? "Unlimited" : `${baseJobLimit} limit`} jobs`}
-          icon={FileText}
+          iconName="FileText"
         />
         <StatsCard
           title="Total Applications"
           value={totalApplications}
           description="All time applications received"
-          icon={Users}
+          iconName="Users"
           trend={totalApplications > 0 ? { value: 15, label: "from last month", isPositive: true } : undefined}
         />
         <StatsCard
           title="Shortlisted"
           value={shortlistedCandidates}
           description="Candidates in review"
-          icon={CheckCircle}
+          iconName="CheckCircle"
         />
         <StatsCard
           title="Total Jobs"
           value={totalJobs}
           description="Jobs posted all time"
-          icon={TrendingUp}
+          iconName="TrendingUp"
         />
       </div>
 

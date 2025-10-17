@@ -47,6 +47,15 @@ export type UserDoc = {
   address?: string
   focusAreas?: string[]
   teamSize?: string
+  notifications?: {
+    emailApplications: boolean
+    emailMessages: boolean
+    emailUpdates: boolean
+  }
+  privacy?: {
+    profileVisibility: "public" | "private"
+    showEmail: boolean
+  }
   createdAt: Date
   updatedAt: Date
 }

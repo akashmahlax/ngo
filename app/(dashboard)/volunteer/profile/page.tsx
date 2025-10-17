@@ -9,15 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+
 import { ImageUploader } from "@/components/upload/image-uploader"
 import { Save, Plus, X, Globe, Lock, User, MapPin, Briefcase, GraduationCap } from "lucide-react"
 import { toast } from "sonner"
+
 
 export default function VolunteerProfile() {
   const { data: session, update } = useSession()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [editMode, setEditMode] = useState(false)
   const [profile, setProfile] = useState({
     name: "",
     bio: "",
@@ -42,6 +44,7 @@ export default function VolunteerProfile() {
       description: string
     }>,
     profileVisibility: "public" as "public" | "private",
+    avatarUrl: ""
   })
   const [newSkill, setNewSkill] = useState("")
 
@@ -65,6 +68,7 @@ export default function VolunteerProfile() {
             experience: data.experience || [],
             education: data.education || [],
             profileVisibility: data.profileVisibility || "public",
+            avatarUrl: data.avatarUrl || session?.user?.avatarUrl || ""
           })
         }
       } catch (error) {
@@ -73,9 +77,8 @@ export default function VolunteerProfile() {
         setLoading(false)
       }
     }
-
     loadProfile()
-  }, [])
+  }, [session])
 
   async function handleImageUpload(file: File): Promise<string> {
     const formData = new FormData()
@@ -116,8 +119,8 @@ export default function VolunteerProfile() {
       if (!res.ok) throw new Error("Failed to save")
       toast.success("Profile updated successfully")
       await update() // Update session
-    } catch (e: any) {
-      toast.error(e.message || "Failed to save profile")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save profile")
     } finally {
       setSaving(false)
     }
@@ -199,6 +202,160 @@ export default function VolunteerProfile() {
 
   if (!session?.user) return null
 
+  // VIEW MODE
+  if (!editMode) {
+    // Get plan info from session
+    const plan = session?.plan || "Base"
+    const isPlus = plan?.includes("plus")
+    const planExpiresAt = session?.planExpiresAt ? new Date(session.planExpiresAt) : null
+    const isExpired = planExpiresAt && planExpiresAt < new Date()
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Volunteer Profile</h1>
+            <p className="text-muted-foreground">Your public profile as seen by NGOs and volunteers</p>
+          </div>
+          <Button variant="outline" onClick={() => setEditMode(true)}>
+            Edit Profile
+          </Button>
+        </div>
+        <div className="grid gap-8 md:grid-cols-3">
+          {/* Avatar & Account Info */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-32 w-32 rounded-full bg-gray-100 border flex items-center justify-center overflow-hidden">
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-16 w-16 text-muted-foreground" />
+              )}
+            </div>
+            <h2 className="text-xl font-semibold">{profile.name}</h2>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span>{profile.location}</span>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {profile.skills.map((skill, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+            <div className="mt-2">
+              <Badge variant={profile.profileVisibility === "public" ? "success" : "secondary"}>
+                {profile.profileVisibility === "public" ? "Public" : "Private"}
+              </Badge>
+            </div>
+            {/* Account Card */}
+            <Card className="w-full mt-4">
+              <CardHeader>
+                <CardTitle>Account</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Email:</span>
+                  <span className="text-muted-foreground">{session?.user?.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Plan:</span>
+                  <Badge variant={isPlus ? "default" : "secondary"}>{plan?.replace("_", " ")}</Badge>
+                  {isPlus && !isExpired && (
+                    <Badge variant="success">Active</Badge>
+                  )}
+                  {isExpired && (
+                    <Badge variant="destructive">Expired</Badge>
+                  )}
+                </div>
+                {planExpiresAt && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Expires:</span>
+                    <span className="text-muted-foreground">{planExpiresAt.toLocaleDateString()}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          {/* Info Cards */}
+          <div className="md:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground whitespace-pre-line">{profile.bio || "No bio provided."}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Links</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 md:grid-cols-2">
+                  {profile.socialLinks.linkedin && (
+                    <a href={profile.socialLinks.linkedin} target="_blank" rel="noopener" className="text-blue-700 hover:underline">LinkedIn</a>
+                  )}
+                  {profile.socialLinks.github && (
+                    <a href={profile.socialLinks.github} target="_blank" rel="noopener" className="text-gray-700 hover:underline">GitHub</a>
+                  )}
+                  {profile.socialLinks.website && (
+                    <a href={profile.socialLinks.website} target="_blank" rel="noopener" className="text-green-700 hover:underline">Website</a>
+                  )}
+                  {profile.socialLinks.twitter && (
+                    <a href={profile.socialLinks.twitter} target="_blank" rel="noopener" className="text-blue-500 hover:underline">Twitter</a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Experience</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile.experience.length === 0 ? (
+                  <p className="text-muted-foreground">No experience added.</p>
+                ) : (
+                  profile.experience.map((exp, idx) => (
+                    <div key={idx} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{exp.title}</span>
+                        <span className="text-xs text-muted-foreground">{exp.duration}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">{exp.company}</div>
+                      <div className="mt-2 text-sm">{exp.description}</div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Education</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile.education.length === 0 ? (
+                  <p className="text-muted-foreground">No education added.</p>
+                ) : (
+                  profile.education.map((edu, idx) => (
+                    <div key={idx} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{edu.degree}</span>
+                        <span className="text-xs text-muted-foreground">{edu.year}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">{edu.institution}</div>
+                      <div className="mt-2 text-sm">{edu.description}</div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // EDIT MODE (original form)
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-8">
@@ -206,21 +363,23 @@ export default function VolunteerProfile() {
           <h1 className="text-3xl font-bold">Edit Profile</h1>
           <p className="text-muted-foreground">Update your volunteer profile information</p>
         </div>
+        <Button variant="outline" onClick={() => setEditMode(false)}>
+          Cancel
+        </Button>
       </div>
-
       <div className="grid gap-8 md:grid-cols-3">
         {/* Avatar Upload */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Profile Picture</h2>
           <ImageUploader
-            currentImage={(session.user as any).avatarUrl}
+            currentImage={profile.avatarUrl || undefined}
             onUpload={handleImageUpload}
             onRemove={handleImageRemove}
           />
         </div>
-
         {/* Basic Information */}
         <div className="md:col-span-2 space-y-6">
+          {/* ...existing code for edit form... */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -238,7 +397,6 @@ export default function VolunteerProfile() {
                   placeholder="Your full name"
                 />
               </div>
-              
               <div>
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
@@ -252,7 +410,6 @@ export default function VolunteerProfile() {
                   {profile.bio.length}/500 characters
                 </p>
               </div>
-              
               <div>
                 <Label htmlFor="location" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -267,8 +424,7 @@ export default function VolunteerProfile() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Skills */}
+          {/* ...existing code for skills, social links, experience, education, privacy... */}
           <Card>
             <CardHeader>
               <CardTitle>Skills & Expertise</CardTitle>
@@ -285,7 +441,6 @@ export default function VolunteerProfile() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              
               <div className="flex flex-wrap gap-2">
                 {profile.skills.map((skill, index) => (
                   <Badge key={index} variant="secondary" className="flex items-center gap-1">
@@ -298,8 +453,6 @@ export default function VolunteerProfile() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Social Links */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -360,8 +513,6 @@ export default function VolunteerProfile() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Experience */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -425,8 +576,6 @@ export default function VolunteerProfile() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Education */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -490,8 +639,6 @@ export default function VolunteerProfile() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Privacy Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -523,7 +670,6 @@ export default function VolunteerProfile() {
           </Card>
         </div>
       </div>
-
       <div className="mt-8 flex justify-end">
         <Button onClick={saveProfile} disabled={saving} size="lg">
           <Save className="h-4 w-4 mr-2" />

@@ -32,7 +32,7 @@ export function CheckoutButton({ plan }: { plan: "volunteer_plus" | "ngo_plus" }
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || "Failed to create order")
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         order_id: data.order.id,
         handler: function () {
           // Webhook will finalize plan; we can optionally poll or show success

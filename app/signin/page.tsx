@@ -179,7 +179,7 @@ function SignInPageInner() {
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
           <div className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don`&apos;`t have an account?{" "}
             <a href="/signup" className="text-primary font-medium hover:underline">
               Sign up
             </a>
