@@ -1,9 +1,4 @@
 import { Footer } from './footer'
-
-export function SiteFooter() {
-  return <Footer />
-}
-
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"

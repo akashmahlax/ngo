@@ -28,24 +28,18 @@ export function SearchBar({
   const [query, setQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [recent, setRecent] = useState<string[]>(recentSearches)
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounced search
   useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
 
     timeoutRef.current = setTimeout(() => {
-      if (onSearch && query.trim()) {
-        onSearch(query.trim())
-      }
+      if (onSearch && query.trim()) onSearch(query.trim())
     }, debounceMs)
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [query, onSearch, debounceMs])
 

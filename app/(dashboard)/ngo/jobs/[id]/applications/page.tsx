@@ -16,6 +16,7 @@ type Application = {
   volunteer?: {
     name: string
     email: string
+    avatarUrl?: string
     skills: string[]
     bio: string
   }

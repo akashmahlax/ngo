@@ -4,7 +4,8 @@ import { getCollections } from "@/lib/models"
 import { ObjectId } from "mongodb"
 import { z } from "zod"
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, context: any) {
+  const { params } = context
   const { jobs } = await getCollections()
   const job = await jobs.findOne({ _id: new ObjectId(params.id) })
   if (!job) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 })
@@ -17,7 +18,8 @@ const patchSchema = z.object({
   status: z.enum(["open", "closed"]).optional(),
 })
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: any) {
+  const { params } = context
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
 
@@ -38,7 +40,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ ok: true })
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, context: any) {
+  const { params } = context
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
 

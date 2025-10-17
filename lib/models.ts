@@ -1,10 +1,11 @@
 import client from "@/lib/db"
+import { ObjectId } from "mongodb"
 
 export type UserRole = "volunteer" | "ngo"
 export type UserPlan = "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
 
 export type UserDoc = {
-  _id: any
+  _id: ObjectId
   name?: string
   email: string
   passwordHash?: string | null
@@ -51,8 +52,8 @@ export type UserDoc = {
 }
 
 export type JobDoc = {
-  _id: any
-  ngoId: any
+  _id: ObjectId
+  ngoId: ObjectId
   title: string
   description: string
   category?: string
@@ -68,10 +69,10 @@ export type JobDoc = {
 }
 
 export type ApplicationDoc = {
-  _id: any
-  jobId: any
-  ngoId: any
-  volunteerId: any
+  _id: ObjectId
+  jobId: ObjectId
+  ngoId: ObjectId
+  volunteerId: ObjectId
   status: "applied" | "review" | "interview" | "offered" | "rejected" | "withdrawn"
   notes?: string
   ngoNotes?: string
@@ -87,8 +88,8 @@ export type ApplicationDoc = {
 
 export type OrderStatus = "created" | "paid" | "failed"
 export type OrderDoc = {
-  _id: any
-  userId: any
+  _id: ObjectId
+  userId: ObjectId
   role: UserRole
   planTarget: Extract<UserPlan, "volunteer_plus" | "ngo_plus">
   orderId: string

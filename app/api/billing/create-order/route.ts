@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     status: "created",
     receipt,
     createdAt: new Date(),
-  })
+  } as any)
 
   return NextResponse.json({ order })
 }

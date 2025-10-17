@@ -27,6 +27,16 @@ export async function GET() {
       experience: user.experience,
       education: user.education,
       profileVisibility: user.profileVisibility,
+      // NGO specific fields
+      orgName: user.orgName,
+      website: user.website,
+      orgType: user.orgType,
+      registrationNumber: user.registrationNumber,
+      phone: user.phone,
+      address: user.address,
+      focusAreas: user.focusAreas,
+      teamSize: user.teamSize,
+      verified: user.verified,
     })
   } catch (error) {
     console.error("Profile fetch error:", error)
@@ -49,21 +59,38 @@ export async function PATCH(request: NextRequest) {
     const userId = new ObjectId((session as any).userId)
 
     // Update user profile
+    const updateData: any = {
+      name: body.name,
+      bio: body.bio,
+      location: body.location,
+      skills: body.skills,
+      socialLinks: body.socialLinks,
+      experience: body.experience,
+      education: body.education,
+      profileVisibility: body.profileVisibility,
+      // NGO specific fields
+      orgName: body.orgName,
+      website: body.website,
+      orgType: body.orgType,
+      registrationNumber: body.registrationNumber,
+      phone: body.phone,
+      address: body.address,
+      focusAreas: body.focusAreas,
+      teamSize: body.teamSize,
+      verified: body.verified,
+      updatedAt: new Date(),
+    }
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key]
+      }
+    })
+
     await users.updateOne(
       { _id: userId } as any,
-      {
-        $set: {
-          name: body.name,
-          bio: body.bio,
-          location: body.location,
-          skills: body.skills,
-          socialLinks: body.socialLinks,
-          experience: body.experience,
-          education: body.education,
-          profileVisibility: body.profileVisibility,
-          updatedAt: new Date(),
-        },
-      }
+      { $set: updateData }
     )
 
     return NextResponse.json({ success: true })

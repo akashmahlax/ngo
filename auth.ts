@@ -18,7 +18,6 @@ type AppUser = {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
-  allowDangerousEmailAccountLinking: true, // Allow linking accounts with same email
   pages: {
     signIn: "/signin",
     error: "/signin",

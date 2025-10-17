@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         {
           resource_type: "image",
           folder: "ngo-platform/avatars",
-          public_id: `avatar_${session.user.id}_${Date.now()}`,
+          public_id: `avatar_${(session.user as any)?.id ?? (session as any).userId}_${Date.now()}`,
           transformation: {
             width: 400,
             height: 400,

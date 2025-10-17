@@ -3,7 +3,8 @@ import { auth } from "@/auth"
 import { getCollections } from "@/lib/models"
 import { ObjectId } from "mongodb"
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: any) {
+  const { params } = context
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
 
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const { jobs, applications, users } = await getCollections()
     
     // Verify job ownership
-    const job = await jobs.findOne({ _id: new ObjectId(params.id) })
+  const job = await jobs.findOne({ _id: new ObjectId(params.id) })
     if (!job) return NextResponse.json({ error: "JOB_NOT_FOUND" }, { status: 404 })
     
     const user = await users.findOne({ email: session.user.email })
@@ -30,8 +31,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       apps.map(async (app) => {
         const volunteer = await users.findOne({ _id: app.volunteerId })
         return {
-          _id: app._id.toString(),
-          volunteerId: app.volunteerId.toString(),
+          _id: String(app._id),
+          volunteerId: String(app.volunteerId),
           status: app.status,
           createdAt: app.createdAt,
           volunteer: volunteer ? {

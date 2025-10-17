@@ -6,7 +6,8 @@ import { z } from "zod"
 
 const schema = z.object({ status: z.enum(["review", "interview", "offered", "rejected", "withdrawn"]) })
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: any) {
+  const { params } = context
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
   const role = (session as any).role
@@ -24,9 +25,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (role === "ngo") {
     const job = await jobs.findOne({ _id: app.jobId })
-    if (!job || job.ngoId.toString() !== user._id.toString()) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
+    if (!job || String(job.ngoId) !== String(user._id)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
   } else if (role === "volunteer") {
-    if (app.volunteerId.toString() !== user._id.toString()) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
+    if (String(app.volunteerId) !== String(user._id)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
   } else {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
   }

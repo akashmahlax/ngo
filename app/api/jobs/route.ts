@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
     createdAt: now,
     updatedAt: now,
   }
-  const { insertedId } = await jobs.insertOne(doc)
-  return NextResponse.json({ jobId: insertedId.toString() })
+  const { insertedId } = await jobs.insertOne(doc as any)
+  return NextResponse.json({ jobId: String(insertedId) })
 }
 
 

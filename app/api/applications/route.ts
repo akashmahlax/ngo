@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     status: "applied" as const,
     createdAt: now,
     updatedAt: now,
-  })
+  } as any)
   await recordApplication(user._id.toString())
 
   return NextResponse.json({ ok: true })
