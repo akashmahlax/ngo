@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -13,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { ImageUploader } from "@/components/upload/image-uploader"
 import { Save, Plus, X, Globe, Lock, User, MapPin, Briefcase, GraduationCap } from "lucide-react"
 import { toast } from "sonner"
-
+import Image from "next/image"
 
 export default function VolunteerProfile() {
   const { data: session, update } = useSession()
@@ -54,8 +53,9 @@ export default function VolunteerProfile() {
         const res = await fetch("/api/profile")
         if (res.ok) {
           const data = await res.json()
-          setProfile({
-            name: data.name || "",
+          setProfile(prev => ({
+            ...prev,
+            name: data.name || session?.user?.name || "",
             bio: data.bio || "",
             location: data.location || "",
             skills: data.skills || [],
@@ -68,10 +68,10 @@ export default function VolunteerProfile() {
             experience: data.experience || [],
             education: data.education || [],
             profileVisibility: data.profileVisibility || "public",
-            avatarUrl: data.avatarUrl || session?.user?.avatarUrl || ""
-          })
+            avatarUrl: data.avatarUrl || session?.user?.image || session?.user?.avatarUrl || ""
+          }))
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error loading profile:", error)
       } finally {
         setLoading(false)
@@ -83,44 +83,87 @@ export default function VolunteerProfile() {
   async function handleImageUpload(file: File): Promise<string> {
     const formData = new FormData()
     formData.append("file", file)
-    
-    const res = await fetch("/api/profile/avatar", {
-      method: "POST",
-      body: formData,
-    })
-    
-    if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || "Failed to upload image")
+    try {
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || "Failed to upload image")
+      }
+      const data = await res.json()
+      setProfile(prev => ({ ...prev, avatarUrl: data.avatarUrl }))
+      await saveProfile({ ...profile, avatarUrl: data.avatarUrl })
+      toast.success("Profile photo updated!")
+      await update()
+      return data.avatarUrl
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to upload image")
+        throw error
+      } else {
+        toast.error("Failed to upload image")
+        throw new Error("Failed to upload image")
+      }
     }
-    
-    const data = await res.json()
-    await update() // Update session
-    return data.avatarUrl
   }
 
   async function handleImageRemove() {
     try {
-      await fetch("/api/profile/avatar", { method: "DELETE" })
-      await update() // Update session
-    } catch (error) {
-      console.error("Error removing image:", error)
+      const res = await fetch("/api/profile/avatar", { method: "DELETE" })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || "Failed to remove image")
+      }
+      setProfile(prev => ({ ...prev, avatarUrl: "" }))
+      await saveProfile({ ...profile, avatarUrl: "" })
+      toast.success("Profile photo removed!")
+      await update()
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to remove image")
+      } else {
+        toast.error("Failed to remove image")
+      }
     }
   }
 
-  async function saveProfile() {
+  async function saveProfile(updated?: typeof profile) {
     setSaving(true)
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        body: JSON.stringify(updated || profile),
       })
       if (!res.ok) throw new Error("Failed to save")
       toast.success("Profile updated successfully")
-      await update() // Update session
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save profile")
+      await update()
+      // Reload profile from backend to reflect changes
+      const refreshed = await fetch("/api/profile")
+      if (refreshed.ok) {
+        const data = await refreshed.json()
+        setProfile(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          bio: data.bio || prev.bio,
+          location: data.location || prev.location,
+          skills: data.skills || prev.skills,
+          socialLinks: data.socialLinks || prev.socialLinks,
+          experience: data.experience || prev.experience,
+          education: data.education || prev.education,
+          profileVisibility: data.profileVisibility || prev.profileVisibility,
+          avatarUrl: data.avatarUrl || prev.avatarUrl
+        }))
+      }
+      setEditMode(false)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message || "Failed to save profile")
+      } else {
+        toast.error("Failed to save profile")
+      }
     } finally {
       setSaving(false)
     }
@@ -205,10 +248,13 @@ export default function VolunteerProfile() {
   // VIEW MODE
   if (!editMode) {
     // Get plan info from session
-    const plan = session?.plan || "Base"
-    const isPlus = plan?.includes("plus")
-    const planExpiresAt = session?.planExpiresAt ? new Date(session.planExpiresAt) : null
-    const isExpired = planExpiresAt && planExpiresAt < new Date()
+  const plan = session?.plan || "Base"
+  const isPlus = plan?.includes("plus")
+  const planExpiresAt = session?.planExpiresAt ? new Date(session.planExpiresAt) : null
+  const isExpired = planExpiresAt && planExpiresAt < new Date()
+  const displayName = session?.user?.name || profile.name
+  const displayEmail = session?.user?.email
+  const displayAvatar = session?.user?.image || session?.user?.avatarUrl || profile.avatarUrl
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
@@ -224,13 +270,20 @@ export default function VolunteerProfile() {
           {/* Avatar & Account Info */}
           <div className="flex flex-col items-center gap-4">
             <div className="h-32 w-32 rounded-full bg-gray-100 border flex items-center justify-center overflow-hidden">
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+              {displayAvatar ? (
+                <Image
+                  src={displayAvatar}
+                  alt="Profile"
+                  width={128}
+                  height={128}
+                  className="h-full w-full object-cover"
+                  priority
+                />
               ) : (
                 <User className="h-16 w-16 text-muted-foreground" />
               )}
             </div>
-            <h2 className="text-xl font-semibold">{profile.name}</h2>
+            <h2 className="text-xl font-semibold">{displayName}</h2>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>{profile.location}</span>
@@ -255,7 +308,7 @@ export default function VolunteerProfile() {
               <CardContent className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Email:</span>
-                  <span className="text-muted-foreground">{session?.user?.email}</span>
+                  <span className="text-muted-foreground">{displayEmail}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Plan:</span>
@@ -671,7 +724,7 @@ export default function VolunteerProfile() {
         </div>
       </div>
       <div className="mt-8 flex justify-end">
-        <Button onClick={saveProfile} disabled={saving} size="lg">
+  <Button onClick={() => saveProfile()} disabled={saving} size="lg">
           <Save className="h-4 w-4 mr-2" />
           {saving ? "Saving..." : "Save Changes"}
         </Button>

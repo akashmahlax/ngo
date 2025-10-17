@@ -27,6 +27,7 @@ export async function GET() {
       experience: user.experience,
       education: user.education,
       profileVisibility: user.profileVisibility,
+      avatarUrl: user.avatarUrl,
       // NGO specific fields
       orgName: user.orgName,
       website: user.website,
