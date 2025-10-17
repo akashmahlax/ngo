@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server"
 import { getCollections } from "@/lib/models"
 
@@ -66,5 +67,4 @@ export async function POST(req: NextRequest) {
 }
 
 // Configure route to run on Edge Runtime
-export const runtime = 'edge'
 export const preferredRegion = 'auto'
