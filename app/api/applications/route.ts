@@ -7,6 +7,70 @@ import { ObjectId } from "mongodb"
 
 const createSchema = z.object({ jobId: z.string().min(1) })
 
+export async function GET(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
+  }
+
+  try {
+    const { applications, jobs, users } = await getCollections()
+    const userId = new ObjectId((session as any).userId)
+    const role = (session as any).role
+
+    // Build query based on role
+    const query = role === "volunteer" 
+      ? { volunteerId: userId }
+      : { ngoId: userId }
+
+    // Fetch applications sorted by most recent
+    const apps = await applications.find(query).sort({ createdAt: -1 }).toArray()
+
+    // Populate job and NGO/volunteer details
+    const enrichedApps = await Promise.all(
+      apps.map(async (app) => {
+        const job = await jobs.findOne({ _id: app.jobId })
+        const ngo = await users.findOne({ _id: app.ngoId })
+        const volunteer = await users.findOne({ _id: app.volunteerId })
+
+        return {
+          _id: app._id.toString(),
+          status: app.status,
+          appliedAt: app.createdAt,
+          coverLetter: app.coverLetter || "",
+          job: job ? {
+            _id: job._id.toString(),
+            title: job.title,
+            location: job.location,
+            type: job.type,
+            category: job.category
+          } : null,
+          ngo: ngo ? {
+            _id: ngo._id.toString(),
+            name: ngo.name,
+            orgName: ngo.orgName || ngo.name,
+            avatarUrl: ngo.avatarUrl
+          } : null,
+          volunteer: volunteer ? {
+            _id: volunteer._id.toString(),
+            name: volunteer.name,
+            email: volunteer.email,
+            avatarUrl: volunteer.avatarUrl
+          } : null
+        }
+      })
+    )
+
+    return NextResponse.json({ applications: enrichedApps })
+  } catch (error: any) {
+    console.error("Error fetching applications:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch applications" },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })

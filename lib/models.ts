@@ -66,6 +66,8 @@ export type JobDoc = {
   title: string
   description: string
   category?: string
+  location?: string
+  type?: string
   locationType?: "onsite" | "remote" | "hybrid"
   skills?: string[]
   benefits?: string[]
@@ -82,7 +84,8 @@ export type ApplicationDoc = {
   jobId: ObjectId
   ngoId: ObjectId
   volunteerId: ObjectId
-  status: "applied" | "review" | "interview" | "offered" | "rejected" | "withdrawn"
+  status: "applied" | "shortlisted" | "accepted" | "rejected" | "withdrawn"
+  coverLetter?: string
   notes?: string
   ngoNotes?: string
   rating?: number

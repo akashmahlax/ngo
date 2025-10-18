@@ -12,8 +12,8 @@
   --popover-foreground: oklch(0.20 0.02 240);
   --primary: oklch(0.52 0.15 150); /* professional forest green */
   --primary-foreground: oklch(0.99 0 0); /* crisp white text */
-  --accent: oklch(0.72 0.13 145); /* vibrant but professional mint */
-  --accent-foreground: oklch(0.18 0.02 150);
+  --accent: oklch(0.96 0.01 145); /* very subtle light green background */
+  --accent-foreground: oklch(0.18 0.02 150); /* dark green text for contrast */
   --secondary: oklch(0.96 0.01 130); /* subtle sage background */
   --secondary-foreground: oklch(0.22 0.01 135); /* dark readable text */
   --muted: oklch(0.95 0.01 135); /* gentle muted bg */
@@ -48,8 +48,8 @@
   --popover-foreground: oklch(0.97 0.01 240);
   --primary: oklch(0.70 0.13 150); /* bright professional green for dark mode */
   --primary-foreground: oklch(0.15 0.01 240); /* dark text on primary */
-  --accent: oklch(0.65 0.12 155); /* professional teal accent */
-  --accent-foreground: oklch(0.97 0.01 240);
+  --accent: oklch(0.28 0.02 150); /* darker subtle green accent for dark mode */
+  --accent-foreground: oklch(0.97 0.01 240); /* bright white text on accent */
   --secondary: oklch(0.22 0.01 240); /* elevated dark surface */
   --secondary-foreground: oklch(0.97 0.01 240);
   --muted: oklch(0.25 0.01 240); /* muted elevated surface */

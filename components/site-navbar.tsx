@@ -27,7 +27,6 @@ import {
 import { Menu, Search, CommandIcon } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
-import SignIn from "@/components/auth/sign-in"
 import SignOut from "@/components/auth/sign-out"
 import { getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -145,6 +144,18 @@ export function SiteNavbar() {
                     <Separator className="my-2" />
                   </div>
                 ))}
+                
+                {/* Auth buttons in mobile menu */}
+                {!session?.user && (
+                  <div className="mt-4 grid gap-2">
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/signup" onClick={() => setOpen(false)}>Sign up</Link>
+                    </Button>
+                    <Button asChild className="w-full">
+                      <Link href="/signin" onClick={() => setOpen(false)}>Sign in</Link>
+                    </Button>
+                  </div>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
@@ -226,7 +237,9 @@ export function SiteNavbar() {
               <Button asChild variant="outline">
                 <Link href="/signup">Sign up</Link>
               </Button>
-              <SignIn />
+              <Button asChild>
+                <Link href="/signin">Sign in</Link>
+              </Button>
             </div>
           )}
         </div>

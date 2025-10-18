@@ -4,7 +4,9 @@ import { getCollections } from "@/lib/models"
 import { ObjectId } from "mongodb"
 import { z } from "zod"
 
-const schema = z.object({ status: z.enum(["review", "interview", "offered", "rejected", "withdrawn"]) })
+const schema = z.object({ 
+  status: z.enum(["applied", "shortlisted", "accepted", "rejected", "withdrawn"]) 
+})
 
 export async function PATCH(req: NextRequest, context: any) {
   const { params } = context

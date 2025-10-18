@@ -112,6 +112,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (u.role) token.role = u.role
         if (u.plan) token.plan = u.plan
         if (u.planExpiresAt) token.planExpiresAt = u.planExpiresAt
+        if (u.avatarUrl) token.avatarUrl = u.avatarUrl
       }
 
       // Ensure token has latest DB values
@@ -121,10 +122,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const db = client.db()
         const users = db.collection<AppUser>("users")
         const dbUser = await users.findOne({ email: token.email as string })
+        
+        // If user no longer exists in database (deleted), invalidate token
+        if (!dbUser) {
+          console.log("User not found in database, invalidating session:", token.email)
+          return null as any // Force logout by returning null token
+        }
+        
         if (dbUser) {
           token.userId = dbUser._id.toString()
           token.role = dbUser.role ?? token.role
           token.profileComplete = !!dbUser.role
+          
+          // Add avatarUrl from database
+          token.avatarUrl = (dbUser as any).avatarUrl ?? token.avatarUrl
           
           // Check if plan has expired and downgrade if needed
           let currentPlan = dbUser.plan ?? token.plan
@@ -158,6 +169,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ;(session as any).plan = token.plan
         ;(session as any).planExpiresAt = token.planExpiresAt
         ;(session as any).profileComplete = token.profileComplete
+        
+        // Add avatarUrl to session
+        if (token.avatarUrl) {
+          session.user.image = token.avatarUrl as string
+          ;(session.user as any).avatarUrl = token.avatarUrl
+        }
       }
       return session
     },

@@ -43,11 +43,15 @@ export default function CompleteProfilePage() {
     setError(null)
 
     try {
+      // Determine plan based on role
+      const plan = role === "ngo" ? "ngo_base" : "volunteer_free"
+      
       const res = await fetch("/api/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role,
+          plan,
           orgName: role === "ngo" ? orgName : undefined,
         }),
       })
@@ -102,7 +106,7 @@ export default function CompleteProfilePage() {
             <div className="space-y-4">
               <RadioGroup value={role || ""} onValueChange={(v) => setRole(v as "volunteer" | "ngo")}>
                 <div
-                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition"
+                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
                   onClick={() => setRole("volunteer")}
                 >
                   <RadioGroupItem value="volunteer" id="volunteer" />
@@ -115,7 +119,7 @@ export default function CompleteProfilePage() {
                 </div>
 
                 <div
-                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition"
+                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
                   onClick={() => setRole("ngo")}
                 >
                   <RadioGroupItem value="ngo" id="ngo" />

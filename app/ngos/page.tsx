@@ -1,127 +1,114 @@
+
 "use client"
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Search, 
-  Filter,
   X,
   Grid,
   List,
   MapPin,
   Building2,
-  CheckCircle
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Award,
+  Briefcase
 } from "lucide-react"
 import Link from "next/link"
+import { apiGet } from "@/lib/api-client"
 
-// Mock data for demonstration
-const mockNgos = [
-  {
-    id: "1",
-    name: "Green Earth Conservation Society",
-    logo: "/placeholder.svg",
-    mission: "Dedicated to protecting and preserving local wildlife habitats through community engagement and scientific research.",
-    focusAreas: ["Environment", "Wildlife Conservation", "Research"],
-    location: "San Francisco, CA",
-    verified: true,
-    activeJobs: 3,
-  },
-  {
-    id: "2",
-    name: "Tech for Good Foundation",
-    logo: "/placeholder.svg",
-    mission: "Leveraging technology to solve social challenges and empower underserved communities worldwide.",
-    focusAreas: ["Technology", "Education", "Digital Inclusion"],
-    location: "Austin, TX",
-    verified: true,
-    activeJobs: 2,
-  },
-  {
-    id: "3",
-    name: "Education First Initiative",
-    logo: "/placeholder.svg",
-    mission: "Providing quality education and mentorship to underprivileged children in urban communities.",
-    focusAreas: ["Education", "Youth Development", "Mentorship"],
-    location: "New York, NY",
-    verified: false,
-    activeJobs: 5,
-  },
-  {
-    id: "4",
-    name: "Community Arts Collective",
-    logo: "/placeholder.svg",
-    mission: "Promoting arts and culture as tools for community building and social expression.",
-    focusAreas: ["Arts & Culture", "Community Development", "Creative Programs"],
-    location: "Portland, OR",
-    verified: true,
-    activeJobs: 1,
-  },
-  {
-    id: "5",
-    name: "Healthcare for All",
-    logo: "/placeholder.svg",
-    mission: "Ensuring access to quality healthcare for underserved populations through mobile clinics and community programs.",
-    focusAreas: ["Healthcare", "Public Health", "Community Outreach"],
-    location: "Denver, CO",
-    verified: false,
-    activeJobs: 4,
-  },
-  {
-    id: "6",
-    name: "Global Disaster Relief",
-    logo: "/placeholder.svg",
-    mission: "Providing emergency response and long-term recovery support for communities affected by natural disasters.",
-    focusAreas: ["Disaster Relief", "Emergency Response", "Humanitarian Aid"],
-    location: "Miami, FL",
-    verified: true,
-    activeJobs: 2,
-  },
-]
+interface NGO {
+  _id: string
+  name: string
+  email: string
+  description?: string
+  category?: string
+  activeJobs: number
+  avatar?: string
+  mission?: string
+  focusAreas?: string[]
+  location?: string
+  verified?: boolean
+  orgName?: string
+}
 
 export default function NgosDirectory() {
-  const { data: session } = useSession()
+  const [ngos, setNgos] = useState<NGO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
   const [locationFilter, setLocationFilter] = useState("")
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showFilters, setShowFilters] = useState(true)
 
-  // Get all unique focus areas for filtering
+  // Fetch NGOs from API
+  useEffect(() => {
+    const fetchNgos = async () => {
+      try {
+        setLoading(true)
+        const response = await apiGet<{ ngos: NGO[]; totalCount: number }>(
+          "/api/ngos?limit=100&sort=active"
+        )
+        
+        if (response.data) {
+          setNgos(response.data.ngos || [])
+          setTotalCount(response.data.totalCount || 0)
+        } else {
+          console.error("Failed to fetch NGOs:", response.error)
+          setNgos([])
+        }
+      } catch (error) {
+        console.error("Error fetching NGOs:", error)
+        setNgos([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNgos()
+  }, [])
+
+  // Get top 20 focus areas
   const allFocusAreas = Array.from(
-    new Set(mockNgos.flatMap(ngo => ngo.focusAreas))
-  )
+    new Set(
+      ngos
+        .map(ngo => ngo.category)
+        .filter((cat): cat is string => Boolean(cat))
+    )
+  ).slice(0, 20)
 
   // Filter NGOs based on search and filters
-  const filteredNgos = mockNgos.filter(ngo => {
+  const filteredNgos = ngos.filter(ngo => {
+    const ngoName = ngo.orgName || ngo.name
+    const ngoDescription = ngo.description || ngo.mission || ""
+    const ngoCategory = ngo.category || ""
+    
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      if (!ngo.name.toLowerCase().includes(query) && 
-          !ngo.mission.toLowerCase().includes(query) &&
-          !ngo.focusAreas.some(area => area.toLowerCase().includes(query))) {
+      if (!ngoName.toLowerCase().includes(query) && 
+          !ngoDescription.toLowerCase().includes(query) &&
+          !ngoCategory.toLowerCase().includes(query)) {
         return false
       }
     }
     
     // Focus areas filter
-    if (selectedFocusAreas.length > 0 && 
-        !selectedFocusAreas.every(area => ngo.focusAreas.includes(area))) {
+    if (selectedFocusAreas.length > 0 && ngo.category &&
+        !selectedFocusAreas.includes(ngo.category)) {
       return false
     }
     
     // Location filter
-    if (locationFilter && 
+    if (locationFilter && ngo.location &&
         !ngo.location.toLowerCase().includes(locationFilter.toLowerCase())) {
-      return false
-    }
-    
-    // Verified only filter
-    if (verifiedOnly && !ngo.verified) {
       return false
     }
     
@@ -140,176 +127,322 @@ export default function NgosDirectory() {
     setSearchQuery("")
     setSelectedFocusAreas([])
     setLocationFilter("")
-    setVerifiedOnly(false)
   }
 
-  const hasActiveFilters = searchQuery || selectedFocusAreas.length > 0 || locationFilter || verifiedOnly
+  const activeFilterCount = (searchQuery ? 1 : 0) + selectedFocusAreas.length + (locationFilter ? 1 : 0)
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold">Organizations Directory</h1>
-        <p className="text-muted-foreground">
-          Discover nonprofits and NGOs making a difference in your community
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="mb-8">
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search organizations by name, mission, or focus area..."
-            className="pl-10 pr-4 py-6 text-base"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Filter by location..."
-              className="pl-10"
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="verified"
-              checked={verifiedOnly}
-              onChange={(e) => setVerifiedOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <Label htmlFor="verified" className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              Verified Organizations Only
-            </Label>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-            >
-              {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" onClick={clearFilters} disabled={!hasActiveFilters}>
-              <X className="h-4 w-4 mr-2" />
-              Clear Filters
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {allFocusAreas.map((area) => (
-            <Button
-              key={area}
-              variant={selectedFocusAreas.includes(area) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleFocusAreaFilter(area)}
-            >
-              {area}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Results Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <p className="text-muted-foreground">
-          Showing {filteredNgos.length} of {mockNgos.length} organizations
-        </p>
-        <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
-            {mockNgos.length} total organizations
-          </span>
-        </div>
-      </div>
-
-      {/* Empty State */}
-      {filteredNgos.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No organizations found</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search or filters to find more organizations
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/80 dark:via-primary/90 dark:to-primary/80 text-primary-foreground py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Organizations Directory</h1>
+            <p className="text-lg md:text-xl text-primary-foreground/90">
+              Discover nonprofits and NGOs making a difference in your community
             </p>
-            <Button onClick={clearFilters}>Clear Filters</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        // NGOs Grid/List
-        <div className={viewMode === "grid" 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-          : "space-y-4"
-        }>
-          {filteredNgos.map((ngo) => (
-            <Card key={ngo.id} className={viewMode === "list" ? "flex" : ""}>
-              <CardContent className={`p-6 ${viewMode === "list" ? "flex-1" : ""}`}>
-                <div className={viewMode === "list" ? "flex flex-col md:flex-row md:items-center" : ""}>
-                  <div className={viewMode === "list" ? "md:w-1/3 mb-4 md:mb-0 md:mr-6" : "mb-4"}>
-                    <div className="flex items-center gap-3">
-                      <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
-                        {ngo.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold">{ngo.name}</h3>
-                          {ngo.verified && (
-                            <CheckCircle className="h-4 w-4 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>{ngo.location}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={viewMode === "list" ? "md:w-2/3" : ""}>
-                    <p className="text-muted-foreground mb-3 line-clamp-2">
-                      {ngo.mission}
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {ngo.focusAreas.slice(0, 3).map((area, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {area}
-                        </Badge>
-                      ))}
-                      {ngo.focusAreas.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{ngo.focusAreas.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge variant="outline">
-                        {ngo.activeJobs} active jobs
-                      </Badge>
-                      <Button asChild>
-                        <Link href={`/ngos/${ngo.id}`}>
-                          View Profile
-                        </Link>
+          </div>
+
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search organizations by name, mission, or focus area..."
+                className="pl-12 pr-4 py-6 text-base bg-background dark:bg-card text-foreground shadow-lg border-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Filters Panel */}
+        <Card className="mb-6 shadow-lg">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Filters</CardTitle>
+                {activeFilterCount > 0 && (
+                  <Badge variant="default" className="rounded-full">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                {showFilters ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Show
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+
+          {showFilters && (
+            <CardContent className="space-y-4">
+              {/* Location Filter */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Filter by location..."
+                    className="pl-10"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Focus Areas */}
+              {allFocusAreas.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Focus Areas</label>
+                  <div className="flex flex-wrap gap-2">
+                    {allFocusAreas.map((area) => (
+                      <Button
+                        key={area}
+                        variant={selectedFocusAreas.includes(area) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleFocusAreaFilter(area)}
+                        className="transition-all"
+                      >
+                        {area}
                       </Button>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              )}
+
+              {/* Clear Filters */}
+              {activeFilterCount > 0 && (
+                <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+                  <X className="h-4 w-4 mr-2" />
+                  Clear All Filters
+                </Button>
+              )}
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Loading State */}
+        {loading ? (
+          <Card className="shadow-lg">
+            <CardContent className="py-16 text-center">
+              <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin mb-4" />
+              <p className="text-lg font-medium">Loading organizations...</p>
+              <p className="text-muted-foreground mt-2">Discovering amazing nonprofits for you</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* View Controls & Stats */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <p className="text-lg font-medium">
+                  {filteredNgos.length} Organization{filteredNgos.length !== 1 ? 's' : ''}
+                </p>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Building2 className="h-4 w-4" />
+                  <span className="text-sm">{totalCount} total</span>
+                </div>
+              </div>
+
+              {/* View Toggle */}
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid className="h-4 w-4 mr-2" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="h-4 w-4 mr-2" />
+                  List
+                </Button>
+              </div>
+            </div>
+
+            {/* Empty State */}
+            {filteredNgos.length === 0 ? (
+              <Card className="shadow-lg">
+                <CardContent className="py-16 text-center">
+                  <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No organizations found</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    {searchQuery || activeFilterCount > 0
+                      ? "Try adjusting your search or filters to discover more organizations"
+                      : "There are no organizations available at the moment"}
+                  </p>
+                  {activeFilterCount > 0 && (
+                    <Button onClick={clearFilters}>
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              // NGOs Grid/List
+              <div className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  : "space-y-4"
+              }>
+                {filteredNgos.map((ngo) => {
+                  const displayName = ngo.orgName || ngo.name
+                  const displayDescription = ngo.description || ngo.mission || "No description available"
+
+                  if (viewMode === "grid") {
+                    return (
+                      <Card
+                        key={ngo._id}
+                        className="group hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+                      >
+                        <CardContent className="p-6">
+                          {/* Organization Header */}
+                          <div className="flex flex-col items-center text-center mb-4">
+                            <Avatar className="h-20 w-20 mb-3 ring-2 ring-primary/10 dark:ring-primary/20">
+                              <AvatarImage src={ngo.avatar} alt={displayName} />
+                              <AvatarFallback className="text-2xl font-bold bg-primary/10 dark:bg-primary/20 text-primary">
+                                {displayName.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="w-full">
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <h3 className="font-bold text-lg line-clamp-1">{displayName}</h3>
+                                {ngo.verified && (
+                                  <Award className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                )}
+                              </div>
+                              
+                              {ngo.location && (
+                                <div className="flex items-center justify-center text-sm text-muted-foreground">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  <span className="line-clamp-1">{ngo.location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-4 min-h-[60px]">
+                            {displayDescription}
+                          </p>
+
+                          {/* Category & Jobs */}
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            {ngo.category && (
+                              <Badge variant="secondary" className="text-xs">
+                                {ngo.category}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              <Briefcase className="h-3 w-3 mr-1" />
+                              {ngo.activeJobs} {ngo.activeJobs === 1 ? 'job' : 'jobs'}
+                            </Badge>
+                          </div>
+
+                          {/* View Button */}
+                          <Button asChild className="w-full">
+                            <Link href={`/ngos/${ngo._id}`}>
+                              View Profile
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )
+                  } else {
+                    // List View
+                    return (
+                      <Card
+                        key={ngo._id}
+                        className="hover:shadow-md transition-shadow"
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex flex-col md:flex-row md:items-center gap-4">
+                            {/* Avatar & Basic Info */}
+                            <div className="flex items-center gap-4 md:w-1/3">
+                              <Avatar className="h-16 w-16 flex-shrink-0 ring-2 ring-primary/10 dark:ring-primary/20">
+                                <AvatarImage src={ngo.avatar} alt={displayName} />
+                                <AvatarFallback className="text-xl font-bold bg-primary/10 dark:bg-primary/20 text-primary">
+                                  {displayName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-lg line-clamp-1">{displayName}</h3>
+                                  {ngo.verified && (
+                                    <Award className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                  )}
+                                </div>
+                                {ngo.location && (
+                                  <div className="flex items-center text-sm text-muted-foreground">
+                                    <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                    <span className="line-clamp-1">{ngo.location}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Description & Actions */}
+                            <div className="md:w-2/3 flex flex-col md:flex-row md:items-center gap-4">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                  {displayDescription}
+                                </p>
+                                
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {ngo.category && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {ngo.category}
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline" className="text-xs">
+                                    <Briefcase className="h-3 w-3 mr-1" />
+                                    {ngo.activeJobs} {ngo.activeJobs === 1 ? 'job' : 'jobs'}
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              <Button asChild className="md:flex-shrink-0">
+                                <Link href={`/ngos/${ngo._id}`}>
+                                  View Profile
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  }
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

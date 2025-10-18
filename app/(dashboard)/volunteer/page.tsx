@@ -1,27 +1,55 @@
 import { auth } from "@/auth"
 import { getCollections } from "@/lib/models"
 import { StatsCard } from "@/components/dashboard/stats-card"
-import { PieChart } from "@/components/charts/pie-chart"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Plus, ExternalLink, Calendar, FileText, Clock, CheckCircle, TrendingUp } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {  
+  Briefcase, 
+  CheckCircle, 
+  XCircle, 
+  Send,
+  TrendingUp,
+  FileText,
+  User,
+  ArrowRight,
+  AlertCircle,
+  Star,
+  Calendar
+} from "lucide-react"
 import Link from "next/link"
 import { ObjectId } from "mongodb"
+import { redirect } from "next/navigation"
 
 export default async function VolunteerDashboard() {
   const session = await auth()
-  if (!session?.user) return null
+  if (!session?.user) redirect("/signin")
 
-  const { applications, users } = await getCollections()
-  const userId = new ObjectId(session.userId)
+  const { applications, users, jobs } = await getCollections()
+  const userId = new ObjectId((session as any).userId)
   
   // Get user data
   const user = await users.findOne({ _id: userId })
-  const isPlus = session.plan?.includes("plus")
-  const monthlyQuota = isPlus ? null : user?.monthlyApplicationCount || 0
+  if (!user) redirect("/signin")
+
+  const isPlus = (session as any).plan?.includes("plus")
+  const monthlyQuota = user.monthlyApplicationCount || 0
   const quotaLimit = 1
+
+  // Calculate profile completion
+  const profileFields = [
+    user.name,
+    user.bio,
+    user.location,
+    user.skills?.length,
+    user.experience?.length,
+    user.education?.length,
+    user.avatarUrl,
+  ]
+  const completedFields = profileFields.filter(Boolean).length
+  const profileCompletion = Math.round((completedFields / profileFields.length) * 100)
 
   // Get applications with job details
   const applicationsList = await applications
@@ -46,75 +74,122 @@ export default async function VolunteerDashboard() {
       { $unwind: "$job" },
       { $unwind: "$ngo" },
       { $sort: { createdAt: -1 } },
-      { $limit: 10 }
+      { $limit: 5 }
     ])
     .toArray()
 
   // Get stats
   const totalApplications = await applications.countDocuments({ volunteerId: userId })
-  const pendingApplications = await applications.countDocuments({ 
+  const appliedCount = await applications.countDocuments({ 
     volunteerId: userId, 
-    status: { $in: ["applied", "review"] } 
+    status: "applied" 
   })
-  const acceptedApplications = await applications.countDocuments({ 
+  const shortlistedCount = await applications.countDocuments({ 
     volunteerId: userId, 
-    status: "offered" 
+    status: "shortlisted" 
   })
-  const rejectedApplications = await applications.countDocuments({ 
+  const acceptedCount = await applications.countDocuments({ 
+    volunteerId: userId, 
+    status: "accepted" 
+  })
+  const rejectedCount = await applications.countDocuments({ 
     volunteerId: userId, 
     status: "rejected" 
   })
 
-  // Prepare chart data
-  const statusData = [
-    { name: "Pending", value: pendingApplications, color: "#3B82F6" },
-    { name: "Accepted", value: acceptedApplications, color: "#10B981" },
-    { name: "Rejected", value: rejectedApplications, color: "#EF4444" },
-  ].filter(item => item.value > 0)
+  // Get total available jobs
+  const totalJobs = await jobs.countDocuments({ status: "open" })
+
+  // Status helper
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "applied":
+        return <Badge variant="secondary" className="gap-1"><Send className="h-3 w-3" /> Applied</Badge>
+      case "shortlisted":
+        return <Badge variant="default" className="gap-1"><Star className="h-3 w-3" /> Shortlisted</Badge>
+      case "accepted":
+        return <Badge className="gap-1 bg-green-600"><CheckCircle className="h-3 w-3" /> Accepted</Badge>
+      case "rejected":
+        return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" /> Rejected</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {session.user.name || "Volunteer"}!
+          <h1 className="text-3xl font-bold">Welcome back, {user.name || "Volunteer"}! 👋</h1>
+          <p className="text-muted-foreground mt-1">
+            Track your applications and discover new opportunities
           </p>
         </div>
         <div className="flex gap-2">
           <Button asChild>
             <Link href="/jobs">
-              <Plus className="h-4 w-4 mr-2" />
-              Find Jobs
+              <Briefcase className="h-4 w-4 mr-2" />
+              Browse Jobs
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/dashboard/volunteer/applications">
-              View All Applications
-              <ExternalLink className="h-4 w-4 ml-2" />
+            <Link href="/volunteer/profile">
+              <User className="h-4 w-4 mr-2" />
+              Edit Profile
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* Plan Status Banner */}
+      {/* Profile Completion Alert */}
+      {profileCompletion < 80 && (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-medium text-amber-900 dark:text-amber-100">
+                  Complete your profile to stand out
+                </h3>
+                <p className="text-sm text-amber-700 dark:text-amber-200 mt-1">
+                  Your profile is {profileCompletion}% complete. Add more details to increase your chances of getting selected.
+                </p>
+                <div className="mt-3 flex items-center gap-4">
+                  <Progress value={profileCompletion} className="flex-1 h-2" />
+                  <Button asChild size="sm" variant="outline" className="border-amber-600">
+                    <Link href="/volunteer/profile">Complete Now</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Application Quota */}
       {!isPlus && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium text-amber-900">Free Plan</h3>
-                <p className="text-sm text-amber-700">
-                  {monthlyQuota}/{quotaLimit} applications used this month
+                <h3 className="font-medium">Free Plan - Monthly Applications</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {monthlyQuota} of {quotaLimit} applications used this month
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-32">
-                  <Progress value={monthlyQuota ? (monthlyQuota / quotaLimit) * 100 : 0} className="h-2" />
+                  <Progress 
+                    value={(monthlyQuota / quotaLimit) * 100} 
+                    className="h-2" 
+                  />
                 </div>
                 <Button asChild size="sm">
-                  <Link href="/upgrade">Upgrade</Link>
+                  <Link href="/upgrade">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Upgrade
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -122,166 +197,190 @@ export default async function VolunteerDashboard() {
         </Card>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Total Applications"
           value={totalApplications}
-          description="All time applications"
           iconName="FileText"
-          trend={totalApplications > 0 ? { value: 12, label: "from last month", isPositive: true } : undefined}
+          description="All time"
         />
         <StatsCard
-          title="Pending Review"
-          value={pendingApplications}
-          description="Awaiting response"
+          title="Under Review"
+          value={appliedCount}
           iconName="Clock"
+          description="Awaiting response"
         />
         <StatsCard
-          title="Accepted Offers"
-          value={acceptedApplications}
-          description="Successful applications"
+          title="Shortlisted"
+          value={shortlistedCount}
+          iconName="Star"
+          description="In consideration"
+        />
+        <StatsCard
+          title="Accepted"
+          value={acceptedCount}
           iconName="CheckCircle"
-          trend={acceptedApplications > 0 ? { value: 8, label: "from last month", isPositive: true } : undefined}
+          description="Opportunities won"
         />
         <StatsCard
-          title="This Month"
-          value={monthlyQuota || 0}
-          description={`${isPlus ? "Unlimited" : `${quotaLimit} limit`} applications`}
-          iconName="TrendingUp"
+          title="Available Jobs"
+          value={totalJobs}
+          iconName="Briefcase"
+          description="Open positions"
         />
       </div>
 
-      {/* Charts and Recent Applications */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Application Status Chart */}
-        <div className="lg:col-span-1">
-          {statusData.length > 0 ? (
-            <PieChart
-              data={statusData}
-              title="Application Status"
-            />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Application Status</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 text-center">
-                <div className="h-12 w-12 mx-auto mb-4">
-                  <FileText className="w-full h-full text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">No applications yet</p>
-                <Button asChild className="mt-4">
-                  <Link href="/jobs">Start Applying</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Applications */}
-        <div className="lg:col-span-2">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Applications</CardTitle>
+                <CardDescription>Track your latest submissions</CardDescription>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/volunteer/applications">
+                  View All
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {applicationsList.length === 0 ? (
+              <div className="text-center py-12">
+                <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No applications yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start applying to jobs and track your progress here
+                </p>
+                <Button asChild>
+                  <Link href="/jobs">Browse Open Positions</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {applicationsList.map((app: any) => (
+                  <div
+                    key={app._id.toString()}
+                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
+                  >
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={app.ngo.avatarUrl} />
+                      <AvatarFallback>
+                        {(app.ngo.orgName || app.ngo.name || "NGO").charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <Link 
+                            href={`/volunteer/applications/${app._id}`}
+                            className="font-medium hover:text-primary line-clamp-1"
+                          >
+                            {app.job.title}
+                          </Link>
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {app.ngo.orgName || app.ngo.name}
+                          </p>
+                        </div>
+                        {getStatusBadge(app.status)}
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(app.createdAt).toLocaleDateString()}
+                        </div>
+                        {app.job.category && (
+                          <Badge variant="outline" className="text-xs">
+                            {app.job.category}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions & Stats */}
+        <div className="space-y-6">
+          {/* Application Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Applications</CardTitle>
+              <CardTitle>Application Status</CardTitle>
+              <CardDescription>Current breakdown</CardDescription>
             </CardHeader>
-            <CardContent>
-              {applicationsList.length > 0 ? (
-                <div className="space-y-4">
-                  {applicationsList.map((app) => (
-                    <div key={app._id.toString()} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-medium">{app.job.title}</h3>
-                          <Badge 
-                            variant={
-                              app.status === "offered" ? "default" :
-                              app.status === "rejected" ? "destructive" :
-                              "secondary"
-                            }
-                          >
-                            {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{app.ngo.orgName || app.ngo.name}</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(app.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/volunteer/applications`}>
-                          View Details
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-blue-500" />
+                  <span className="text-sm">Applied</span>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="h-12 w-12 mx-auto mb-4">
-                    <FileText className="w-full h-full text-muted-foreground" />
-                  </div>
-                  <h3 className="font-medium mb-2">No applications yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start your volunteering journey by applying to jobs
-                  </p>
-                  <Button asChild>
-                    <Link href="/jobs">Browse Jobs</Link>
-                  </Button>
+                <span className="text-sm font-medium">{appliedCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-primary" />
+                  <span className="text-sm">Shortlisted</span>
                 </div>
-              )}
+                <span className="text-sm font-medium">{shortlistedCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-green-600" />
+                  <span className="text-sm">Accepted</span>
+                </div>
+                <span className="text-sm font-medium">{acceptedCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-red-600" />
+                  <span className="text-sm">Rejected</span>
+                </div>
+                <span className="text-sm font-medium">{rejectedCount}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/jobs">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Browse All Jobs
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/volunteer/applications">
+                  <FileText className="h-4 w-4 mr-2" />
+                  My Applications
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/volunteer/profile">
+                  <User className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href={`/volunteers/${userId.toString()}`}>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  View Public Profile
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Quick Links */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button asChild variant="outline" className="h-auto p-4 flex-col">
-              <Link href="/jobs">
-                <div className="h-6 w-6 mb-2">
-                  <FileText className="w-full h-full" />
-                </div>
-                Browse Jobs
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-auto p-4 flex-col">
-              <Link href="/dashboard/volunteer/applications">
-                <div className="h-6 w-6 mb-2">
-                  <Clock className="w-full h-full" />
-                </div>
-                My Applications
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-auto p-4 flex-col">
-              <Link href="/dashboard/volunteer/profile">
-                <ExternalLink className="h-6 w-6 mb-2" />
-                Edit Profile
-              </Link>
-            </Button>
-            {!isPlus && (
-              <Button asChild variant="outline" className="h-auto p-4 flex-col">
-                <Link href="/upgrade">
-                  <div className="h-6 w-6 mb-2">
-                    <TrendingUp className="w-full h-full" />
-                  </div>
-                  Upgrade Plan
-                </Link>
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
-
-

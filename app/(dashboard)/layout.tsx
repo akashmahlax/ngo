@@ -135,8 +135,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-green-600 text-white"
-                    : "text-muted-foreground hover:bg-green-50 hover:text-green-700"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
                 onClick={() => setSidebarOpen(false)}
               >
@@ -154,10 +154,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {!isPlus && (
           <Link
             href="/upgrade"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50"
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground"
             onClick={() => setSidebarOpen(false)}
           >
-            <Crown className="h-4 w-4 text-green-600" />
+            <Crown className="h-4 w-4" />
             Upgrade Plan
           </Link>
         )}
