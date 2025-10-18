@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   ChevronLeft, 
   Plus, 
@@ -402,36 +403,41 @@ export default function EditJobPage({ params }: { params: { id: string } }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="category">Category *</Label>
-                    <select
-                      id="category"
+                    <Select
                       value={job.category}
-                      onChange={(e) => setJob(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full border rounded-md px-3 py-2"
+                      onValueChange={(value) => setJob(prev => ({ ...prev, category: value }))}
                     >
-                      <option value="">Select a category</option>
-                      {CATEGORIES.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
                     <Label htmlFor="locationType">Location Type *</Label>
-                    <select
-                      id="locationType"
+                    <Select
                       value={job.locationType}
-                      onChange={(e) => setJob(prev => ({ 
+                      onValueChange={(value) => setJob(prev => ({ 
                         ...prev, 
-                        locationType: e.target.value as "onsite" | "remote" | "hybrid" 
+                        locationType: value as "onsite" | "remote" | "hybrid" 
                       }))}
-                      className="w-full border rounded-md px-3 py-2"
                     >
-                      <option value="onsite">On-site</option>
-                      <option value="remote">Remote</option>
-                      <option value="hybrid">Hybrid</option>
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select location type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="onsite">On-site</SelectItem>
+                        <SelectItem value="remote">Remote</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

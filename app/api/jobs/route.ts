@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { getCollections } from "@/lib/models"
+import { getCollections, type JobDoc } from "@/lib/models"
 import { canPostJob } from "@/lib/quotas"
 import { z } from "zod"
 import { ObjectId } from "mongodb"
 
 const createSchema = z.object({
-  title: z.string().min(3),
-  description: z.string().min(10),
-  category: z.string().optional(),
-  locationType: z.enum(["onsite", "remote", "hybrid"]).optional(),
+  title: z.string().min(3).max(200),
+  description: z.string().min(10).max(5000),
+  category: z.string().min(1),
+  locationType: z.enum(["onsite", "remote", "hybrid"]),
+  location: z.string().optional(),
+  requirements: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
+  duration: z.string().optional(),
+  commitment: z.enum(["full-time", "part-time", "flexible"]).optional(),
+  applicationDeadline: z.string().optional(),
+  numberOfPositions: z.number().min(1).optional(),
 })
 
 export async function GET(req: NextRequest) {
@@ -36,19 +43,22 @@ export async function GET(req: NextRequest) {
     .limit(limit)
     .toArray()
   
-  // Enrich with NGO names
+  // Enrich with NGO names and logos
   const { users } = await getCollections()
   const enriched = await Promise.all(
     list.map(async (job) => {
       const ngo = await users.findOne(
         { _id: new ObjectId(job.ngoId?.toString() || "") },
-        { projection: { name: 1 } }
+        { projection: { name: 1, orgName: 1, logoUrl: 1, verified: 1, plan: 1 } }
       )
       return {
         ...job,
         _id: job._id?.toString(),
         ngoId: job.ngoId?.toString(),
-        ngoName: ngo?.name || "Unknown NGO"
+        ngoName: ngo?.orgName || ngo?.name || "Unknown NGO",
+        ngoLogoUrl: ngo?.logoUrl || null,
+        ngoVerified: ngo?.verified || false,
+        ngoPlan: ngo?.plan || "ngo_base"
       }
     })
   )
@@ -59,35 +69,85 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
-  const role = (session as any).role as string | undefined
+  
+  const sessionWithRole = session as { role?: string; plan?: string; planExpiresAt?: string }
+  const role = sessionWithRole.role
   if (role !== "ngo") return NextResponse.json({ error: "ONLY_NGO" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   const parsed = createSchema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: "INVALID_BODY" }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: "INVALID_BODY", details: parsed.error }, { status: 400 })
 
   const { users, jobs } = await getCollections()
   const user = await users.findOne({ email: session.user.email })
   if (!user) return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 })
-  const isPlus = user.plan === "ngo_plus"
+  
+  // Check plan and expiry
+  const plan = user.plan || "ngo_base"
+  const planExpiresAt = user.planExpiresAt ? new Date(user.planExpiresAt) : null
+  const isPlanExpired = planExpiresAt && new Date() > planExpiresAt
+  
+  if (isPlanExpired) {
+    return NextResponse.json({ 
+      error: "PLAN_EXPIRED", 
+      message: "Your plan has expired. Please renew to continue posting jobs." 
+    }, { status: 402 })
+  }
+  
+  const isPlus = plan === "ngo_plus"
   const check = await canPostJob(user._id.toString(), isPlus)
-  if (!check.ok) return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 402 })
+  
+  if (!check.ok) {
+    return NextResponse.json({ 
+      error: "LIMIT_REACHED",
+      message: `You have reached your job posting limit. Free plan allows ${check.limit} active jobs. Upgrade to NGO Plus for unlimited postings.`,
+      active: check.active,
+      limit: check.limit
+    }, { status: 402 })
+  }
 
   const now = new Date()
-  const { title, description, category, locationType, skills } = parsed.data
-  const doc = {
+  const { 
+    title, 
+    description, 
+    category, 
+    locationType, 
+    location, 
+    requirements, 
+    benefits, 
+    skills,
+    duration,
+    commitment,
+    applicationDeadline,
+    numberOfPositions 
+  } = parsed.data
+  
+  const doc: Omit<JobDoc, '_id'> & {
+    duration?: string
+    commitment?: string
+    applicationDeadline?: string
+    numberOfPositions?: number
+  } = {
     ngoId: new ObjectId(user._id),
     title,
     description,
     category,
     locationType,
-    skills: skills ?? [],
+    location: location || undefined,
+    requirements: requirements || [],
+    benefits: benefits || [],
+    skills: skills || [],
+    duration: duration || undefined,
+    commitment: commitment || undefined,
+    applicationDeadline: applicationDeadline || undefined,
+    numberOfPositions: numberOfPositions || 1,
     status: "open" as const,
     createdAt: now,
     updatedAt: now,
   }
-  const { insertedId } = await jobs.insertOne(doc as any)
-  return NextResponse.json({ jobId: String(insertedId) })
+  
+  const { insertedId } = await jobs.insertOne(doc as JobDoc)
+  return NextResponse.json({ jobId: String(insertedId), message: "Job posted successfully!" })
 }
 
 

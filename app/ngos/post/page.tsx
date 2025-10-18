@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import { 
   ChevronLeft, 
   Plus, 
@@ -17,16 +19,26 @@ import {
   Save, 
   Eye,
   AlertCircle,
-  Lock
+  Lock,
+  Crown,
+  Briefcase
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
+type QuotaInfo = {
+  active: number
+  limit: number
+  isPlus: boolean
+}
+
 export default function PostJobPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null)
+  const [loadingQuota, setLoadingQuota] = useState(true)
 
-  // Check if user has NGO Plus plan
+  // Check if user has NGO Plus plan and fetch quota
   useEffect(() => {
     if (status === "loading") return
     
@@ -44,11 +56,22 @@ export default function PostJobPage() {
       return
     }
 
-    if (userSession?.plan !== "ngo_plus") {
-      toast.error("Upgrade to NGO Plus to post jobs")
-      router.push("/upgrade?plan=ngo_plus")
-      return
+    // Fetch current quota info
+    const fetchQuota = async () => {
+      try {
+        const res = await fetch("/api/jobs/quota")
+        if (res.ok) {
+          const data = await res.json()
+          setQuotaInfo(data)
+        }
+      } catch {
+        // Silently fail, quota will show as unavailable
+      } finally {
+        setLoadingQuota(false)
+      }
     }
+    
+    fetchQuota()
   }, [session, status, router])
   
   const [currentStep, setCurrentStep] = useState(1)
@@ -65,6 +88,10 @@ export default function PostJobPage() {
     requirements: [] as string[],
     benefits: [] as string[],
     skills: [] as string[],
+    duration: "",
+    commitment: "full-time" as "full-time" | "part-time" | "flexible",
+    applicationDeadline: "",
+    numberOfPositions: 1,
   })
   
   const [newRequirement, setNewRequirement] = useState("")
@@ -153,12 +180,26 @@ export default function PostJobPage() {
   const handleSubmit = async () => {
     setSaving(true)
     try {
-      // In a real implementation, this would be an API call
-      // await fetch('/api/jobs', { method: 'POST', body: JSON.stringify(job) })
-      console.log("Job data:", job)
+      const res = await fetch('/api/jobs', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(job) 
+      })
+      
+      const data = await res.json()
+      
+      if (!res.ok) {
+        if (res.status === 402) {
+          toast.error(data.message || "Upgrade required to post more jobs")
+        } else {
+          toast.error(data.error || "Failed to post job")
+        }
+        return
+      }
+      
       toast.success("Job posted successfully!")
-      // Redirect to jobs page or dashboard
-    } catch (error) {
+      router.push("/jobs")
+    } catch {
       toast.error("Failed to post job")
     } finally {
       setSaving(false)
@@ -191,7 +232,7 @@ export default function PostJobPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Button variant="ghost" asChild className="mb-6">
-        <Link href="/dashboard/ngo">
+        <Link href="/ngo">
           <ChevronLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Link>
@@ -203,6 +244,82 @@ export default function PostJobPage() {
           Create a volunteer opportunity for your organization
         </p>
       </div>
+
+      {/* Quota Info and Upgrade Alert */}
+      {!loadingQuota && quotaInfo && (
+        <div className="mb-6 space-y-4">
+          {/* Quota Display */}
+          <Card className={quotaInfo.isPlus ? "border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" : ""}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Briefcase className={`h-5 w-5 ${quotaInfo.isPlus ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {quotaInfo.isPlus ? (
+                        <span className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-amber-600" />
+                          Unlimited Job Postings
+                        </span>
+                      ) : (
+                        `Job Postings: ${quotaInfo.active} / ${quotaInfo.limit}`
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {quotaInfo.isPlus 
+                        ? "You have NGO Plus - post as many jobs as you need" 
+                        : `You have ${quotaInfo.limit - quotaInfo.active} job slot${quotaInfo.limit - quotaInfo.active !== 1 ? 's' : ''} remaining`
+                      }
+                    </p>
+                  </div>
+                </div>
+                {!quotaInfo.isPlus && (
+                  <CheckoutButton plan="ngo_plus" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upgrade Alert for Limit Reached */}
+          {!quotaInfo.isPlus && quotaInfo.active >= quotaInfo.limit && (
+            <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20">
+              <Lock className="h-5 w-5 text-red-600" />
+              <AlertTitle className="text-red-900 dark:text-red-100 font-semibold">
+                Job Posting Limit Reached
+              </AlertTitle>
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                <p className="mb-3">
+                  You have reached your limit of {quotaInfo.limit} active job postings. 
+                  Upgrade to NGO Plus for unlimited job postings and more features.
+                </p>
+                <div className="flex gap-2">
+                  <CheckoutButton plan="ngo_plus" />
+                  <Button variant="outline" asChild size="sm">
+                    <Link href="/ngo/jobs">View My Jobs</Link>
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Upgrade Suggestion for Non-Plus Users */}
+          {!quotaInfo.isPlus && quotaInfo.active < quotaInfo.limit && (
+            <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+              <Crown className="h-5 w-5 text-blue-600" />
+              <AlertTitle className="text-blue-900 dark:text-blue-100 font-semibold">
+                Unlock Unlimited Job Postings
+              </AlertTitle>
+              <AlertDescription className="text-blue-800 dark:text-blue-200">
+                <p className="mb-3">
+                  Upgrade to NGO Plus for unlimited job postings, featured listings, and advanced analytics. 
+                  Only ₹1/month during our launch period!
+                </p>
+                <CheckoutButton plan="ngo_plus" />
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
 
       <StepIndicator />
 
@@ -230,10 +347,24 @@ export default function PostJobPage() {
                   {job.locationType === "remote" && "Remote"}
                   {job.locationType === "hybrid" && "Hybrid"}
                 </Badge>
+                {job.commitment && (
+                  <Badge variant="outline">{job.commitment}</Badge>
+                )}
+                {job.duration && (
+                  <Badge variant="secondary">{job.duration}</Badge>
+                )}
               </div>
-              <p className="text-muted-foreground">
-                {job.locationType === "onsite" && job.location}
-              </p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                {job.locationType === "onsite" && job.location && (
+                  <p>📍 {job.location}</p>
+                )}
+                {job.numberOfPositions > 1 && (
+                  <p>👥 {job.numberOfPositions} positions available</p>
+                )}
+                {job.applicationDeadline && (
+                  <p>📅 Apply by: {new Date(job.applicationDeadline).toLocaleDateString()}</p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -334,42 +465,47 @@ export default function PostJobPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="category">Category *</Label>
-                    <select
-                      id="category"
+                    <Select
                       value={job.category}
-                      onChange={(e) => setJob(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full border rounded-md px-3 py-2"
+                      onValueChange={(value) => setJob(prev => ({ ...prev, category: value }))}
                     >
-                      <option value="">Select a category</option>
-                      {CATEGORIES.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
                     <Label htmlFor="locationType">Location Type *</Label>
-                    <select
-                      id="locationType"
+                    <Select
                       value={job.locationType}
-                      onChange={(e) => setJob(prev => ({ 
+                      onValueChange={(value) => setJob(prev => ({ 
                         ...prev, 
-                        locationType: e.target.value as "onsite" | "remote" | "hybrid" 
+                        locationType: value as "onsite" | "remote" | "hybrid" 
                       }))}
-                      className="w-full border rounded-md px-3 py-2"
                     >
-                      <option value="onsite">On-site</option>
-                      <option value="remote">Remote</option>
-                      <option value="hybrid">Hybrid</option>
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select location type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="onsite">On-site</SelectItem>
+                        <SelectItem value="remote">Remote</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 {job.locationType === "onsite" && (
                   <div>
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="location">Location *</Label>
                     <Input
                       id="location"
                       value={job.location}
@@ -378,6 +514,62 @@ export default function PostJobPage() {
                     />
                   </div>
                 )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="commitment">Time Commitment *</Label>
+                    <Select
+                      value={job.commitment}
+                      onValueChange={(value) => setJob(prev => ({ 
+                        ...prev, 
+                        commitment: value as "full-time" | "part-time" | "flexible" 
+                      }))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select commitment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="flexible">Flexible</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="duration">Duration</Label>
+                    <Input
+                      id="duration"
+                      value={job.duration}
+                      onChange={(e) => setJob(prev => ({ ...prev, duration: e.target.value }))}
+                      placeholder="e.g., 3 months, Ongoing"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="numberOfPositions">Number of Positions</Label>
+                    <Input
+                      id="numberOfPositions"
+                      type="number"
+                      min="1"
+                      value={job.numberOfPositions}
+                      onChange={(e) => setJob(prev => ({ ...prev, numberOfPositions: parseInt(e.target.value) || 1 }))}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="applicationDeadline">Application Deadline</Label>
+                    <Input
+                      id="applicationDeadline"
+                      type="date"
+                      value={job.applicationDeadline}
+                      onChange={(e) => setJob(prev => ({ ...prev, applicationDeadline: e.target.value }))}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </div>
 
                 <div className="flex justify-end">
                   <Button onClick={handleNext} disabled={!job.title || !job.category}>
@@ -410,9 +602,14 @@ export default function PostJobPage() {
                       value={newRequirement}
                       onChange={(e) => setNewRequirement(e.target.value)}
                       placeholder="Add a requirement"
-                      onKeyPress={(e) => e.key === "Enter" && addRequirement()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addRequirement()
+                        }
+                      }}
                     />
-                    <Button onClick={addRequirement} size="icon">
+                    <Button onClick={addRequirement} size="icon" type="button">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -438,9 +635,14 @@ export default function PostJobPage() {
                       value={newBenefit}
                       onChange={(e) => setNewBenefit(e.target.value)}
                       placeholder="Add a benefit"
-                      onKeyPress={(e) => e.key === "Enter" && addBenefit()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addBenefit()
+                        }
+                      }}
                     />
-                    <Button onClick={addBenefit} size="icon">
+                    <Button onClick={addBenefit} size="icon" type="button">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -466,9 +668,14 @@ export default function PostJobPage() {
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       placeholder="Add a skill"
-                      onKeyPress={(e) => e.key === "Enter" && addSkill()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addSkill()
+                        }
+                      }}
                     />
-                    <Button onClick={addSkill} size="icon">
+                    <Button onClick={addSkill} size="icon" type="button">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -520,6 +727,10 @@ export default function PostJobPage() {
                       <p><span className="text-muted-foreground">Title:</span> {job.title || "Not provided"}</p>
                       <p><span className="text-muted-foreground">Category:</span> {job.category || "Not provided"}</p>
                       <p><span className="text-muted-foreground">Location:</span> {job.locationType} {job.locationType === "onsite" && job.location}</p>
+                      <p><span className="text-muted-foreground">Commitment:</span> {job.commitment || "Not specified"}</p>
+                      {job.duration && <p><span className="text-muted-foreground">Duration:</span> {job.duration}</p>}
+                      {job.numberOfPositions > 1 && <p><span className="text-muted-foreground">Positions:</span> {job.numberOfPositions}</p>}
+                      {job.applicationDeadline && <p><span className="text-muted-foreground">Deadline:</span> {new Date(job.applicationDeadline).toLocaleDateString()}</p>}
                     </div>
                   </div>
 

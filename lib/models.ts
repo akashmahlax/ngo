@@ -50,6 +50,8 @@ export type UserDoc = {
   address?: string
   focusAreas?: string[]
   teamSize?: string
+  logoUrl?: string
+  logoPublicId?: string
   notifications?: {
     emailApplications: boolean
     emailMessages: boolean
@@ -75,6 +77,10 @@ export type JobDoc = {
   skills?: string[]
   benefits?: string[]
   requirements?: string[]
+  duration?: string
+  commitment?: "full-time" | "part-time" | "flexible"
+  applicationDeadline?: string
+  numberOfPositions?: number
   applicationCount?: number
   viewCount?: number
   status: "open" | "closed"

@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     const planExpiresAt = sessionWithProfile.planExpiresAt ? new Date(sessionWithProfile.planExpiresAt) : null
     const isPlanExpired = planExpiresAt && new Date() > planExpiresAt
 
-    // Volunteers trying to access NGO post job page - BLOCK
+    // Volunteers trying to access NGO post job page - BLOCK (hard redirect)
     if (isNgoPostRoute && userRole === "volunteer") {
       return NextResponse.redirect(new URL('/volunteer', request.url))
     }
@@ -56,46 +56,27 @@ export async function middleware(request: NextRequest) {
       if (userRole !== "ngo") {
         return NextResponse.redirect(new URL('/', request.url))
       }
+      // Allow access but add headers to show upgrade prompts
       if (userPlan !== "ngo_plus" || isPlanExpired) {
-        return NextResponse.redirect(new URL('/upgrade?plan=ngo_plus&reason=post_job', request.url))
+        const response = NextResponse.next()
+        response.headers.set('x-upgrade-required', 'true')
+        response.headers.set('x-upgrade-plan', 'ngo_plus')
+        response.headers.set('x-upgrade-reason', isPlanExpired ? 'plan_expired' : 'post_job')
+        return response
       }
     }
 
-    // Volunteer dashboard access - only volunteer_free and volunteer_plus with active plan
-    if (isVolunteerRoute && userRole === "volunteer") {
-      if (userPlan !== "volunteer_free" && userPlan !== "volunteer_plus") {
-        return NextResponse.redirect(new URL('/upgrade?plan=volunteer_plus&reason=dashboard_access', request.url))
-      }
-      // If volunteer_plus but expired, redirect to upgrade
-      if (userPlan === "volunteer_plus" && isPlanExpired) {
-        return NextResponse.redirect(new URL('/upgrade?plan=volunteer_plus&reason=plan_expired', request.url))
-      }
-    }
-
-    // NGO dashboard access - require ngo_plus (paid plan only, except ngo_base can view billing)
-    if (isNgoRoute && userRole === "ngo") {
-      // Allow access to billing page for all NGOs to upgrade
-      const isBillingRoute = pathname.startsWith("/ngo/billing")
-      
-      if (!isBillingRoute && userPlan !== "ngo_plus") {
-        return NextResponse.redirect(new URL('/upgrade?plan=ngo_plus&reason=dashboard_access', request.url))
-      }
-      
-      // If ngo_plus but expired, redirect to upgrade
-      if (userPlan === "ngo_plus" && isPlanExpired) {
-        if (!isBillingRoute) {
-          return NextResponse.redirect(new URL('/upgrade?plan=ngo_plus&reason=plan_expired', request.url))
-        }
-      }
-    }
-
-    // Cross-role access prevention
+    // Cross-role access prevention (only hard redirect for wrong role)
     if (isVolunteerRoute && userRole !== "volunteer") {
       return NextResponse.redirect(new URL('/ngo', request.url))
     }
     if (isNgoRoute && userRole !== "ngo") {
       return NextResponse.redirect(new URL('/volunteer', request.url))
     }
+    
+    // ALLOW ALL DASHBOARD ACCESS - No redirects based on plan
+    // Users can access their dashboards regardless of plan
+    // Individual features will show upgrade prompts if needed
   }
 
   return NextResponse.next()

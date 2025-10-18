@@ -44,7 +44,13 @@ declare global {
   }
 }
 
-export function CheckoutButton({ plan }: { plan: "volunteer_plus" | "ngo_plus" }) {
+export function CheckoutButton({ 
+  plan, 
+  className 
+}: { 
+  plan: "volunteer_plus" | "ngo_plus"
+  className?: string 
+}) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -132,7 +138,7 @@ export function CheckoutButton({ plan }: { plan: "volunteer_plus" | "ngo_plus" }
   }
 
   return (
-    <Button onClick={handleClick} disabled={loading} size="lg" className="shadow-lg">
+    <Button onClick={handleClick} disabled={loading} size="lg" className={className || "shadow-lg"}>
       {loading ? "Processing..." : "Pay ₹1 & Upgrade Now"}
     </Button>
   )

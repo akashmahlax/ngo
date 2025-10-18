@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Search, 
   MapPin, 
@@ -17,11 +19,34 @@ import {
   X,
   Grid,
   List,
-  Bookmark
+  Bookmark,
+  CheckCircle,
+  Crown
 } from "lucide-react"
 import { JobDoc } from "@/lib/models"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+
+type EnrichedJob = {
+  _id: string
+  ngoId: string
+  title: string
+  description: string
+  category?: string
+  locationType?: string
+  skills?: string[]
+  benefits?: string[]
+  requirements?: string[]
+  applicationCount?: number
+  viewCount?: number
+  status: string
+  createdAt: Date | string
+  updatedAt: Date | string
+  ngoName?: string
+  ngoLogoUrl?: string | null
+  ngoVerified?: boolean
+  ngoPlan?: string
+}
 
 // Mock data for demonstration
 const mockJobs: JobDoc[] = [
@@ -100,7 +125,7 @@ const LOCATION_TYPES = [
 
 export default function JobsPage() {
   const { data: session } = useSession()
-  const [jobs, setJobs] = useState<JobDoc[]>(mockJobs)
+  const [jobs, setJobs] = useState<JobDoc[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
@@ -109,12 +134,30 @@ export default function JobsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
 
-  // Simulate loading data
+  // Fetch jobs from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(timer)
+    const fetchJobs = async () => {
+      try {
+        const res = await fetch('/api/jobs?limit=100')
+        if (res.ok) {
+          const data = await res.json()
+          setJobs(data.jobs.map((job: EnrichedJob) => ({
+            ...job,
+            _id: job._id,
+            createdAt: new Date(job.createdAt),
+            updatedAt: new Date(job.updatedAt),
+          })))
+        }
+      } catch (error) {
+        console.error('Failed to fetch jobs:', error)
+        // Fall back to mock data if API fails
+        setJobs(mockJobs)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchJobs()
   }, [])
 
   // Filter and sort jobs
@@ -311,15 +354,16 @@ export default function JobsPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border rounded-md px-3 py-2 text-sm"
-              >
-                <option value="newest">Newest</option>
-                <option value="applications">Most Applications</option>
-                <option value="popular">Most Popular</option>
-              </select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="applications">Most Applications</SelectItem>
+                  <SelectItem value="popular">Most Popular</SelectItem>
+                </SelectContent>
+              </Select>
               <Button 
                 variant="outline" 
                 size="icon"
@@ -346,11 +390,37 @@ export default function JobsPage() {
               ? "grid grid-cols-1 md:grid-cols-2 gap-6" 
               : "space-y-4"
             }>
-              {filteredJobs.map((job) => (
+              {filteredJobs.map((job) => {
+                const enrichedJob = job as unknown as EnrichedJob
+                return (
                 <Card key={job._id.toString()} className={viewMode === "list" ? "flex" : ""}>
                   <CardContent className={`p-6 ${viewMode === "list" ? "flex-1" : ""}`}>
                     <div className={viewMode === "list" ? "flex flex-col md:flex-row md:items-center justify-between" : ""}>
-                      <div>
+                      <div className="flex-1">
+                        {/* NGO Info Header */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={enrichedJob.ngoLogoUrl || undefined} alt={enrichedJob.ngoName || "NGO"} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {(enrichedJob.ngoName || "N").charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-medium">{enrichedJob.ngoName || "Unknown NGO"}</h4>
+                              {enrichedJob.ngoVerified && (
+                                <CheckCircle className="h-4 w-4 text-blue-600 fill-blue-600" />
+                              )}
+                              {enrichedJob.ngoPlan === "ngo_plus" && (
+                                <Badge variant="secondary" className="text-xs gap-1">
+                                  <Crown className="h-3 w-3 text-amber-600" />
+                                  Plus
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
                         <div className="flex items-start justify-between">
                           <h3 className="text-lg font-semibold mb-2">
                             <Link href={`/jobs/${job._id}`} className="hover:underline">
@@ -397,7 +467,7 @@ export default function JobsPage() {
                           </div>
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
-                            {formatDistanceToNow(job.createdAt, { addSuffix: true })}
+                            {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                           </div>
                         </div>
                         <Button asChild>
@@ -409,7 +479,7 @@ export default function JobsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )})}
             </div>
           )}
         </div>
