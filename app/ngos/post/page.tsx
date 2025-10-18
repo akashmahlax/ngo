@@ -92,11 +92,19 @@ export default function PostJobPage() {
     commitment: "full-time" as "full-time" | "part-time" | "flexible",
     applicationDeadline: "",
     numberOfPositions: 1,
+    // Compensation fields
+    compensationType: "unpaid" as "paid" | "unpaid" | "stipend",
+    salaryRange: "",
+    stipendAmount: "",
+    hourlyRate: "",
+    paymentFrequency: "" as "" | "hourly" | "daily" | "monthly" | "one-time" | "project-based",
+    additionalPerks: [] as string[],
   })
   
   const [newRequirement, setNewRequirement] = useState("")
   const [newBenefit, setNewBenefit] = useState("")
   const [newSkill, setNewSkill] = useState("")
+  const [newPerk, setNewPerk] = useState("")
 
   // Categories for the job
   const CATEGORIES = [
@@ -162,6 +170,23 @@ export default function PostJobPage() {
     setJob(prev => ({
       ...prev,
       skills: prev.skills.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addPerk = () => {
+    if (newPerk.trim() && !job.additionalPerks.includes(newPerk.trim())) {
+      setJob(prev => ({
+        ...prev,
+        additionalPerks: [...prev.additionalPerks, newPerk.trim()]
+      }))
+      setNewPerk("")
+    }
+  }
+
+  const removePerk = (index: number) => {
+    setJob(prev => ({
+      ...prev,
+      additionalPerks: prev.additionalPerks.filter((_, i) => i !== index)
     }))
   }
 
@@ -568,6 +593,132 @@ export default function PostJobPage() {
                       onChange={(e) => setJob(prev => ({ ...prev, applicationDeadline: e.target.value }))}
                       min={new Date().toISOString().split('T')[0]}
                     />
+                  </div>
+                </div>
+
+                {/* Compensation Section */}
+                <div className="border-t pt-6 mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Compensation & Benefits</h3>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <Label htmlFor="compensationType">Compensation Type *</Label>
+                      <Select
+                        value={job.compensationType}
+                        onValueChange={(value) => setJob(prev => ({ 
+                          ...prev, 
+                          compensationType: value as "paid" | "unpaid" | "stipend" 
+                        }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select compensation type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unpaid">Unpaid / Volunteer</SelectItem>
+                          <SelectItem value="paid">Paid Position</SelectItem>
+                          <SelectItem value="stipend">Stipend Provided</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {job.compensationType === "paid" && (
+                      <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                        <div>
+                          <Label htmlFor="salaryRange">Salary Range</Label>
+                          <Input
+                            id="salaryRange"
+                            value={job.salaryRange}
+                            onChange={(e) => setJob(prev => ({ ...prev, salaryRange: e.target.value }))}
+                            placeholder="e.g., ₹15,000 - ₹25,000/month"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="hourlyRate">Hourly Rate (Optional)</Label>
+                          <Input
+                            id="hourlyRate"
+                            type="number"
+                            value={job.hourlyRate}
+                            onChange={(e) => setJob(prev => ({ ...prev, hourlyRate: e.target.value }))}
+                            placeholder="e.g., 500"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">Amount in ₹ per hour</p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="paymentFrequency">Payment Frequency</Label>
+                          <Select
+                            value={job.paymentFrequency}
+                            onValueChange={(value) => setJob(prev => ({ 
+                              ...prev, 
+                              paymentFrequency: value as "hourly" | "daily" | "monthly" | "one-time" | "project-based"
+                            }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select payment frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="hourly">Hourly</SelectItem>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="one-time">One-time</SelectItem>
+                              <SelectItem value="project-based">Project-based</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+
+                    {job.compensationType === "stipend" && (
+                      <div className="pl-4 border-l-2 border-primary/20">
+                        <Label htmlFor="stipendAmount">Stipend Amount</Label>
+                        <Input
+                          id="stipendAmount"
+                          value={job.stipendAmount}
+                          onChange={(e) => setJob(prev => ({ ...prev, stipendAmount: e.target.value }))}
+                          placeholder="e.g., ₹5,000/month"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Specify amount and frequency</p>
+                      </div>
+                    )}
+
+                    {/* Additional Perks */}
+                    <div>
+                      <Label htmlFor="additionalPerks">Additional Perks (Optional)</Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          id="additionalPerks"
+                          value={newPerk}
+                          onChange={(e) => setNewPerk(e.target.value)}
+                          placeholder="e.g., Food provided, Travel allowance"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault()
+                              addPerk()
+                            }
+                          }}
+                        />
+                        <Button type="button" onClick={addPerk} size="icon" variant="outline">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {job.additionalPerks.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {job.additionalPerks.map((perk, index) => (
+                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                              {perk}
+                              <button
+                                type="button"
+                                onClick={() => removePerk(index)}
+                                className="ml-1 hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

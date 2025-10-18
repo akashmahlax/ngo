@@ -18,6 +18,13 @@ const createSchema = z.object({
   commitment: z.enum(["full-time", "part-time", "flexible"]).optional(),
   applicationDeadline: z.string().optional(),
   numberOfPositions: z.number().min(1).optional(),
+  // Compensation fields
+  compensationType: z.enum(["paid", "unpaid", "stipend"]).optional(),
+  salaryRange: z.string().optional(),
+  stipendAmount: z.string().optional(),
+  hourlyRate: z.string().optional(),
+  paymentFrequency: z.enum(["hourly", "daily", "monthly", "one-time", "project-based"]).optional(),
+  additionalPerks: z.array(z.string()).optional(),
 })
 
 export async function GET(req: NextRequest) {
@@ -119,7 +126,13 @@ export async function POST(req: NextRequest) {
     duration,
     commitment,
     applicationDeadline,
-    numberOfPositions 
+    numberOfPositions,
+    compensationType,
+    salaryRange,
+    stipendAmount,
+    hourlyRate,
+    paymentFrequency,
+    additionalPerks
   } = parsed.data
   
   const doc: Omit<JobDoc, '_id'> & {
@@ -127,6 +140,12 @@ export async function POST(req: NextRequest) {
     commitment?: string
     applicationDeadline?: string
     numberOfPositions?: number
+    compensationType?: string
+    salaryRange?: string
+    stipendAmount?: string
+    hourlyRate?: number
+    paymentFrequency?: string
+    additionalPerks?: string[]
   } = {
     ngoId: new ObjectId(user._id),
     title,
@@ -141,6 +160,12 @@ export async function POST(req: NextRequest) {
     commitment: commitment || undefined,
     applicationDeadline: applicationDeadline || undefined,
     numberOfPositions: numberOfPositions || 1,
+    compensationType: compensationType || undefined,
+    salaryRange: salaryRange || undefined,
+    stipendAmount: stipendAmount || undefined,
+    hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
+    paymentFrequency: paymentFrequency || undefined,
+    additionalPerks: additionalPerks || [],
     status: "open" as const,
     createdAt: now,
     updatedAt: now,

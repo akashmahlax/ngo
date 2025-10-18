@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { JobCard } from "@/components/job-card"
 import { 
   Search, 
   MapPin, 
@@ -387,99 +388,39 @@ export default function JobsPage() {
           ) : (
             // Job Listings
             <div className={viewMode === "grid" 
-              ? "grid grid-cols-1 md:grid-cols-2 gap-6" 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
               : "space-y-4"
             }>
               {filteredJobs.map((job) => {
                 const enrichedJob = job as unknown as EnrichedJob
                 return (
-                <Card key={job._id.toString()} className={viewMode === "list" ? "flex" : ""}>
-                  <CardContent className={`p-6 ${viewMode === "list" ? "flex-1" : ""}`}>
-                    <div className={viewMode === "list" ? "flex flex-col md:flex-row md:items-center justify-between" : ""}>
-                      <div className="flex-1">
-                        {/* NGO Info Header */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={enrichedJob.ngoLogoUrl || undefined} alt={enrichedJob.ngoName || "NGO"} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {(enrichedJob.ngoName || "N").charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-medium">{enrichedJob.ngoName || "Unknown NGO"}</h4>
-                              {enrichedJob.ngoVerified && (
-                                <CheckCircle className="h-4 w-4 text-blue-600 fill-blue-600" />
-                              )}
-                              {enrichedJob.ngoPlan === "ngo_plus" && (
-                                <Badge variant="secondary" className="text-xs gap-1">
-                                  <Crown className="h-3 w-3 text-amber-600" />
-                                  Plus
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start justify-between">
-                          <h3 className="text-lg font-semibold mb-2">
-                            <Link href={`/jobs/${job._id}`} className="hover:underline">
-                              {job.title}
-                            </Link>
-                          </h3>
-                          <Button variant="ghost" size="icon">
-                            <Bookmark className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <Badge variant="secondary">{job.category || "General"}</Badge>
-                          <Badge variant="outline">
-                            {job.locationType === "onsite" && "On-site"}
-                            {job.locationType === "remote" && "Remote"}
-                            {job.locationType === "hybrid" && "Hybrid"}
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {job.description}
-                        </p>
-                        
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {job.skills?.slice(0, 3).map((skill, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {job.skills && job.skills.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{job.skills.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className={viewMode === "list" ? "md:ml-4 md:text-right" : "mt-4 pt-4 border-t"}>
-                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            {job.applicationCount || 0} applied
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
-                          </div>
-                        </div>
-                        <Button asChild>
-                          <Link href={`/jobs/${job._id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )})}
+                  <JobCard 
+                    key={job._id.toString()}
+                    job={{
+                      _id: job._id.toString(),
+                      title: job.title,
+                      description: job.description,
+                      category: job.category,
+                      location: job.location,
+                      locationType: job.locationType,
+                      createdAt: new Date(job.createdAt),
+                      skills: job.skills,
+                      compensationType: job.compensationType,
+                      salaryRange: job.salaryRange,
+                      stipendAmount: job.stipendAmount,
+                      commitment: job.commitment,
+                      applicationCount: job.applicationCount
+                    }}
+                    ngo={{
+                      name: enrichedJob.ngoName || "Unknown NGO",
+                      logoUrl: enrichedJob.ngoLogoUrl,
+                      verified: enrichedJob.ngoVerified,
+                      plan: enrichedJob.ngoPlan
+                    }}
+                    viewMode={viewMode}
+                  />
+                )
+              })}
             </div>
           )}
         </div>

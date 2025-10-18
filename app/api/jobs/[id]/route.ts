@@ -5,11 +5,75 @@ import { ObjectId } from "mongodb"
 import { z } from "zod"
 
 export async function GET(_req: NextRequest, context: any) {
-  const { params } = context
-  const { jobs } = await getCollections()
-  const job = await jobs.findOne({ _id: new ObjectId(params.id) })
-  if (!job) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 })
-  return NextResponse.json({ job })
+  try {
+    const { params } = context
+    const { id } = params
+
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "INVALID_ID" }, { status: 400 })
+    }
+
+    const { jobs, users } = await getCollections()
+    
+    // Find the job
+    const job = await jobs.findOne({ _id: new ObjectId(id) })
+    if (!job) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 })
+    }
+
+    // Find the NGO details
+    const ngo = await users.findOne(
+      { _id: job.ngoId },
+      { 
+        projection: { 
+          _id: 1,
+          orgName: 1, 
+          name: 1,
+          verified: 1, 
+          logoUrl: 1, 
+          plan: 1,
+          focusAreas: 1,
+          location: 1,
+          description: 1,
+          yearEstablished: 1,
+          teamSize: 1,
+          website: 1
+        } 
+      }
+    )
+
+    // Increment view count
+    await jobs.updateOne(
+      { _id: new ObjectId(id) },
+      { $inc: { viewCount: 1 } }
+    )
+
+    // Return enriched job data
+    return NextResponse.json({
+      job: {
+        ...job,
+        _id: job._id.toString(),
+        ngoId: job.ngoId.toString(),
+        ngo: ngo ? {
+          _id: ngo._id.toString(),
+          name: ngo.orgName || ngo.name,
+          verified: ngo.verified || false,
+          logoUrl: ngo.logoUrl,
+          plan: ngo.plan,
+          focusAreas: ngo.focusAreas,
+          location: ngo.location,
+          description: ngo.description,
+          yearEstablished: ngo.yearEstablished,
+          teamSize: ngo.teamSize,
+          website: ngo.website
+        } : null
+      }
+    })
+  } catch (error) {
+    console.error("Error fetching job:", error)
+    return NextResponse.json({ error: "SERVER_ERROR" }, { status: 500 })
+  }
 }
 
 const patchSchema = z.object({

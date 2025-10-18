@@ -41,6 +41,13 @@ export type UserDoc = {
     year: string
     description?: string
   }>
+  // Volunteer-specific fields
+  expectedSalary?: string // e.g., "₹15,000 - ₹20,000/month"
+  hourlyRate?: number // e.g., 500 (₹500/hour)
+  availability?: "full-time" | "part-time" | "flexible" | "weekends"
+  totalEarnings?: number // Total earned through platform
+  hoursWorked?: number // Total hours worked
+  // NGO-specific fields
   orgName?: string
   website?: string
   verified?: boolean
@@ -50,8 +57,17 @@ export type UserDoc = {
   address?: string
   focusAreas?: string[]
   teamSize?: string
+  yearEstablished?: string
+  description?: string // Detailed NGO description
+  impactStats?: {
+    volunteersHelped?: number
+    projectsCompleted?: number
+    peopleImpacted?: number
+  }
   logoUrl?: string
   logoPublicId?: string
+  coverPhotoUrl?: string
+  coverPhotoPublicId?: string
   notifications?: {
     emailApplications: boolean
     emailMessages: boolean
@@ -81,6 +97,14 @@ export type JobDoc = {
   commitment?: "full-time" | "part-time" | "flexible"
   applicationDeadline?: string
   numberOfPositions?: number
+  // Payment & Compensation fields
+  compensationType?: "paid" | "unpaid" | "stipend"
+  salaryRange?: string // e.g., "₹10,000 - ₹15,000/month"
+  stipendAmount?: string // e.g., "₹5,000/month"
+  hourlyRate?: number // e.g., 500 (₹500/hour)
+  paymentFrequency?: "hourly" | "daily" | "monthly" | "one-time" | "project-based"
+  additionalPerks?: string[] // e.g., ["Food provided", "Travel allowance"]
+  // Meta fields
   applicationCount?: number
   viewCount?: number
   status: "open" | "closed"
