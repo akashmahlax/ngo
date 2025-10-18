@@ -44,9 +44,17 @@ export type UserDoc = {
   // Volunteer-specific fields
   expectedSalary?: string // e.g., "₹15,000 - ₹20,000/month"
   hourlyRate?: number // e.g., 500 (₹500/hour)
+  ngoHourlyRate?: number // Rate NGO pays (may be different from volunteer rate)
   availability?: "full-time" | "part-time" | "flexible" | "weekends"
   totalEarnings?: number // Total earned through platform
   hoursWorked?: number // Total hours worked
+  title?: string // Professional title/role
+  successRate?: number // 0-100 percentage
+  responseTime?: string // e.g., "< 1 hour", "< 24 hours"
+  currentWorkStatus?: string // e.g., "Available", "Busy - 2 projects", "Not available"
+  completedProjects?: number // Number of completed projects
+  activeProjects?: number // Number of ongoing projects
+  rating?: number // 0-5 star rating
   // NGO-specific fields
   orgName?: string
   website?: string

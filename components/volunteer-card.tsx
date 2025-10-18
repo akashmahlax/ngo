@@ -13,7 +13,13 @@ import {
   Mail,
   CheckCircle,
   Star,
-  TrendingUp
+  TrendingUp,
+  Zap,
+  Target,
+  MessageCircle,
+  ArrowRight,
+  CircleDot,
+  Trophy
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -30,12 +36,20 @@ type VolunteerCardProps = {
     avatarUrl?: string
     verified?: boolean
     experience?: any[]
-    // New salary/earnings fields
+    // Salary/earnings fields
     expectedSalary?: string
     hourlyRate?: number
+    ngoHourlyRate?: number
     availability?: "full-time" | "part-time" | "flexible" | "weekends"
     totalEarnings?: number
     hoursWorked?: number
+    // Performance fields
+    successRate?: number
+    responseTime?: string
+    currentWorkStatus?: string
+    completedProjects?: number
+    activeProjects?: number
+    rating?: number
   }
   viewMode?: "grid" | "list"
 }
@@ -53,248 +67,401 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
     }
   }
 
-  if (viewMode === "list") {
+  const getWorkStatusColor = (status?: string) => {
+    if (!status) return "text-gray-500"
+    if (status.toLowerCase().includes("available")) return "text-green-600 dark:text-green-400"
+    if (status.toLowerCase().includes("busy")) return "text-amber-600 dark:text-amber-400"
+    return "text-red-600 dark:text-red-400"
+  }
+
+  const getSuccessRateColor = (rate?: number) => {
+    if (!rate) return "text-gray-500"
+    if (rate >= 90) return "text-green-600"
+    if (rate >= 75) return "text-blue-600"
+    if (rate >= 60) return "text-amber-600"
+    return "text-red-600"
+  }
+
+  // Grid View - Creative Card Design
+  if (viewMode === "grid") {
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-transparent hover:border-l-primary overflow-hidden">
-        <div className="flex flex-col md:flex-row p-6 gap-6">
-          {/* Left: Avatar & Status */}
-          <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-3">
-            <Avatar className="h-20 w-20 ring-2 ring-background shadow-lg">
-              <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name} />
-              <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-2xl font-bold">
-                {volunteer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex md:flex-col gap-2">
-              {volunteer.verified && (
-                <Badge variant="outline" className="gap-1 border-blue-600/30 text-blue-600">
-                  <CheckCircle className="h-3 w-3 fill-blue-600" />
-                  Verified
-                </Badge>
-              )}
-              {volunteer.availability && (
-                <Badge variant="outline" className={`gap-1 capitalize ${getAvailabilityColor(volunteer.availability)}`}>
-                  <Clock className="h-3 w-3" />
-                  {volunteer.availability}
-                </Badge>
+      <Card className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 bg-gradient-to-br from-background via-background to-primary/5">
+        {/* Decorative corner accent */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full -mr-16 -mt-16 opacity-50 group-hover:opacity-100 transition-opacity" />
+        
+        {/* Verified/Top badge */}
+        {volunteer.verified && (
+          <div className="absolute top-3 left-3 z-10">
+            <Badge className="bg-blue-600 text-white border-0 shadow-lg">
+              <CheckCircle className="h-3 w-3 mr-1 fill-white" />
+              Verified Pro
+            </Badge>
+          </div>
+        )}
+
+        {/* Success Rate Badge */}
+        {volunteer.successRate !== undefined && volunteer.successRate >= 80 && (
+          <div className="absolute top-3 right-3 z-10">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg">
+              <Trophy className="h-3 w-3 mr-1" />
+              {volunteer.successRate}%
+            </Badge>
+          </div>
+        )}
+
+        <div className="p-6 space-y-4">
+          {/* Header: Avatar + Name + Title */}
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <Avatar className="h-20 w-20 ring-4 ring-background shadow-xl border-2 border-primary/20 group-hover:ring-primary/30 transition-all">
+                <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name} />
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-white text-2xl font-bold">
+                  {volunteer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Online/Status indicator */}
+              {volunteer.currentWorkStatus?.toLowerCase().includes("available") && (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-background rounded-full animate-pulse" />
               )}
             </div>
-          </div>
 
-          {/* Center: Info */}
-          <div className="flex-1 space-y-3">
-            <div>
+            <div className="flex-1 min-w-0">
               <Link href={`/volunteers/${volunteer._id}`} className="group/link">
-                <h3 className="text-xl font-bold group-hover/link:text-primary transition-colors">
+                <h3 className="font-bold text-lg group-hover/link:text-primary transition-colors line-clamp-1">
                   {volunteer.name}
                 </h3>
               </Link>
               {volunteer.title && (
-                <p className="text-sm text-muted-foreground font-medium">{volunteer.title}</p>
+                <p className="text-sm text-muted-foreground font-medium line-clamp-1">
+                  {volunteer.title}
+                </p>
               )}
-            </div>
-
-            {volunteer.bio && (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {volunteer.bio}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-3 text-sm">
               {volunteer.location && (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>{volunteer.location}</span>
-                </div>
-              )}
-              
-              {volunteer.experience && volunteer.experience.length > 0 && (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Briefcase className="h-4 w-4" />
-                  <span>{volunteer.experience.length} {volunteer.experience.length === 1 ? 'role' : 'roles'}</span>
-                </div>
-              )}
-
-              {volunteer.hoursWorked !== undefined && volunteer.hoursWorked > 0 && (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Award className="h-4 w-4" />
-                  <span>{volunteer.hoursWorked}h worked</span>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <MapPin className="h-3 w-3" />
+                  <span className="line-clamp-1">{volunteer.location}</span>
                 </div>
               )}
             </div>
-
-            {volunteer.skills && volunteer.skills.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {volunteer.skills.slice(0, 5).map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {skill}
-                  </Badge>
-                ))}
-                {volunteer.skills.length > 5 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{volunteer.skills.length - 5} more
-                  </Badge>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Right: Salary & Actions */}
-          <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-4">
-            <div className="text-right">
-              {volunteer.expectedSalary || volunteer.hourlyRate ? (
-                <>
-                  <div className="flex items-center justify-end gap-1 mb-1">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                    <span className="text-xs text-muted-foreground">
-                      {volunteer.hourlyRate ? 'Hourly Rate' : 'Expected'}
-                    </span>
-                  </div>
-                  <p className="text-lg font-bold text-primary">
-                    {volunteer.hourlyRate ? `₹${volunteer.hourlyRate}/hr` : volunteer.expectedSalary}
-                  </p>
-                </>
-              ) : (
-                <Badge variant="outline">Open to opportunities</Badge>
-              )}
+          {/* Pricing Section - Eye-Catching */}
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-l-4 border-primary rounded-lg p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span>Your Rate</span>
+                </div>
+                <div className="text-2xl font-bold text-primary">
+                  ₹{volunteer.hourlyRate || 0}
+                  <span className="text-sm text-muted-foreground">/hr</span>
+                </div>
+              </div>
               
-              {volunteer.totalEarnings !== undefined && volunteer.totalEarnings > 0 && (
-                <div className="mt-2 text-xs text-muted-foreground flex items-center justify-end gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  ₹{volunteer.totalEarnings.toLocaleString()} earned
+              {volunteer.ngoHourlyRate && (
+                <div className="flex-1 text-right border-l pl-4">
+                  <div className="text-xs text-muted-foreground mb-1">NGO Pays</div>
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                    ₹{volunteer.ngoHourlyRate}
+                    <span className="text-sm">/hr</span>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="flex md:flex-col gap-2">
-              <Button asChild className="md:w-full">
-                <Link href={`/volunteers/${volunteer._id}`}>View Profile</Link>
-              </Button>
-              <Button variant="outline" size="icon">
-                <Mail className="h-4 w-4" />
-              </Button>
+          {/* Stats Row - 3 Column Grid */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* Success Rate */}
+            <div className="bg-accent/50 rounded-lg p-2 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Target className="h-3 w-3 text-primary" />
+              </div>
+              <div className={`text-lg font-bold ${getSuccessRateColor(volunteer.successRate)}`}>
+                {volunteer.successRate || 0}%
+              </div>
+              <div className="text-[10px] text-muted-foreground">Success</div>
             </div>
+
+            {/* Response Time */}
+            <div className="bg-accent/50 rounded-lg p-2 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Zap className="h-3 w-3 text-amber-500" />
+              </div>
+              <div className="text-sm font-bold text-foreground line-clamp-1">
+                {volunteer.responseTime || "N/A"}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Response</div>
+            </div>
+
+            {/* Rating */}
+            <div className="bg-accent/50 rounded-lg p-2 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+              </div>
+              <div className="text-lg font-bold text-foreground">
+                {volunteer.rating?.toFixed(1) || "N/A"}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Rating</div>
+            </div>
+          </div>
+
+          {/* Current Work Status */}
+          {volunteer.currentWorkStatus && (
+            <div className="flex items-center gap-2 p-2 bg-accent/30 rounded-lg">
+              <CircleDot className={`h-4 w-4 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
+              <span className="text-sm font-medium">{volunteer.currentWorkStatus}</span>
+            </div>
+          )}
+
+          {/* Projects Info */}
+          {(volunteer.completedProjects !== undefined || volunteer.activeProjects !== undefined) && (
+            <div className="flex gap-2 text-xs">
+              {volunteer.completedProjects !== undefined && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 rounded-full">
+                  <CheckCircle className="h-3 w-3" />
+                  <span className="font-medium">{volunteer.completedProjects} completed</span>
+                </div>
+              )}
+              {volunteer.activeProjects !== undefined && volunteer.activeProjects > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 rounded-full">
+                  <Briefcase className="h-3 w-3" />
+                  <span className="font-medium">{volunteer.activeProjects} active</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Skills - Compact */}
+          {volunteer.skills && volunteer.skills.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {volunteer.skills.slice(0, 3).map((skill, index) => (
+                <Badge key={index} variant="secondary" className="text-[10px] px-2 py-0.5 font-medium">
+                  {skill}
+                </Badge>
+              ))}
+              {volunteer.skills.length > 3 && (
+                <Badge variant="outline" className="text-[10px] px-2 py-0.5">
+                  +{volunteer.skills.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2 border-t">
+            <Button asChild className="flex-1" size="sm">
+              <Link href={`/volunteers/${volunteer._id}`}>
+                View Profile
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" className="px-3">
+              <Mail className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
       </Card>
     )
   }
 
-  // Grid View
+  // List View - Comprehensive Info Layout
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden relative">
-      {/* Gradient Background Accent */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
-      {/* Content */}
-      <div className="relative p-6 space-y-4">
-        {/* Header with Avatar */}
-        <div className="flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24 ring-4 ring-background shadow-lg group-hover:ring-primary/20 transition-all mb-3">
-            <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name} />
-            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-2xl font-bold">
-              {volunteer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          
-          <Link href={`/volunteers/${volunteer._id}`} className="group/link">
-            <h3 className="text-lg font-bold group-hover/link:text-primary transition-colors">
-              {volunteer.name}
-            </h3>
-          </Link>
-          
-          {volunteer.title && (
-            <p className="text-sm text-muted-foreground font-medium mt-1">
-              {volunteer.title}
-            </p>
-          )}
-          
-          <div className="flex items-center justify-center gap-2 mt-2">
-            {volunteer.verified && (
-              <CheckCircle className="h-4 w-4 text-blue-600 fill-blue-600" />
-            )}
-            {volunteer.availability && (
-              <Badge variant="outline" className={`text-xs capitalize ${getAvailabilityColor(volunteer.availability)}`}>
-                {volunteer.availability}
-              </Badge>
-            )}
-          </div>
-        </div>
+    <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-primary/30 hover:border-l-primary overflow-hidden bg-gradient-to-r from-background to-primary/5">
+      <div className="p-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left: Avatar + Basic Info */}
+          <div className="flex items-start gap-4">
+            <div className="relative flex-shrink-0">
+              <Avatar className="h-24 w-24 ring-4 ring-background shadow-xl border-2 border-primary/20">
+                <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name} />
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-white text-2xl font-bold">
+                  {volunteer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              {volunteer.currentWorkStatus?.toLowerCase().includes("available") && (
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-4 border-background rounded-full animate-pulse" />
+              )}
+              
+              {volunteer.verified && (
+                <div className="absolute -top-2 -right-2">
+                  <Badge className="bg-blue-600 text-white border-0 shadow-lg px-1.5 py-0.5">
+                    <CheckCircle className="h-3 w-3" />
+                  </Badge>
+                </div>
+              )}
+            </div>
 
-        {/* Bio */}
-        {volunteer.bio && (
-          <p className="text-sm text-muted-foreground text-center line-clamp-3">
-            {volunteer.bio}
-          </p>
-        )}
-
-        {/* Salary Highlight */}
-        {(volunteer.expectedSalary || volunteer.hourlyRate) && (
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-3 border border-primary/10">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  {volunteer.hourlyRate ? 'Hourly Rate' : 'Expected Salary'}
+            <div className="flex-1 min-w-0">
+              <Link href={`/volunteers/${volunteer._id}`} className="group/link">
+                <h3 className="text-2xl font-bold group-hover/link:text-primary transition-colors">
+                  {volunteer.name}
+                </h3>
+              </Link>
+              {volunteer.title && (
+                <p className="text-base text-muted-foreground font-medium mt-1">
+                  {volunteer.title}
                 </p>
-                <p className="font-bold text-primary">
-                  {volunteer.hourlyRate ? `₹${volunteer.hourlyRate}/hr` : volunteer.expectedSalary}
-                </p>
+              )}
+              
+              <div className="flex flex-wrap gap-3 mt-2 text-sm">
+                {volunteer.location && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>{volunteer.location}</span>
+                  </div>
+                )}
+                
+                {volunteer.availability && (
+                  <Badge variant="outline" className={`capitalize ${getAvailabilityColor(volunteer.availability)}`}>
+                    <Clock className="h-3 w-3 mr-1" />
+                    {volunteer.availability}
+                  </Badge>
+                )}
               </div>
-              <DollarSign className="h-8 w-8 text-primary opacity-20" />
+
+              {volunteer.currentWorkStatus && (
+                <div className="flex items-center gap-2 mt-2">
+                  <CircleDot className={`h-3.5 w-3.5 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
+                  <span className="text-sm font-medium">{volunteer.currentWorkStatus}</span>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Stats */}
-        <div className="flex justify-center gap-4 text-xs">
-          {volunteer.location && (
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              <span className="truncate max-w-[100px]">{volunteer.location}</span>
+          {/* Center: Performance Metrics */}
+          <div className="flex-1 border-l border-border/50 pl-6 space-y-4">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-4 gap-3">
+              {/* Success Rate */}
+              <div className="text-center p-3 bg-accent/50 rounded-lg">
+                <Target className="h-5 w-5 text-primary mx-auto mb-1" />
+                <div className={`text-xl font-bold ${getSuccessRateColor(volunteer.successRate)}`}>
+                  {volunteer.successRate || 0}%
+                </div>
+                <div className="text-xs text-muted-foreground">Success</div>
+              </div>
+
+              {/* Response Time */}
+              <div className="text-center p-3 bg-accent/50 rounded-lg">
+                <Zap className="h-5 w-5 text-amber-500 mx-auto mb-1" />
+                <div className="text-sm font-bold line-clamp-1">
+                  {volunteer.responseTime || "N/A"}
+                </div>
+                <div className="text-xs text-muted-foreground">Response</div>
+              </div>
+
+              {/* Rating */}
+              <div className="text-center p-3 bg-accent/50 rounded-lg">
+                <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto mb-1" />
+                <div className="text-xl font-bold">
+                  {volunteer.rating?.toFixed(1) || "N/A"}
+                </div>
+                <div className="text-xs text-muted-foreground">Rating</div>
+              </div>
+
+              {/* Projects */}
+              <div className="text-center p-3 bg-accent/50 rounded-lg">
+                <Trophy className="h-5 w-5 text-green-600 mx-auto mb-1" />
+                <div className="text-xl font-bold">
+                  {volunteer.completedProjects || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Completed</div>
+              </div>
             </div>
-          )}
-          {volunteer.experience && volunteer.experience.length > 0 && (
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Briefcase className="h-3 w-3" />
-              <span>{volunteer.experience.length}</span>
-            </div>
-          )}
-        </div>
 
-        {/* Earnings Badge */}
-        {volunteer.totalEarnings !== undefined && volunteer.totalEarnings > 0 && (
-          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground bg-accent/50 rounded-md py-1.5">
-            <TrendingUp className="h-3 w-3" />
-            <span>₹{volunteer.totalEarnings.toLocaleString()} total earned</span>
-          </div>
-        )}
-
-        {/* Skills Tags */}
-        {volunteer.skills && volunteer.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            {volunteer.skills.slice(0, 4).map((skill, index) => (
-              <Badge key={index} variant="secondary" className="text-xs font-normal">
-                {skill}
-              </Badge>
-            ))}
-            {volunteer.skills.length > 4 && (
-              <Badge variant="outline" className="text-xs">
-                +{volunteer.skills.length - 4}
-              </Badge>
+            {/* Skills */}
+            {volunteer.skills && volunteer.skills.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                  <Award className="h-3 w-3" />
+                  SKILLS
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {volunteer.skills.slice(0, 8).map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {volunteer.skills.length > 8 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{volunteer.skills.length - 8} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-        )}
 
-        {/* Hover Action Buttons */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity space-y-2">
-          <Button asChild className="w-full" size="sm">
-            <Link href={`/volunteers/${volunteer._id}`}>View Full Profile</Link>
-          </Button>
-          <Button variant="outline" className="w-full" size="sm">
-            <Mail className="h-4 w-4 mr-2" />
-            Contact
-          </Button>
+          {/* Right: Pricing & Actions */}
+          <div className="flex flex-col justify-between gap-4 min-w-[200px]">
+            {/* Pricing Card */}
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 rounded-xl p-4 space-y-3">
+              {/* Volunteer Rate */}
+              <div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                  <DollarSign className="h-3 w-3" />
+                  Your Rate
+                </div>
+                <div className="text-3xl font-bold text-primary">
+                  ₹{volunteer.hourlyRate || 0}
+                  <span className="text-sm text-muted-foreground">/hr</span>
+                </div>
+              </div>
+
+              {/* NGO Rate */}
+              {volunteer.ngoHourlyRate && (
+                <div className="border-t border-primary/20 pt-2">
+                  <div className="text-xs text-muted-foreground mb-1">NGO Pays</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    ₹{volunteer.ngoHourlyRate}
+                    <span className="text-sm">/hr</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Earnings */}
+              {volunteer.totalEarnings !== undefined && volunteer.totalEarnings > 0 && (
+                <div className="border-t border-primary/20 pt-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Total Earned</span>
+                    <span className="font-bold text-green-600">
+                      ₹{volunteer.totalEarnings.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Active Projects */}
+            {volunteer.activeProjects !== undefined && volunteer.activeProjects > 0 && (
+              <div className="bg-blue-100 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                  <Briefcase className="h-4 w-4" />
+                  <span className="font-medium text-sm">
+                    {volunteer.activeProjects} Active Project{volunteer.activeProjects > 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <Button asChild className="w-full" size="lg">
+                <Link href={`/volunteers/${volunteer._id}`}>
+                  View Full Profile
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full" size="lg">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Contact Now
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </Card>
