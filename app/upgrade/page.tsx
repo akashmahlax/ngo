@@ -1,9 +1,25 @@
 import { auth } from "@/auth"
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
 
-export default async function UpgradePage({ searchParams }: { searchParams: { plan?: "volunteer_plus" | "ngo_plus" } }) {
-  const session = await auth()
-  const plan = searchParams.plan || (((session as any).role === "ngo") ? "ngo_plus" : "volunteer_plus")
+type UpgradeSearchParams = {
+  plan?: "volunteer_plus" | "ngo_plus"
+}
+
+export default async function UpgradePage({
+  searchParams,
+}: {
+  searchParams: Promise<UpgradeSearchParams>
+}) {
+  const [params, session] = await Promise.all([searchParams, auth()])
+  type SessionWithRole = typeof session & {
+    role?: "volunteer" | "ngo"
+    user?: {
+      role?: "volunteer" | "ngo"
+    }
+  }
+  const sessionWithRole = session as SessionWithRole
+  const userRole = sessionWithRole?.role || sessionWithRole?.user?.role
+  const plan = params?.plan || (userRole === "ngo" ? "ngo_plus" : "volunteer_plus")
   return (
     <section className="container mx-auto px-4 py-12">
       <h1 className="text-2xl font-semibold">Upgrade</h1>

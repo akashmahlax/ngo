@@ -116,36 +116,128 @@ export default function VolunteersDirectory() {
 
   const hasActiveFilters = searchQuery || selectedSkills.length > 0 || locationFilter
 
+  const verifiedCount = volunteers.filter((volunteer) => volunteer.verified).length
+  const uniqueLocations = new Set(
+    volunteers
+      .map((volunteer) => volunteer.location?.trim())
+      .filter((value): value is string => Boolean(value))
+  )
+  const skillFrequency = volunteers.reduce<Record<string, number>>((acc, volunteer) => {
+    ;(volunteer.skills || []).forEach((skill) => {
+      const key = skill.trim()
+      if (!key) return
+      acc[key] = (acc[key] || 0) + 1
+    })
+    return acc
+  }, {})
+  const topSkillEntries = Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+  const totalSkills = Object.keys(skillFrequency).length
+  const totalVolunteers = totalCount || volunteers.length
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 dark:from-[#050517] dark:to-[#111132]">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/90 text-primary-foreground dark:from-primary/80 dark:via-primary/90 dark:to-primary/80">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary to-primary/80 dark:from-primary/70 dark:via-primary/80 dark:to-primary/60" />
+        <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-white/30 blur-3xl opacity-40 dark:bg-white/10" />
+        <div className="absolute right-[-80px] top-10 h-96 w-96 rounded-full bg-primary-foreground/30 blur-3xl opacity-40 dark:bg-primary-foreground/10" />
+        <div className="absolute bottom-[-120px] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-white/10 blur-[120px] opacity-70 dark:bg-white/5" />
+        <div className="relative z-10 container mx-auto px-4 py-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <Badge variant="outline" className="mb-6 bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30 dark:border-primary-foreground/20">
+              Professional Volunteer Network
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
               Discover Talented Volunteers
             </h1>
-            <p className="text-lg md:text-xl opacity-90 mb-8">
-              Connect with skilled individuals passionate about making a difference
+            <p className="text-lg md:text-xl text-primary-foreground/85 dark:text-primary-foreground/80 max-w-2xl mx-auto">
+              Connect with skilled, mission-driven professionals ready to contribute expertise and energy to impactful causes.
             </p>
-            
+
             {/* Main Search */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 opacity-70" />
+            <div className="relative max-w-2xl mx-auto mt-10">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-foreground/70" />
               <Input
                 placeholder="Search by name, skills, or expertise..."
-                className="pl-12 pr-4 py-6 text-lg bg-background dark:bg-card text-foreground border-0 shadow-lg"
+                className="pl-12 pr-4 py-6 text-lg bg-white/95 dark:bg-[#161629]/90 text-foreground border border-white/40 dark:border-white/10 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.8)] backdrop-blur"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            {topSkillEntries.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 mt-8">
+                {topSkillEntries.map(([skill, count]) => (
+                  <Badge
+                    key={skill}
+                    variant="outline"
+                    className="bg-white/20 dark:bg-white/10 border-white/50 dark:border-white/20 text-primary-foreground backdrop-blur"
+                  >
+                    {skill}
+                    <span className="ml-2 text-xs opacity-90">· {count}</span>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* Hero Stats */}
+      <div className="container relative z-20 -mt-12 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-card/80 dark:bg-[#11112B]/90 border border-white/20 dark:border-white/10 backdrop-blur-xl shadow-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Volunteers</p>
+                  <p className="text-3xl font-bold mt-1">{totalVolunteers}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Across the entire platform</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary-foreground" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/80 dark:bg-[#11112B]/90 border border-white/20 dark:border-white/10 backdrop-blur-xl shadow-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Verified Talent</p>
+                  <p className="text-3xl font-bold mt-1">{verifiedCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Professionally vetted volunteers</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-emerald-500/20 dark:bg-emerald-400/20 flex items-center justify-center">
+                  <Award className="h-6 w-6 text-emerald-500 dark:text-emerald-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/80 dark:bg-[#11112B]/90 border border-white/20 dark:border-white/10 backdrop-blur-xl shadow-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Global Reach</p>
+                  <p className="text-3xl font-bold mt-1">{uniqueLocations.size}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Active volunteer locations</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-sky-500/20 dark:bg-sky-400/20 flex items-center justify-center">
+                  <MapPin className="h-6 w-6 text-sky-500 dark:text-sky-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters & Controls */}
-        <div className="bg-card rounded-lg shadow-sm border p-4 mb-8">
+        <div className="bg-card/80 dark:bg-[#0B0B1C]/80 backdrop-blur-xl border border-border/60 dark:border-white/10 rounded-2xl shadow-xl p-6 mb-10 transition-all">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <Button 
@@ -272,15 +364,18 @@ export default function VolunteersDirectory() {
               const yearsExp = volunteer.experience?.length || 0
               
               return (
-                <Card key={volunteer._id} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <Card
+                  key={volunteer._id}
+                  className="group bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 hover:border-primary/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 backdrop-blur"
+                >
                   <CardContent className="p-6">
                     {viewMode === "grid" ? (
                       /* Grid View */
                       <div className="text-center">
                         <div className="relative inline-block mb-4">
-                          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+                          <Avatar className="h-24 w-24 ring-4 ring-primary/25 dark:ring-primary/40 border border-white/20 shadow-[0_20px_40px_-20px_rgba(14,116,144,0.9)] transition-transform group-hover:scale-[1.03]">
                             <AvatarImage src={avatarSrc} alt={volunteer.name} />
-                            <AvatarFallback className="text-2xl font-bold bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary">
+                            <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/30 via-primary/40 to-primary/20 text-primary-foreground">
                               {volunteer.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -345,9 +440,9 @@ export default function VolunteersDirectory() {
                       <div className="flex gap-4">
                         <div className="flex-shrink-0">
                           <div className="relative">
-                            <Avatar className="h-16 w-16 border-2 border-background shadow">
+                            <Avatar className="h-16 w-16 ring-2 ring-primary/25 dark:ring-primary/40 border border-white/20 shadow">
                               <AvatarImage src={avatarSrc} alt={volunteer.name} />
-                              <AvatarFallback className="text-xl font-bold bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary">
+                              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-primary/25 via-primary/35 to-primary/15 text-primary-foreground">
                                 {volunteer.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>

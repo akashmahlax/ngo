@@ -132,13 +132,17 @@ export default function NgosDirectory() {
   const activeFilterCount = (searchQuery ? 1 : 0) + selectedFocusAreas.length + (locationFilter ? 1 : 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 dark:from-[#050517] dark:via-[#0A0A1E] dark:to-[#111132]">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/80 dark:via-primary/90 dark:to-primary/80 text-primary-foreground py-16">
-        <div className="container mx-auto px-4">
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/70 dark:via-primary/80 dark:to-primary/70">
+        {/* Decorative blur circles */}
+        <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-white/30 dark:bg-white/10 blur-3xl" />
+        <div className="absolute right-10 top-10 h-80 w-80 rounded-full bg-white/20 dark:bg-white/5 blur-3xl" />
+        
+        <div className="container relative mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Organizations Directory</h1>
-            <p className="text-lg md:text-xl text-primary-foreground/90">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white drop-shadow-lg">Organizations Directory</h1>
+            <p className="text-lg md:text-xl text-white/90 dark:text-white/80 drop-shadow">
               Discover nonprofits and NGOs making a difference in your community
             </p>
           </div>
@@ -149,7 +153,7 @@ export default function NgosDirectory() {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search organizations by name, mission, or focus area..."
-                className="pl-12 pr-4 py-6 text-base bg-background dark:bg-card text-foreground shadow-lg border-none"
+                className="pl-12 pr-4 py-6 text-base bg-background/95 dark:bg-[#0F0F23]/90 text-foreground shadow-2xl border-white/20 dark:border-white/10 backdrop-blur-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -160,7 +164,7 @@ export default function NgosDirectory() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters Panel */}
-        <Card className="mb-6 shadow-lg">
+        <Card className="mb-6 bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -175,6 +179,7 @@ export default function NgosDirectory() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
+                className="hover:bg-primary/10"
               >
                 {showFilters ? (
                   <>
@@ -240,7 +245,7 @@ export default function NgosDirectory() {
 
         {/* Loading State */}
         {loading ? (
-          <Card className="shadow-lg">
+          <Card className="bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
             <CardContent className="py-16 text-center">
               <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin mb-4" />
               <p className="text-lg font-medium">Loading organizations...</p>
@@ -267,6 +272,7 @@ export default function NgosDirectory() {
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
+                  className={viewMode !== "grid" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}
                 >
                   <Grid className="h-4 w-4 mr-2" />
                   Grid
@@ -275,6 +281,7 @@ export default function NgosDirectory() {
                   variant={viewMode === "list" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("list")}
+                  className={viewMode !== "list" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}
                 >
                   <List className="h-4 w-4 mr-2" />
                   List
@@ -284,9 +291,9 @@ export default function NgosDirectory() {
 
             {/* Empty State */}
             {filteredNgos.length === 0 ? (
-              <Card className="shadow-lg">
+              <Card className="bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
                 <CardContent className="py-16 text-center">
-                  <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <Search className="h-16 w-16 mx-auto text-muted-foreground/60 mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No organizations found</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     {searchQuery || activeFilterCount > 0
@@ -316,21 +323,21 @@ export default function NgosDirectory() {
                     return (
                       <Card
                         key={ngo._id}
-                        className="group hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+                        className="group bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl hover:-translate-y-1 hover:shadow-2xl hover:border-primary/30 dark:hover:border-primary/40 transition-all duration-200"
                       >
                         <CardContent className="p-6">
                           {/* Organization Header */}
                           <div className="flex flex-col items-center text-center mb-4">
-                            <Avatar className="h-20 w-20 mb-3 ring-2 ring-primary/10 dark:ring-primary/20">
+                            <Avatar className="h-20 w-20 mb-3 ring-4 ring-primary/25 dark:ring-primary/40 border border-white/20 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(14,116,144,0.7)]">
                               <AvatarImage src={ngo.avatar} alt={displayName} />
-                              <AvatarFallback className="text-2xl font-bold bg-primary/10 dark:bg-primary/20 text-primary">
+                              <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/30 via-primary/40 to-primary/20 text-primary-foreground">
                                 {displayName.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
 
                             <div className="w-full">
                               <div className="flex items-center justify-center gap-2 mb-1">
-                                <h3 className="font-bold text-lg line-clamp-1">{displayName}</h3>
+                                <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">{displayName}</h3>
                                 {ngo.verified && (
                                   <Award className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 )}
@@ -353,18 +360,18 @@ export default function NgosDirectory() {
                           {/* Category & Jobs */}
                           <div className="flex flex-wrap items-center gap-2 mb-4">
                             {ngo.category && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
                                 {ngo.category}
                               </Badge>
                             )}
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs border-border/50 dark:border-white/20">
                               <Briefcase className="h-3 w-3 mr-1" />
                               {ngo.activeJobs} {ngo.activeJobs === 1 ? 'job' : 'jobs'}
                             </Badge>
                           </div>
 
                           {/* View Button */}
-                          <Button asChild className="w-full">
+                          <Button asChild className="w-full shadow-md hover:shadow-lg transition-shadow">
                             <Link href={`/ngos/${ngo._id}`}>
                               View Profile
                             </Link>
@@ -377,15 +384,15 @@ export default function NgosDirectory() {
                     return (
                       <Card
                         key={ngo._id}
-                        className="hover:shadow-md transition-shadow"
+                        className="bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl hover:shadow-2xl hover:border-primary/30 dark:hover:border-primary/40 transition-all duration-200"
                       >
                         <CardContent className="p-6">
                           <div className="flex flex-col md:flex-row md:items-center gap-4">
                             {/* Avatar & Basic Info */}
                             <div className="flex items-center gap-4 md:w-1/3">
-                              <Avatar className="h-16 w-16 flex-shrink-0 ring-2 ring-primary/10 dark:ring-primary/20">
+                              <Avatar className="h-16 w-16 flex-shrink-0 ring-4 ring-primary/25 dark:ring-primary/40 border border-white/20 dark:border-white/10 shadow-[0_10px_30px_-10px_rgba(14,116,144,0.7)]">
                                 <AvatarImage src={ngo.avatar} alt={displayName} />
-                                <AvatarFallback className="text-xl font-bold bg-primary/10 dark:bg-primary/20 text-primary">
+                                <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-primary/30 via-primary/40 to-primary/20 text-primary-foreground">
                                   {displayName.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -415,18 +422,18 @@ export default function NgosDirectory() {
                                 
                                 <div className="flex flex-wrap items-center gap-2">
                                   {ngo.category && (
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
                                       {ngo.category}
                                     </Badge>
                                   )}
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs border-border/50 dark:border-white/20">
                                     <Briefcase className="h-3 w-3 mr-1" />
                                     {ngo.activeJobs} {ngo.activeJobs === 1 ? 'job' : 'jobs'}
                                   </Badge>
                                 </div>
                               </div>
 
-                              <Button asChild className="md:flex-shrink-0">
+                              <Button asChild className="md:flex-shrink-0 shadow-md hover:shadow-lg transition-shadow">
                                 <Link href={`/ngos/${ngo._id}`}>
                                   View Profile
                                 </Link>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -72,25 +73,29 @@ export default function SignupPage() {
       
       toast.success("Account created successfully!")
       
+      // Sign in the user automatically after signup
+      const signInResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (!signInResult?.ok) {
+        toast.error("Account created but auto-login failed. Please sign in manually.")
+        r.push("/signin")
+        return
+      }
+
+      // Redirect based on plan selection
       if (String(plan).endsWith("plus")) {
         r.push("/upgrade?plan=" + plan)
       } else {
-        // Sign in the user automatically after signup
-        const signInRes = await fetch("/api/auth/callback/credentials", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        })
-        
-        if (signInRes.ok) {
-          r.push(role === "ngo" ? "/dashboard/ngo" : "/dashboard/volunteer")
-        } else {
-          r.push("/signin")
-        }
+        r.push(role === "ngo" ? "/ngo" : "/volunteer")
       }
-    } catch (e: any) {
-      setError(e.message || "An error occurred during signup")
-      toast.error(e.message || "Signup failed")
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "An error occurred during signup"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -147,7 +152,11 @@ export default function SignupPage() {
           
           <div className="grid gap-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(v) => { setRole(v as any); setPlan(v === 'ngo' ? 'ngo_base' : 'volunteer_free') }}>
+            <Select value={role} onValueChange={(v) => { 
+              const newRole = v as "volunteer" | "ngo"
+              setRole(newRole)
+              setPlan(newRole === 'ngo' ? 'ngo_base' : 'volunteer_free')
+            }}>
               <SelectTrigger id="role">
                 <SelectValue placeholder="Select your role" />
               </SelectTrigger>
