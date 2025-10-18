@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Kbd } from "@/components/ui/kbd"
@@ -24,7 +25,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Menu, Search, CommandIcon } from "lucide-react"
+import { Menu, Search, CommandIcon, Crown, Zap } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
 import SignOut from "@/components/auth/sign-out"
@@ -90,7 +91,10 @@ export function SiteNavbar() {
 
   // Small typed helpers to avoid using `any` directly
   const role = (session as unknown as { role?: string })?.role
+  const plan = (session as unknown as { plan?: string })?.plan
   const userObj = session as unknown as { user?: { avatarUrl?: string; name?: string; email?: string } }
+  
+  const isPlusUser = plan === "volunteer_plus" || plan === "ngo_plus"
 
   // Hide the site-wide navbar on dashboard routes to avoid duplicate headers.
   // Our dashboards are available under multiple host paths (app router parallel/
@@ -208,30 +212,62 @@ export function SiteNavbar() {
           <ThemeToggle />
 
           {session?.user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src={userObj.user?.avatarUrl || undefined} />
-                  <AvatarFallback>{userObj.user?.name?.slice(0,2)?.toUpperCase() || "ME"}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={getDashboardBase(role)}>Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={getDashboardProfilePath(role)}>Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <span>
-                    <SignOut />
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              {isPlusUser && (
+                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hidden sm:flex">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Plus
+                </Badge>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="relative cursor-pointer">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={userObj.user?.avatarUrl || undefined} />
+                      <AvatarFallback>{userObj.user?.name?.slice(0,2)?.toUpperCase() || "ME"}</AvatarFallback>
+                    </Avatar>
+                    {isPlusUser && (
+                      <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 border-2 border-background flex items-center justify-center">
+                        <Zap className="h-2.5 w-2.5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-56">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>My Account</span>
+                    {isPlusUser && (
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                        Plus
+                      </Badge>
+                    )}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={getDashboardBase(role)}>Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={getDashboardProfilePath(role)}>Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${role}/billing`}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>Billing</span>
+                        {!isPlusUser && (
+                          <Badge variant="outline" className="text-xs">Free</Badge>
+                        )}
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <span>
+                      <SignOut />
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="outline">

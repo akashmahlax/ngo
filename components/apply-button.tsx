@@ -5,7 +5,9 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
+import { Lock, AlertCircle } from "lucide-react"
 
 export function ApplyButton({ jobId }: { jobId: string }) {
   const { data: session } = useSession()
@@ -24,21 +26,64 @@ export function ApplyButton({ jobId }: { jobId: string }) {
     )
   }
 
-  const role = (session as any).role
+  const userSession = session as {
+    role?: string
+    plan?: string
+    planExpiresAt?: string
+  }
+
+  const role = userSession.role
+  const plan = userSession.plan
+  const planExpiresAt = userSession.planExpiresAt ? new Date(userSession.planExpiresAt) : null
+  const isPlanExpired = planExpiresAt && new Date() > planExpiresAt
+
   if (role !== "volunteer") {
     return (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Only volunteers can apply for jobs</p>
-        <Button onClick={() => router.push("/signup")} variant="outline" className="w-full">
-          Sign up as Volunteer
-        </Button>
-      </div>
+      <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50">
+        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+        <AlertDescription className="text-amber-800 dark:text-amber-200">
+          Only volunteers can apply for jobs. Please sign up as a volunteer.
+        </AlertDescription>
+      </Alert>
     )
   }
 
-  const plan = (session as any).plan
+  // Check if user has valid plan (volunteer_free or active volunteer_plus)
+  const hasValidPlan = plan === "volunteer_free" || (plan === "volunteer_plus" && !isPlanExpired)
+
+  if (!hasValidPlan || isPlanExpired) {
+    return (
+      <Alert className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-red-200 dark:border-red-900/50">
+        <Lock className="h-5 w-5 text-red-600 dark:text-red-400" />
+        <AlertDescription>
+          <div className="space-y-3">
+            <div>
+              <p className="font-semibold text-red-900 dark:text-red-100 mb-1">
+                {isPlanExpired ? "Your Plan Has Expired" : "Valid Plan Required"}
+              </p>
+              <p className="text-sm text-red-800 dark:text-red-200">
+                {isPlanExpired 
+                  ? "Your subscription has expired. Renew your plan to continue applying for jobs."
+                  : "You need an active volunteer plan to apply for jobs. Sign up for free or upgrade to Plus for unlimited applications."
+                }
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {!plan && (
+                <Button onClick={() => router.push("/complete-profile")} className="flex-1">
+                  Complete Profile
+                </Button>
+              )}
+              <CheckoutButton plan="volunteer_plus" />
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   const isPlus = plan === "volunteer_plus"
-  const isExpired = (session as any).planExpiresAt && new Date((session as any).planExpiresAt) < new Date()
+  const isExpired = isPlanExpired
 
   async function handleApply() {
     setLoading(true)
@@ -63,7 +108,7 @@ export function ApplyButton({ jobId }: { jobId: string }) {
       }
       
       router.push("/(dashboard)/volunteer/applications")
-    } catch (e) {
+    } catch {
       setError("Failed to apply")
     } finally {
       setLoading(false)

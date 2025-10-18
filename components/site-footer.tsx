@@ -9,7 +9,7 @@ export function SiteFooter() {
         <div className="grid gap-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-md bg-primary" aria-hidden />
-            <span className="font-semibold">CivicConnect</span>
+            <span className="font-semibold">Just Because Asia</span>
           </div>
           <p className="text-sm text-muted-foreground">Connecting NGOs and volunteers to drive measurable impact.</p>
           <Button asChild size="sm" className="w-fit">
@@ -67,7 +67,7 @@ export function SiteFooter() {
       </div>
       <Separator />
       <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 py-6 md:flex-row">
-        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} CivicConnect. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} just because asia. All rights reserved.</p>
         <div className="flex gap-3">
           <Link className="text-xs text-muted-foreground hover:underline" href="/sitemap">
             Sitemap

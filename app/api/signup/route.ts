@@ -8,7 +8,7 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["volunteer", "ngo"]),
-  plan: z.enum(["volunteer_free", "volunteer_plus", "ngo_base", "ngo_plus"]).optional(),
+  plan: z.enum(["volunteer_free", "volunteer_plus", "ngo_plus"]).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -20,11 +20,11 @@ export async function POST(req: NextRequest) {
 
   const { name, email, password, role, plan } = parsed.data
 
-  const effectivePlan = plan
-    ? plan
-    : role === "volunteer"
-    ? "volunteer_free"
-    : "ngo_base"
+  // CRITICAL FIX: Always set free tier on signup, only upgrade after payment verification
+  const freeTierPlan = role === "volunteer" ? "volunteer_free" : "ngo_base"
+  
+  // Track if user requested a Plus plan so we can redirect to upgrade page
+  const requestedPlusPlan = plan && plan.endsWith("plus")
 
   try {
     await client.connect()
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       email,
       passwordHash,
       role,
-      plan: effectivePlan,
+      plan: freeTierPlan, // Always free tier - only upgrade after payment
       planExpiresAt: null as Date | null, // set upon payment for plus plans
       monthlyApplicationCount: 0,
       monthlyApplicationResetAt: now,
@@ -52,8 +52,11 @@ export async function POST(req: NextRequest) {
     }
     const { insertedId } = await users.insertOne(doc)
 
-    return NextResponse.json({ userId: insertedId.toString(), requiresUpgradePayment: effectivePlan.endsWith("plus") })
-  } catch (e) {
+    return NextResponse.json({ 
+      userId: insertedId.toString(), 
+      requiresUpgradePayment: requestedPlusPlan 
+    })
+  } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

@@ -50,7 +50,7 @@ export default function PostJobPage() {
       return
     }
   }, [session, status, router])
-  const { data: session } = useSession()
+  
   const [currentStep, setCurrentStep] = useState(1)
   const [saving, setSaving] = useState(false)
   const [isPreview, setIsPreview] = useState(false)

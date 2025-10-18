@@ -5,9 +5,42 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
+interface RazorpayResponse {
+  razorpay_payment_id: string
+  razorpay_order_id: string
+  razorpay_signature: string
+}
+
+interface RazorpayError {
+  error: {
+    code: string
+    description: string
+    source: string
+    step: string
+    reason: string
+  }
+}
+
+interface RazorpayOptions {
+  key: string
+  order_id: string
+  handler: (response: RazorpayResponse) => void
+  modal?: {
+    ondismiss?: () => void
+  }
+  theme?: {
+    color: string
+  }
+}
+
+interface RazorpayInstance {
+  open: () => void
+  on: (event: string, handler: (response: RazorpayError) => void) => void
+}
+
 declare global {
   interface Window {
-    Razorpay: any
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance
   }
 }
 
@@ -54,10 +87,10 @@ export function CheckoutButton({ plan }: { plan: "volunteer_plus" | "ngo_plus" }
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || "Failed to create order")
       
-      const options = {
-        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      const options: RazorpayOptions = {
+        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         order_id: data.order.id,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           // Verify payment on server before showing success
           toast.loading("Verifying payment...")
           const verified = await verifyPayment(
@@ -86,7 +119,7 @@ export function CheckoutButton({ plan }: { plan: "volunteer_plus" | "ngo_plus" }
         theme: { color: "#0E7490" },
       }
       const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', function (response: any){
+      rzp.on('payment.failed', function (response: RazorpayError){
         toast.error("Payment failed: " + response.error.description)
         setLoading(false)
       })

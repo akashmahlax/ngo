@@ -74,7 +74,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 })
-  const role = (session as any).role
+  
+  const sessionData = session as {
+    role?: string
+    plan?: string
+    planExpiresAt?: string
+  }
+  
+  const role = sessionData.role
   if (role !== "volunteer") return NextResponse.json({ error: "ONLY_VOLUNTEER" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
@@ -85,10 +92,30 @@ export async function POST(req: NextRequest) {
   const user = await users.findOne({ email: session.user.email })
   if (!user) return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 })
 
+  // Check if user has valid plan
+  const userPlan = user.plan
+  const planExpiresAt = user.planExpiresAt ? new Date(user.planExpiresAt) : null
+  const isPlanExpired = planExpiresAt && new Date() > planExpiresAt
+  
+  // Only volunteer_free and active volunteer_plus can apply
+  if (userPlan !== "volunteer_free" && userPlan !== "volunteer_plus") {
+    return NextResponse.json({ 
+      error: "INVALID_PLAN",
+      message: "You need a valid volunteer plan to apply for jobs."
+    }, { status: 403 })
+  }
+  
+  if (isPlanExpired) {
+    return NextResponse.json({ 
+      error: "PLAN_EXPIRED",
+      message: "Your plan has expired. Please renew to continue applying for jobs."
+    }, { status: 403 })
+  }
+
   const job = await jobs.findOne({ _id: new ObjectId(parsed.data.jobId) })
   if (!job || job.status !== "open") return NextResponse.json({ error: "JOB_UNAVAILABLE" }, { status: 404 })
 
-  const isPlus = user.plan === "volunteer_plus"
+  const isPlus = user.plan === "volunteer_plus" && !isPlanExpired
   const check = await canApply(user._id.toString(), isPlus)
   if (!check.ok) return NextResponse.json({ error: check.reason }, { status: 402 })
 

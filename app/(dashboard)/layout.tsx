@@ -28,6 +28,7 @@ import {
   Crown,
   Menu,
   Bell,
+  CreditCard,
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -108,8 +109,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const role = session.role || "volunteer"
   const plan = session.plan
+  const planExpiresAt = session.planExpiresAt ? new Date(session.planExpiresAt) : null
   const isPlus = plan?.includes("plus")
-  const isExpired = session.planExpiresAt && new Date(session.planExpiresAt) < new Date()
+  const isExpired = planExpiresAt && new Date() > planExpiresAt
+  const daysUntilExpiry = planExpiresAt 
+    ? Math.ceil((planExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null
 
   const userNavItems = navItems[role as keyof typeof navItems] || navItems.volunteer
 
@@ -151,24 +156,70 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Separator />
       
       <div className="p-3">
+        {/* Plan Status Card */}
+        {isPlus && !isExpired && (
+          <div className="rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 p-3 mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium">Current Plan</span>
+              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                Plus
+              </Badge>
+            </div>
+            {planExpiresAt && daysUntilExpiry !== null && (
+              <p className="text-xs text-muted-foreground">
+                {daysUntilExpiry <= 7 ? (
+                  <span className="text-orange-600 dark:text-orange-400 font-medium">
+                    Expires in {daysUntilExpiry} day{daysUntilExpiry !== 1 ? 's' : ''}
+                  </span>
+                ) : (
+                  <>Expires {planExpiresAt.toLocaleDateString()}</>
+                )}
+              </p>
+            )}
+            <Link 
+              href={`/${role}/billing`}
+              className="text-xs text-primary hover:underline mt-1 inline-block"
+              onClick={() => setSidebarOpen(false)}
+            >
+              Manage subscription →
+            </Link>
+          </div>
+        )}
+        
         {!isPlus && (
           <Link
-            href="/upgrade"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground"
+            href={`/upgrade?plan=${role}_plus`}
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground mb-3"
             onClick={() => setSidebarOpen(false)}
           >
             <Crown className="h-4 w-4" />
-            Upgrade Plan
+            Upgrade to Plus
           </Link>
         )}
         
         {isExpired && (
-          <div className="rounded-md bg-amber-50 border border-amber-200 p-3 mb-3">
-            <p className="text-xs text-amber-800">
-              Your plan has expired. <Link href="/upgrade" className="underline">Renew now</Link>
+          <div className="rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-3 mb-3">
+            <p className="text-xs text-amber-800 dark:text-amber-200 mb-1">
+              Your plan has expired.
             </p>
+            <Link 
+              href={`/upgrade?plan=${role}_plus`}
+              className="text-xs text-amber-600 dark:text-amber-400 hover:underline"
+              onClick={() => setSidebarOpen(false)}
+            >
+              Renew now →
+            </Link>
           </div>
         )}
+        
+        <Link
+          href={`/${role}/billing`}
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <CreditCard className="h-4 w-4" />
+          Billing
+        </Link>
       </div>
     </div>
   )
