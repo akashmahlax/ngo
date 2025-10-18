@@ -1,25 +1,55 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   ChevronLeft, 
   Plus, 
   X, 
   Save, 
   Eye,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
 export default function PostJobPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  // Check if user has NGO Plus plan
+  useEffect(() => {
+    if (status === "loading") return
+    
+    if (!session) {
+      toast.error("Please sign in to post jobs")
+      router.push("/signin")
+      return
+    }
+
+    const userSession = session as { role?: string; plan?: string }
+    
+    if (userSession?.role !== "ngo") {
+      toast.error("Only NGOs can post jobs")
+      router.push("/")
+      return
+    }
+
+    if (userSession?.plan !== "ngo_plus") {
+      toast.error("Upgrade to NGO Plus to post jobs")
+      router.push("/upgrade?plan=ngo_plus")
+      return
+    }
+  }, [session, status, router])
   const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [saving, setSaving] = useState(false)

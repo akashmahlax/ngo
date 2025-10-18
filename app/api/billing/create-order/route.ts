@@ -7,8 +7,8 @@ import { auth } from "@/auth"
 const bodySchema = z.object({ plan: z.enum(["volunteer_plus", "ngo_plus"]) })
 
 const PRICES: Record<string, number> = {
-  volunteer_plus: 19900, // in paise (INR 199)
-  ngo_plus: 49900,       // in paise (INR 499)
+  volunteer_plus: 100, // in paise (INR 1) - Testing price
+  ngo_plus: 100,       // in paise (INR 1) - Testing price
 }
 
 export async function POST(req: NextRequest) {

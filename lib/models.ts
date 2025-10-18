@@ -12,6 +12,9 @@ export type UserDoc = {
   role: UserRole
   plan: UserPlan
   planExpiresAt: Date | null
+  planActivatedAt?: Date | null
+  planCancelled?: boolean
+  planCancelledAt?: Date | null
   monthlyApplicationCount: number
   monthlyApplicationResetAt: Date
   bio?: string
