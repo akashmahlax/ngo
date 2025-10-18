@@ -13,15 +13,47 @@ const createSchema = z.object({
   skills: z.array(z.string()).optional(),
 })
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { jobs } = await getCollections()
+  
+  // Parse query parameters
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "50"), 100)
+  const skip = parseInt(req.nextUrl.searchParams.get("skip") || "0")
+  
   const list = await jobs
     .find({ status: "open" })
-    .project({ title: 1, category: 1, createdAt: 1 })
+    .project({ 
+      title: 1, 
+      category: 1, 
+      locationType: 1,
+      description: 1,
+      skills: 1,
+      createdAt: 1,
+      ngoId: 1
+    })
     .sort({ createdAt: -1 })
-    .limit(50)
+    .skip(skip)
+    .limit(limit)
     .toArray()
-  return NextResponse.json({ jobs: list })
+  
+  // Enrich with NGO names
+  const { users } = await getCollections()
+  const enriched = await Promise.all(
+    list.map(async (job) => {
+      const ngo = await users.findOne(
+        { _id: new ObjectId(job.ngoId?.toString() || "") },
+        { projection: { name: 1 } }
+      )
+      return {
+        ...job,
+        _id: job._id?.toString(),
+        ngoId: job.ngoId?.toString(),
+        ngoName: ngo?.name || "Unknown NGO"
+      }
+    })
+  )
+  
+  return NextResponse.json({ jobs: enriched, count: enriched.length })
 }
 
 export async function POST(req: NextRequest) {

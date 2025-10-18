@@ -1,72 +1,75 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
 export default function CompleteProfilePage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const router = useRouter()
-  const [role, setRole] = useState<"volunteer" | "ngo">("volunteer")
-  const [plan, setPlan] = useState<string>("volunteer_free")
+  
+  const [step, setStep] = useState<"role" | "details">("role")
+  const [role, setRole] = useState<"volunteer" | "ngo" | null>(null)
+  const [orgName, setOrgName] = useState("")
   const [loading, setLoading] = useState(false)
-
-  const plansByRole: Record<string, { value: string; label: string; description: string; price: string }[]> = {
-    volunteer: [
-      { value: "volunteer_free", label: "Volunteer Free", description: "1 application per month", price: "₹0" },
-      { value: "volunteer_plus", label: "Volunteer Plus", description: "Unlimited applications", price: "₹199/month" },
-    ],
-    ngo: [
-      { value: "ngo_base", label: "NGO Base", description: "Up to 3 active job postings", price: "₹0" },
-      { value: "ngo_plus", label: "NGO Plus", description: "Unlimited job postings", price: "₹499/month" },
-    ],
-  }
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // If user is not authenticated, redirect to signin
     if (status === "unauthenticated") {
       router.push("/signin")
     }
-    
-    // If user already has a role and plan, redirect to dashboard
-    if (session?.user && (session as any).role && (session as any).plan) {
-      const userRole = (session as any).role
-      router.push(userRole === "ngo" ? "/dashboard/ngo" : "/dashboard/volunteer")
-    }
-  }, [session, status, router])
+  }, [status, router])
 
-  async function handleSubmit() {
+  async function handleCompleteProfile() {
+    if (!role) {
+      setError("Please select a role")
+      return
+    }
+
+    if (role === "ngo" && !orgName.trim()) {
+      setError("Organization name is required for NGOs")
+      return
+    }
+
     setLoading(true)
+    setError(null)
+
     try {
-      // Update user profile with role and plan
       const res = await fetch("/api/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, plan }),
+        body: JSON.stringify({
+          role,
+          orgName: role === "ngo" ? orgName : undefined,
+        }),
       })
-      
+
+      const data = await res.json()
+
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data?.error || "Failed to update profile")
+        throw new Error(data.error || "Failed to complete profile")
       }
-      
-      // Refresh session to get updated user data
-      await signIn("google", { redirect: false })
+
       toast.success("Profile completed successfully!")
-      
-      // Redirect to appropriate dashboard or upgrade page
-      if (plan.endsWith("plus")) {
-        router.push(`/upgrade?plan=${plan}`)
-      } else {
-        router.push(role === "ngo" ? "/dashboard/ngo" : "/dashboard/volunteer")
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to complete profile")
+
+      // Update session
+      await update()
+
+      // Redirect to dashboard
+      const dashboardUrl = role === "ngo" ? "/(dashboard)/ngo" : "/(dashboard)/volunteer"
+      router.push(dashboardUrl)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred"
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -74,81 +77,105 @@ export default function CompleteProfilePage() {
 
   if (status === "loading") {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-md">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-md">
-      <Card>
-        <CardHeader className="space-y-1">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
-          <CardDescription>
-            Welcome! Please complete your profile to continue.
-          </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="role">I am a...</Label>
-            <Select value={role} onValueChange={(v) => { 
-              setRole(v as any); 
-              setPlan(v === 'ngo' ? 'ngo_base' : 'volunteer_free') 
-            }}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select your role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
-                <SelectItem value="ngo">NGO</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="plan">Plan</Label>
-            <Select value={plan} onValueChange={setPlan}>
-              <SelectTrigger id="plan">
-                <SelectValue placeholder="Select a plan" />
-              </SelectTrigger>
-              <SelectContent>
-                {plansByRole[role].map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    <div className="flex items-center justify-between w-full">
-                      <div>
-                        <div className="font-medium">{p.label}</div>
-                        <div className="text-xs text-muted-foreground">{p.description}</div>
-                      </div>
-                      <div className="font-semibold">{p.price}</div>
+
+        <CardContent className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {step === "role" && (
+            <div className="space-y-4">
+              <RadioGroup value={role || ""} onValueChange={(v) => setRole(v as "volunteer" | "ngo")}>
+                <div
+                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition"
+                  onClick={() => setRole("volunteer")}
+                >
+                  <RadioGroupItem value="volunteer" id="volunteer" />
+                  <Label htmlFor="volunteer" className="cursor-pointer flex-1">
+                    <div className="font-medium">I'm a Volunteer</div>
+                    <div className="text-sm text-muted-foreground">
+                      Find and apply for volunteering opportunities
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="pt-4">
-            <Button 
-              className="w-full" 
-              onClick={handleSubmit} 
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Complete Profile"}
-            </Button>
-          </div>
-          
-          <div className="pt-2">
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={() => signOut()}
-            >
-              Sign Out
-            </Button>
-          </div>
+                  </Label>
+                </div>
+
+                <div
+                  className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition"
+                  onClick={() => setRole("ngo")}
+                >
+                  <RadioGroupItem value="ngo" id="ngo" />
+                  <Label htmlFor="ngo" className="cursor-pointer flex-1">
+                    <div className="font-medium">I'm from an NGO</div>
+                    <div className="text-sm text-muted-foreground">
+                      Post jobs and find volunteers
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              <Button onClick={() => setStep("details")} disabled={!role || loading} className="w-full">
+                Continue
+              </Button>
+            </div>
+          )}
+
+          {step === "details" && (
+            <div className="space-y-4">
+              {role === "ngo" && (
+                <div className="space-y-2">
+                  <Label htmlFor="org">Organization Name *</Label>
+                  <Input
+                    id="org"
+                    placeholder="Enter your organization name"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {role === "volunteer" && (
+                <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
+                  <div className="flex gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-medium">Profile info</div>
+                      <div className="text-sm text-muted-foreground">
+                        You can complete your full volunteer profile after signing in
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setStep("role")} disabled={loading} className="flex-1">
+                  Back
+                </Button>
+                <Button
+                  onClick={handleCompleteProfile}
+                  disabled={!role || (role === "ngo" && !orgName.trim()) || loading}
+                  className="flex-1"
+                >
+                  {loading ? "Completing..." : "Complete Profile"}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

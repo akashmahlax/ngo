@@ -1,9 +1,6 @@
-"use client"
-
-import { useState } from "react"
-import { useSession } from "next-auth/react"
+import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { 
   MapPin, 
@@ -13,73 +10,62 @@ import {
   Github,
   Twitter,
   Share2,
-  MessageSquare
+  MessageSquare,
+  Briefcase,
+  GraduationCap
 } from "lucide-react"
 import Link from "next/link"
+import { getCollections } from "@/lib/models"
+import { ObjectId } from "mongodb"
 
-// Mock data for demonstration
-const mockVolunteer = {
-  id: "1",
-  name: "Alex Johnson",
-  avatar: "/placeholder.svg",
-  bio: "Passionate environmentalist with 3 years of experience in wildlife conservation. I believe in using research and data analysis to drive meaningful change in environmental protection. My goal is to contribute to projects that have a tangible impact on preserving our planet for future generations.",
-  location: "San Francisco, CA",
-  skills: ["Conservation", "Research", "Data Analysis", "Wildlife Photography", "Environmental Science", "Field Work", "Grant Writing"],
-  socialLinks: {
-    linkedin: "https://linkedin.com/in/alexjohnson",
-    github: "https://github.com/alexjohnson",
-    website: "https://alexjohnson.com",
-    twitter: "https://twitter.com/alexjohnson",
-  },
-  experience: [
-    {
-      title: "Wildlife Research Assistant",
-      company: "Marine Conservation Institute",
-      duration: "2022 - Present",
-      description: "Conducting field research on marine ecosystems and contributing to conservation policy recommendations."
-    },
-    {
-      title: "Environmental Data Analyst",
-      company: "GreenTech Solutions",
-      duration: "2020 - 2022",
-      description: "Analyzing environmental data to identify trends and support sustainability initiatives."
+async function getVolunteer(id: string) {
+  try {
+    if (!ObjectId.isValid(id)) {
+      return null
     }
-  ],
-  education: [
-    {
-      degree: "M.S. Environmental Science",
-      institution: "Stanford University",
-      year: "2020",
-      description: "Specialized in marine conservation and ecosystem management."
-    },
-    {
-      degree: "B.S. Biology",
-      institution: "UC Berkeley",
-      year: "2018",
-      description: "Focus on ecology and conservation biology."
+
+    const { users } = await getCollections()
+    const volunteer = await users.findOne({ 
+      _id: new ObjectId(id),
+      role: "volunteer"
+    })
+    
+    if (!volunteer) {
+      return null
     }
-  ],
-  availability: "Weekends and evenings",
-  causes: ["Environment", "Wildlife Conservation", "Climate Change"],
+
+    return {
+      id: volunteer._id.toString(),
+      name: volunteer.name || "Anonymous Volunteer",
+      email: volunteer.email,
+      avatarUrl: volunteer.avatarUrl,
+      bio: volunteer.bio || "",
+      location: volunteer.location || "Location not specified",
+      skills: volunteer.skills || [],
+      phone: volunteer.phone,
+      socialLinks: volunteer.socialLinks || {},
+      experience: volunteer.experience || [],
+      education: volunteer.education || [],
+      availability: (volunteer as any).availability || "Not specified",
+      interests: (volunteer as any).interests || [],
+      createdAt: volunteer.createdAt,
+    }
+  } catch (error) {
+    console.error("Error fetching volunteer:", error)
+    return null
+  }
 }
 
-export default function VolunteerPublicProfile({ params }: { params: { id: string } }) {
-  const { data: session } = useSession()
-  const [isShared, setIsShared] = useState(false)
+export default async function VolunteerPublicProfile({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params
+  const volunteer = await getVolunteer(id)
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${mockVolunteer.name}'s Volunteer Profile`,
-        text: `Check out ${mockVolunteer.name}'s volunteer profile`,
-        url: window.location.href,
-      }).catch(console.error)
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href)
-      setIsShared(true)
-      setTimeout(() => setIsShared(false), 2000)
-    }
+  if (!volunteer) {
+    notFound()
   }
 
   return (
@@ -87,43 +73,63 @@ export default function VolunteerPublicProfile({ params }: { params: { id: strin
       {/* Profile Header */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start gap-6">
-          <div className="h-32 w-32 rounded-full bg-primary flex items-center justify-center text-white font-bold text-4xl flex-shrink-0">
-            {mockVolunteer.name.charAt(0)}
-          </div>
+          {volunteer.avatarUrl ? (
+            <img
+              src={volunteer.avatarUrl}
+              alt={volunteer.name}
+              className="h-32 w-32 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="h-32 w-32 rounded-full bg-primary flex items-center justify-center text-white font-bold text-4xl flex-shrink-0">
+              {volunteer.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold">{mockVolunteer.name}</h1>
-                <div className="flex items-center text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{mockVolunteer.location}</span>
-                </div>
+                <h1 className="text-3xl font-bold">{volunteer.name}</h1>
+                {volunteer.location && (
+                  <div className="flex items-center text-muted-foreground mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{volunteer.location}</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleShare}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  {isShared ? "Copied!" : "Share"}
-                </Button>
-                <Button>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Contact
-                </Button>
+                <form action="/api/share">
+                  <Button type="submit" variant="outline">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </form>
+                {volunteer.email && (
+                  <Button asChild>
+                    <Link href={`mailto:${volunteer.email}`}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Contact
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
             
-            <p className="text-muted-foreground mb-4">
-              {mockVolunteer.bio}
-            </p>
+            {volunteer.bio && (
+              <p className="text-muted-foreground mb-4">
+                {volunteer.bio}
+              </p>
+            )}
             
-            <div className="flex flex-wrap gap-2">
-              {mockVolunteer.causes.map((cause, index) => (
-                <Badge key={index} variant="secondary">
-                  {cause}
-                </Badge>
-              ))}
-            </div>
+            {volunteer.interests && volunteer.interests.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {volunteer.interests.map((interest: string, index: number) => (
+                  <Badge key={index} variant="secondary">
+                    {interest}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -132,67 +138,81 @@ export default function VolunteerPublicProfile({ params }: { params: { id: strin
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Skills */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Skills & Expertise</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {mockVolunteer.skills.map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="py-2 text-base">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {volunteer.skills && volunteer.skills.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills & Expertise</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {volunteer.skills.map((skill: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="py-2 text-base">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Experience */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Experience</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {mockVolunteer.experience.map((exp, index) => (
-                <div key={index} className="border-l-2 border-primary pl-4 py-1">
-                  <h3 className="text-lg font-semibold">{exp.title}</h3>
-                  <p className="text-muted-foreground">{exp.company}</p>
-                  <p className="text-sm text-muted-foreground mb-2">{exp.duration}</p>
-                  <p className="text-muted-foreground">{exp.description}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {volunteer.experience && volunteer.experience.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Experience
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {volunteer.experience.map((exp: any, index: number) => (
+                  <div key={index} className="border-l-2 border-primary pl-4 py-1">
+                    <h3 className="text-lg font-semibold">{exp.title}</h3>
+                    {exp.company && <p className="text-muted-foreground">{exp.company}</p>}
+                    {exp.duration && <p className="text-sm text-muted-foreground mb-2">{exp.duration}</p>}
+                    {exp.description && <p className="text-muted-foreground">{exp.description}</p>}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Education */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Education</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {mockVolunteer.education.map((edu, index) => (
-                <div key={index} className="border-l-2 border-primary pl-4 py-1">
-                  <h3 className="text-lg font-semibold">{edu.degree}</h3>
-                  <p className="text-muted-foreground">{edu.institution}</p>
-                  <p className="text-sm text-muted-foreground mb-2">{edu.year}</p>
-                  <p className="text-muted-foreground">{edu.description}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {volunteer.education && volunteer.education.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5" />
+                  Education
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {volunteer.education.map((edu: any, index: number) => (
+                  <div key={index} className="border-l-2 border-primary pl-4 py-1">
+                    <h3 className="text-lg font-semibold">{edu.degree}</h3>
+                    {edu.institution && <p className="text-muted-foreground">{edu.institution}</p>}
+                    {edu.year && <p className="text-sm text-muted-foreground mb-2">{edu.year}</p>}
+                    {edu.description && <p className="text-muted-foreground">{edu.description}</p>}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Availability */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Availability</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{mockVolunteer.availability}</p>
-            </CardContent>
-          </Card>
+          {volunteer.availability && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Availability</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{volunteer.availability}</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Contact Information */}
           <Card>
@@ -200,36 +220,47 @@ export default function VolunteerPublicProfile({ params }: { params: { id: strin
               <CardTitle>Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" asChild>
-                <Link href={`mailto:alex.johnson@example.com`}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Email
-                </Link>
-              </Button>
+              {volunteer.email && (
+                <Button className="w-full" asChild>
+                  <Link href={`mailto:${volunteer.email}`}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email
+                  </Link>
+                </Button>
+              )}
               
-              {mockVolunteer.socialLinks.linkedin && (
+              {volunteer.socialLinks?.linkedin && (
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href={mockVolunteer.socialLinks.linkedin} target="_blank">
+                  <Link href={volunteer.socialLinks.linkedin} target="_blank">
                     <Linkedin className="h-4 w-4 mr-2" />
                     LinkedIn
                   </Link>
                 </Button>
               )}
               
-              {mockVolunteer.socialLinks.github && (
+              {volunteer.socialLinks?.github && (
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href={mockVolunteer.socialLinks.github} target="_blank">
+                  <Link href={volunteer.socialLinks.github} target="_blank">
                     <Github className="h-4 w-4 mr-2" />
                     GitHub
                   </Link>
                 </Button>
               )}
               
-              {mockVolunteer.socialLinks.website && (
+              {volunteer.socialLinks?.website && (
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href={mockVolunteer.socialLinks.website} target="_blank">
+                  <Link href={volunteer.socialLinks.website} target="_blank">
                     <Globe className="h-4 w-4 mr-2" />
                     Website
+                  </Link>
+                </Button>
+              )}
+
+              {volunteer.socialLinks?.twitter && (
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={volunteer.socialLinks.twitter} target="_blank">
+                    <Twitter className="h-4 w-4 mr-2" />
+                    Twitter
                   </Link>
                 </Button>
               )}

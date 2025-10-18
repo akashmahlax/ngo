@@ -124,10 +124,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           token.userId = dbUser._id.toString()
           token.role = dbUser.role ?? token.role
-          token.plan = dbUser.plan ?? token.plan
-          token.planExpiresAt = dbUser.planExpiresAt?.toISOString() ?? token.planExpiresAt
-          // If user doesn't have a role, mark them as incomplete
           token.profileComplete = !!dbUser.role
+          
+          // Check if plan has expired and downgrade if needed
+          let currentPlan = dbUser.plan ?? token.plan
+          if (dbUser.planExpiresAt && new Date() > new Date(dbUser.planExpiresAt)) {
+            // Plan expired - downgrade to free tier
+            const freePlan = dbUser.role === "volunteer" ? "volunteer_free" : "ngo_base"
+            await users.updateOne(
+              { _id: dbUser._id },
+              { 
+                $set: { 
+                  plan: freePlan,
+                  planExpiresAt: null,
+                  updatedAt: new Date()
+                } 
+              }
+            )
+            currentPlan = freePlan
+          }
+          
+          token.plan = currentPlan
+          token.planExpiresAt = dbUser.planExpiresAt?.toISOString() ?? token.planExpiresAt
         }
       } catch {}
 
