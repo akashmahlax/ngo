@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { VolunteerCard } from "@/components/volunteer-card"
 import { 
   Search, 
   X,
@@ -15,10 +15,8 @@ import {
   Users,
   Loader2,
   Award,
-  Briefcase,
   Filter
 } from "lucide-react"
-import Link from "next/link"
 import { apiGet } from "@/lib/api-client"
 
 interface Volunteer {
@@ -359,160 +357,13 @@ export default function VolunteersDirectory() {
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
               : "space-y-4"
           }>
-            {filteredVolunteers.map((volunteer) => {
-              const avatarSrc = volunteer.avatarUrl || volunteer.avatar
-              const yearsExp = volunteer.experience?.length || 0
-              
-              return (
-                <Card
-                  key={volunteer._id}
-                  className="group bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 hover:border-primary/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 backdrop-blur"
-                >
-                  <CardContent className="p-6">
-                    {viewMode === "grid" ? (
-                      /* Grid View */
-                      <div className="text-center">
-                        <div className="relative inline-block mb-4">
-                          <Avatar className="h-24 w-24 ring-4 ring-primary/25 dark:ring-primary/40 border border-white/20 shadow-[0_20px_40px_-20px_rgba(14,116,144,0.9)] transition-transform group-hover:scale-[1.03]">
-                            <AvatarImage src={avatarSrc} alt={volunteer.name} />
-                            <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/30 via-primary/40 to-primary/20 text-primary-foreground">
-                              {volunteer.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {volunteer.verified && (
-                            <div className="absolute -bottom-1 -right-1 bg-blue-500 dark:bg-blue-600 rounded-full p-1">
-                              <Award className="h-4 w-4 text-white" />
-                            </div>
-                          )}
-                        </div>
-
-                        <h3 className="text-lg font-bold mb-1">{volunteer.name}</h3>
-                        
-                        {volunteer.title && (
-                          <p className="text-sm text-muted-foreground mb-3 font-medium">
-                            {volunteer.title}
-                          </p>
-                        )}
-
-                        {volunteer.location && (
-                          <div className="flex items-center justify-center text-sm text-muted-foreground mb-3">
-                            <MapPin className="h-3.5 w-3.5 mr-1" />
-                            <span>{volunteer.location}</span>
-                          </div>
-                        )}
-
-                        {volunteer.bio && (
-                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                            {volunteer.bio}
-                          </p>
-                        )}
-
-                        {volunteer.skills && volunteer.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 justify-center mb-4">
-                            {volunteer.skills.slice(0, 3).map((skill, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                            {volunteer.skills.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{volunteer.skills.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-
-                        {yearsExp > 0 && (
-                          <div className="flex items-center justify-center text-xs text-muted-foreground mb-4">
-                            <Briefcase className="h-3.5 w-3.5 mr-1" />
-                            <span>{yearsExp} experience{yearsExp > 1 ? 's' : ''}</span>
-                          </div>
-                        )}
-
-                        <Button asChild className="w-full">
-                          <Link href={`/volunteers/${volunteer._id}`}>
-                            View Profile
-                          </Link>
-                        </Button>
-                      </div>
-                    ) : (
-                      /* List View */
-                      <div className="flex gap-4">
-                        <div className="flex-shrink-0">
-                          <div className="relative">
-                            <Avatar className="h-16 w-16 ring-2 ring-primary/25 dark:ring-primary/40 border border-white/20 shadow">
-                              <AvatarImage src={avatarSrc} alt={volunteer.name} />
-                              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-primary/25 via-primary/35 to-primary/15 text-primary-foreground">
-                                {volunteer.name.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            {volunteer.verified && (
-                              <div className="absolute -bottom-1 -right-1 bg-blue-500 dark:bg-blue-600 rounded-full p-0.5">
-                                <Award className="h-3 w-3 text-white" />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div>
-                              <h3 className="text-lg font-bold">{volunteer.name}</h3>
-                              {volunteer.title && (
-                                <p className="text-sm text-muted-foreground font-medium">
-                                  {volunteer.title}
-                                </p>
-                              )}
-                            </div>
-                            <Button asChild size="sm">
-                              <Link href={`/volunteers/${volunteer._id}`}>
-                                View Profile
-                              </Link>
-                            </Button>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3 mb-2 text-sm text-muted-foreground">
-                            {volunteer.location && (
-                              <div className="flex items-center">
-                                <MapPin className="h-3.5 w-3.5 mr-1" />
-                                <span>{volunteer.location}</span>
-                              </div>
-                            )}
-                            {yearsExp > 0 && (
-                              <div className="flex items-center">
-                                <Briefcase className="h-3.5 w-3.5 mr-1" />
-                                <span>{yearsExp} experience{yearsExp > 1 ? 's' : ''}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {volunteer.bio && (
-                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                              {volunteer.bio}
-                            </p>
-                          )}
-
-                          {volunteer.skills && volunteer.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                              {volunteer.skills.slice(0, 6).map((skill, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              ))}
-                              {volunteer.skills.length > 6 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{volunteer.skills.length - 6} more
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })}
+            {filteredVolunteers.map((volunteer) => (
+              <VolunteerCard
+                key={volunteer._id}
+                volunteer={volunteer}
+                viewMode={viewMode}
+              />
+            ))}
           </div>
         )}
       </div>

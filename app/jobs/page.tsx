@@ -27,6 +27,7 @@ import {
 import { JobDoc } from "@/lib/models"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { SiteNavbar } from "@/components/site-navbar"
 
 type EnrichedJob = {
   _id: string
@@ -232,7 +233,9 @@ export default function JobsPage() {
 
   if (loading) {
     return (
+      
       <div className="container mx-auto px-4 py-12">
+       
         <div className="animate-pulse space-y-8">
           <div className="h-12 bg-gray-200 rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
