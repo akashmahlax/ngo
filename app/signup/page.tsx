@@ -28,7 +28,7 @@ export default function SignupPage() {
       { value: "volunteer_plus", label: "Volunteer Plus", description: "Unlimited applications", price: "₹199/month" },
     ],
     ngo: [
-      { value: "ngo_base", label: "NGO Base", description: "Up to 3 active job postings", price: "₹69" },
+      { value: "ngo_base", label: "NGO Base", description: "Up to 3 active job postings", price: "₹0" },
       { value: "ngo_plus", label: "NGO Plus", description: "Unlimited job postings", price: "₹499/month" },
     ],
   }

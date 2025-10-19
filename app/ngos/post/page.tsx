@@ -206,10 +206,23 @@ export default function PostJobPage() {
   const handleSubmit = async () => {
     setSaving(true)
     try {
+      // Clean up the job data before submission
+      const cleanedJob = {
+        ...job,
+        // Remove empty optional fields to prevent validation errors
+        paymentFrequency: job.paymentFrequency || undefined,
+        hourlyRate: job.hourlyRate || undefined,
+        salaryRange: job.salaryRange || undefined,
+        stipendAmount: job.stipendAmount || undefined,
+        duration: job.duration || undefined,
+        applicationDeadline: job.applicationDeadline || undefined,
+        location: job.location || undefined,
+      }
+      
       const res = await fetch('/api/jobs', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(job) 
+        body: JSON.stringify(cleanedJob) 
       })
       
       const data = await res.json()
@@ -218,42 +231,63 @@ export default function PostJobPage() {
         if (res.status === 402) {
           toast.error(data.message || "Upgrade required to post more jobs")
         } else {
-          toast.error(data.error || "Failed to post job")
+          console.error("Job posting error:", data)
+          toast.error(data.error || data.message || "Failed to post job")
         }
         return
       }
       
       toast.success("Job posted successfully!")
-      router.push("/jobs")
-    } catch {
+      router.push("/ngo")
+    } catch (error) {
+      console.error("Job posting exception:", error)
       toast.error("Failed to post job")
     } finally {
       setSaving(false)
     }
   }
 
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {[1, 2, 3].map((step) => (
-        <div key={step} className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            currentStep === step 
-              ? "bg-primary text-primary-foreground" 
-              : step < currentStep 
-                ? "bg-secondary text-secondary-foreground" 
-                : "bg-muted text-muted-foreground"
-          }`}>
-            {step}
-          </div>
-          {step < 3 && (
-            <div className={`w-16 h-0.5 ${
-              step < currentStep ? "bg-secondary" : "bg-muted"
-            }`} />
-          )}
+  const StepIndicator = () => {
+    const stepLabels = ["Basic Info", "Details", "Review"]
+    
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-center">
+          {[1, 2, 3].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
+                  currentStep === step 
+                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20 scale-110" 
+                    : step < currentStep 
+                      ? "bg-green-500 text-white" 
+                      : "bg-muted text-muted-foreground"
+                }`}>
+                  {step < currentStep ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    step
+                  )}
+                </div>
+                <p className={`text-xs mt-2 font-medium transition-colors ${
+                  currentStep === step ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  {stepLabels[step - 1]}
+                </p>
+              </div>
+              {step < 3 && (
+                <div className={`w-20 h-1 mx-2 rounded-full transition-all duration-300 ${
+                  step < currentStep ? "bg-green-500" : "bg-muted"
+                }`} />
+              )}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  )
+      </div>
+    )
+  }
 
   return (
     <>
@@ -267,9 +301,16 @@ export default function PostJobPage() {
         </Link>
       </Button>
 
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold">Post a New Job</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-8 text-center relative">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent blur-3xl" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+          <Briefcase className="h-4 w-4" />
+          <span>Job Posting</span>
+        </div>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Post a New Job
+        </h1>
+        <p className="text-lg text-muted-foreground mt-2">
           Create a volunteer opportunity for your organization
         </p>
       </div>
@@ -465,30 +506,51 @@ export default function PostJobPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {currentStep === 1 && "Basic Information"}
-              {currentStep === 2 && "Description & Requirements"}
-              {currentStep === 3 && "Review & Publish"}
+        <Card className="border-2 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+            <CardTitle className="text-2xl flex items-center gap-2">
+              {currentStep === 1 && (
+                <>
+                  <Briefcase className="h-6 w-6 text-primary" />
+                  Basic Information
+                </>
+              )}
+              {currentStep === 2 && (
+                <>
+                  <Plus className="h-6 w-6 text-primary" />
+                  Description & Requirements
+                </>
+              )}
+              {currentStep === 3 && (
+                <>
+                  <Eye className="h-6 w-6 text-primary" />
+                  Review & Publish
+                </>
+              )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               {currentStep === 1 && "Provide the basic details for your volunteer opportunity"}
               {currentStep === 2 && "Describe the role and what you're looking for"}
               {currentStep === 3 && "Review your job posting before publishing"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="title">Job Title *</Label>
+                  <Label htmlFor="title" className="text-base font-semibold">
+                    Job Title *
+                  </Label>
                   <Input
                     id="title"
                     value={job.title}
                     onChange={(e) => setJob(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="e.g., Environmental Conservation Volunteer"
+                    className="mt-2 text-base h-12 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    A clear, descriptive title helps attract the right volunteers
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -726,9 +788,17 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <Button onClick={handleNext} disabled={!job.title || !job.category}>
+                <div className="flex justify-end pt-4 border-t">
+                  <Button 
+                    onClick={handleNext} 
+                    disabled={!job.title || !job.category}
+                    size="lg"
+                    className="min-w-[200px]"
+                  >
                     Next: Description
+                    <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Button>
                 </div>
               </div>
@@ -849,12 +919,23 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={handlePrevious}>
+                <div className="flex justify-between pt-4 border-t">
+                  <Button variant="outline" onClick={handlePrevious} size="lg">
+                    <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
                     Previous
                   </Button>
-                  <Button onClick={handleNext} disabled={!job.description}>
+                  <Button 
+                    onClick={handleNext} 
+                    disabled={!job.description}
+                    size="lg"
+                    className="min-w-[200px]"
+                  >
                     Next: Review
+                    <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Button>
                 </div>
               </div>
@@ -946,16 +1027,24 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={handlePrevious}>
+                <div className="flex justify-between pt-4 border-t">
+                  <Button variant="outline" onClick={handlePrevious} size="lg">
+                    <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
                     Previous
                   </Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setIsPreview(true)}>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setIsPreview(true)} size="lg">
                       <Eye className="h-4 w-4 mr-2" />
                       Preview
                     </Button>
-                    <Button onClick={handleSubmit} disabled={saving}>
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={saving}
+                      size="lg"
+                      className="min-w-[180px] bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    >
                       {saving ? (
                         <>
                           <Save className="h-4 w-4 mr-2 animate-spin" />

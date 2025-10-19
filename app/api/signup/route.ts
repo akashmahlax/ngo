@@ -8,7 +8,7 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["volunteer", "ngo"]),
-  plan: z.enum(["volunteer_free", "volunteer_plus", "ngo_plus"]).optional(),
+  plan: z.enum(["volunteer_free", "volunteer_plus", "ngo_base", "ngo_plus"]).optional(),
 })
 
 export async function POST(req: NextRequest) {
