@@ -372,7 +372,7 @@ export default function PostJobPage() {
       }
       
       toast.success("Job posted successfully!")
-      router.push("/ngo")
+      router.push("/jobs")
     } catch (error) {
       console.error("Job posting exception:", error)
       toast.error("Failed to post job")

@@ -10,9 +10,6 @@ export default async function JobDetailPage({
   return <JobDetailPageClient jobId={resolvedParams.id} />
 }
 
-  const [job, setJob] = useState<JobData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isBookmarked, setIsBookmarked] = useState(false)
 
   useEffect(() => {
     const fetchJob = async () => {
