@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync": "powershell -NoProfile -Command \"param([string]$m='chore: sync') git add .; git commit -m \"$m\"; git push\""
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.0",
