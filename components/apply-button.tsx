@@ -107,7 +107,7 @@ export function ApplyButton({ jobId }: { jobId: string }) {
         return
       }
       
-      router.push("/(dashboard)/volunteer/applications")
+      router.push("/volunteer/applications")
     } catch {
       setError("Failed to apply")
     } finally {

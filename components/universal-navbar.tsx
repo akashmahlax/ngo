@@ -153,7 +153,7 @@ export function UniversalNavbar() {
       <div className="md:hidden">
         {/* Add padding to body so content doesn't hide behind fixed navbar */}
         <div className="h-20 w-full"></div>
-        <div className="fixed top-4 left-4 right-4 z-50">
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-screen-sm mx-auto">
           <div className="bg-background/95 backdrop-blur-xl border rounded-2xl shadow-2xl px-4 py-3 mx-2">
             <div className="flex items-center justify-between">
               {/* Mobile Menu */}
@@ -266,7 +266,7 @@ export function UniversalNavbar() {
                     </div>
 
                     {/* Auth Actions */}
-                    {!isAuthenticated && (
+                    {!isAuthenticated ? (
                       <div className="grid grid-cols-2 gap-3 pt-4 border-t">
                         <Button 
                           variant="outline" 
@@ -287,6 +287,10 @@ export function UniversalNavbar() {
                         >
                           Sign in
                         </Button>
+                      </div>
+                    ) : (
+                      <div className="pt-4 border-t">
+                        <SignOut />
                       </div>
                     )}
                   </div>
@@ -319,6 +323,8 @@ export function UniversalNavbar() {
             </div>
           </div>
         </div>
+        {/* Bottom padding for mobile so content isn't hidden */}
+        <div className="h-6 w-full"></div>
       </div>
 
       {/* Desktop Navigation */}

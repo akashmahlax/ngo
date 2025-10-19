@@ -12,7 +12,10 @@ import {
   CheckCircle,
   Calendar,
   Briefcase,
-  Phone
+  Phone,
+  Users,
+  TrendingUp,
+  Award
 } from "lucide-react"
 import Link from "next/link"
 import { getCollections } from "@/lib/models"
@@ -178,6 +181,55 @@ export default async function NgoPublicProfile({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="border-b bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 mx-auto mb-2">
+                  <Briefcase className="h-5 w-5 text-primary" />
+                </div>
+                <div className="text-2xl font-bold">{ngo.activeJobs.length}</div>
+                <div className="text-xs text-muted-foreground">Active Jobs</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-500/10 mx-auto mb-2">
+                  <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="text-2xl font-bold">{ngo.teamSize}</div>
+                <div className="text-xs text-muted-foreground">Team Size</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-500/10 mx-auto mb-2">
+                  <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="text-2xl font-bold">{ngo.focusAreas.length}</div>
+                <div className="text-xs text-muted-foreground">Focus Areas</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 text-center">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-500/10 mx-auto mb-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="text-2xl font-bold">
+                  {ngo.verified ? <CheckCircle className="h-6 w-6 text-green-500 mx-auto" /> : "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">Verified</div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -32,8 +32,12 @@ function SignInPageInner() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      const user: any = session?.user;
-      if (user && (!user.role || !user.plan)) {
+      const sessionWithProfile = session as typeof session & { 
+        profileComplete?: boolean;
+        role?: string;
+      };
+      // Check profileComplete flag from session (set in auth.ts)
+      if (!sessionWithProfile?.profileComplete) {
         r.push("/complete-profile");
       } else {
         r.push(callbackUrl);

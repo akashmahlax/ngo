@@ -7,10 +7,16 @@ import { UniversalFooter } from "@/components/universal-footer"
 export function SiteLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  // Check if we're in a dashboard route (/(dashboard)/ routes)
-  const isDashboardRoute = pathname?.includes("/(dashboard)") || 
-                           (pathname?.startsWith("/ngo/") && !pathname?.startsWith("/ngos/")) ||
-                           (pathname?.startsWith("/volunteer/") && !pathname?.startsWith("/volunteers/"))
+  // Check if we're in a dashboard route
+  // Dashboard routes: /ngo, /ngo/*, /volunteer, /volunteer/*
+  // Public routes: /ngos, /ngos/*, /volunteers, /volunteers/*
+  const isDashboardRoute = (
+    (pathname === "/ngo" || pathname?.startsWith("/ngo/")) &&
+    !pathname?.startsWith("/ngos")
+  ) || (
+    (pathname === "/volunteer" || pathname?.startsWith("/volunteer/")) &&
+    !pathname?.startsWith("/volunteers")
+  )
   
   return (
     <>

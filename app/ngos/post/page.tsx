@@ -44,7 +44,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
-import { SiteNavbar } from "@/components/site-navbar"
 
 type QuotaInfo = {
   active: number
@@ -423,7 +422,6 @@ export default function PostJobPage() {
 
   return (
     <>
-    <SiteNavbar />
     <div className="container mx-auto px-4 py-8 max-w-4xl">
     
       <Button variant="ghost" asChild className="mb-6">

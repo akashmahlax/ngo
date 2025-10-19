@@ -18,7 +18,6 @@ import {
   Filter
 } from "lucide-react"
 import { apiGet } from "@/lib/api-client"
-import { SiteNavbar } from "@/components/site-navbar"
 
 interface Volunteer {
   _id: string
@@ -147,7 +146,6 @@ export default function VolunteersDirectory() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 dark:from-[#050517] dark:to-[#111132]">
-      <SiteNavbar/>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary to-primary/80 dark:from-primary/70 dark:via-primary/80 dark:to-primary/60" />
