@@ -1,15 +1,80 @@
-import { JobDetailPageClient } from "./JobDetailClient"
+"use client"
 
-export default async function JobDetailPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
-  const resolvedParams = await params
-  
-  return <JobDetailPageClient jobId={resolvedParams.id} />
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { 
+  MapPin, 
+  Calendar, 
+  Users, 
+  Bookmark, 
+  Share2, 
+  ArrowLeft,
+  Check,
+  Clock,
+  Briefcase,
+  Target,
+  Building2,
+  Award,
+  Heart,
+  TrendingUp,
+  Globe,
+  CheckCircle2,
+  Star
+} from "lucide-react"
+import Link from "next/link"
+import { formatDistanceToNow, format } from "date-fns"
+import { ApplyButton } from "@/components/apply-button"
+import { toast } from "sonner"
+
+type JobData = {
+  _id: string
+  title: string
+  description: string
+  ngo: {
+    _id: string
+    name: string
+    verified: boolean
+    logoUrl?: string
+    plan?: string
+    focusAreas?: string[]
+    location?: string
+    description?: string
+  }
+  category?: string
+  locationType?: "onsite" | "remote" | "hybrid"
+  location?: string
+  createdAt: string
+  skills?: string[]
+  benefits?: string[]
+  requirements?: string[]
+  responsibilities?: string[]
+  duration?: string
+  commitment?: "full-time" | "part-time" | "flexible"
+  applicationDeadline?: string
+  numberOfPositions?: number
+  compensationType?: "paid" | "unpaid" | "stipend"
+  salaryRange?: string
+  stipendAmount?: string
+  hourlyRate?: number
+  paymentFrequency?: string
+  additionalPerks?: string[]
+  experienceLevel?: string
+  languagesRequired?: string[]
+  remoteWorkPolicy?: string
+  diversityStatement?: string
+  impactArea?: string[]
+  targetBeneficiaries?: string
+  applicationCount?: number
+  viewCount?: number
 }
 
+export function JobDetailPageClient({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isBookmarked, setIsBookmarked] = useState(false)
@@ -81,14 +146,16 @@ export default async function JobDetailPage({
 
   if (!job) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-2">Job Not Found</h2>
-          <p className="text-muted-foreground mb-6">The job you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-          <Button asChild>
-            <Link href="/jobs">Browse All Jobs</Link>
-          </Button>
-        </div>
+      <div className="container mx-auto px-4 py-16 max-w-md text-center">
+        <Card>
+          <CardContent className="pt-6">
+            <h2 className="text-2xl font-bold mb-2">Job Not Found</h2>
+            <p className="text-muted-foreground mb-6">The job you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+            <Button asChild>
+              <Link href="/jobs">Browse All Jobs</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -372,7 +439,7 @@ export default async function JobDetailPage({
             )}
 
             {/* Impact & Target */}
-            {(job.impactArea && job.impactArea.length > 0) || job.targetBeneficiaries && (
+            {(job.impactArea && job.impactArea.length > 0) || job.targetBeneficiaries ? (
               <Card className="shadow-sm border-l-4 border-l-primary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -401,8 +468,7 @@ export default async function JobDetailPage({
                   )}
                 </CardContent>
               </Card>
-            )}
-
+            ) : null}
           </div>
 
           {/* Right Column - Sidebar */}
