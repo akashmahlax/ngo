@@ -48,7 +48,6 @@ import {
   Command as CommandIcon, 
   Crown, 
   Zap,
-  Bell,
   Briefcase,
   Users,
   Building2,
@@ -60,9 +59,7 @@ import {
   Plus,
   Home,
   User,
-  Mail,
   HelpCircle,
-  Calendar,
   TrendingUp,
   Sparkles
 } from "lucide-react"
@@ -77,10 +74,8 @@ const navData = {
       icon: Briefcase,
       description: "Find volunteer opportunities",
       items: [
-        { title: "Browse Jobs", href: "/jobs", description: "All open positions" },
-        { title: "Categories", href: "/jobs/categories", description: "Filter by cause" },
-        { title: "Remote Jobs", href: "/jobs?type=remote", description: "Work from anywhere" },
-        { title: "Local Jobs", href: "/jobs?type=onsite", description: "In your area" },
+        { title: "Browse All Jobs", href: "/jobs", description: "View open positions" },
+        { title: "Post a Job", href: "/ngos/post", description: "For organizations" },
       ]
     },
     {
@@ -90,9 +85,7 @@ const navData = {
       description: "Discover NGOs and nonprofits",
       items: [
         { title: "Browse NGOs", href: "/ngos", description: "All organizations" },
-        { title: "Featured", href: "/ngos?featured=true", description: "Top rated NGOs" },
-        { title: "Post a Job", href: "/ngos/post", description: "For organizations" },
-        { title: "Success Stories", href: "/ngos/stories", description: "Impact stories" },
+        { title: "Post a Job", href: "/ngos/post", description: "Create opportunity" },
       ]
     },
     {
@@ -102,21 +95,6 @@ const navData = {
       description: "Connect with volunteers",
       items: [
         { title: "Browse Volunteers", href: "/volunteers", description: "Find talented people" },
-        { title: "Build Profile", href: "/volunteers/profile", description: "Create your profile" },
-        { title: "Skills & Badges", href: "/volunteers/badges", description: "Showcase expertise" },
-        { title: "Community", href: "/community", description: "Connect with others" },
-      ]
-    },
-    {
-      title: "Resources",
-      href: "/resources",
-      icon: FileText,
-      description: "Guides and help",
-      items: [
-        { title: "Blog", href: "/blog", description: "Latest insights" },
-        { title: "Guides", href: "/guides", description: "How-to articles" },
-        { title: "Help Center", href: "/help", description: "Get support" },
-        { title: "API Docs", href: "/api-docs", description: "For developers" },
       ]
     },
   ],
@@ -124,7 +102,6 @@ const navData = {
     { title: "Dashboard", icon: Home, shortcut: "D" },
     { title: "Applications", icon: FileText, shortcut: "A" },
     { title: "Profile", icon: User, shortcut: "P" },
-    { title: "Messages", icon: Mail, shortcut: "M" },
     { title: "Settings", icon: Settings, shortcut: "S" },
   ]
 }
@@ -132,7 +109,6 @@ const navData = {
 export function UniversalNavbar() {
   const [cmdOpen, setCmdOpen] = React.useState(false)
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [notifications] = React.useState(3) // Mock notifications
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const router = useRouter()
@@ -170,11 +146,6 @@ export function UniversalNavbar() {
     document.addEventListener("keydown", onKeyDown)
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [cmdOpen, isAuthenticated, role, router])
-
-  // Check if we're in a dashboard route
-  const isDashboard = pathname?.startsWith("/ngo/") || 
-                      pathname?.startsWith("/volunteer/") ||
-                      pathname?.includes("/(dashboard)")
 
   return (
     <>
@@ -343,17 +314,6 @@ export function UniversalNavbar() {
                   <Search className="h-4 w-4" />
                 </Button>
                 
-                {isAuthenticated && (
-                  <Button variant="ghost" size="sm" className="rounded-xl relative">
-                    <Bell className="h-4 w-4" />
-                    {notifications > 0 && (
-                      <div className="absolute -top-1 -right-1 h-4 w-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
-                        <span className="text-xs text-white font-bold">{notifications}</span>
-                      </div>
-                    )}
-                  </Button>
-                )}
-                
                 <ThemeToggle />
               </div>
             </div>
@@ -363,9 +323,9 @@ export function UniversalNavbar() {
 
       {/* Desktop Navigation */}
       <div className="hidden md:block">
-        <div className="sticky top-0 z-50 w-full">
-          <div className="bg-background/95 backdrop-blur-xl border-b shadow-sm">
-            <div className="container mx-auto px-4">
+        <div className="sticky top-0 z-50 w-full pt-4 px-4">
+          <div className="bg-background/95 backdrop-blur-xl border rounded-2xl shadow-lg max-w-7xl mx-auto">
+            <div className="container mx-auto px-6">
               <div className="flex h-16 items-center justify-between">
                 {/* Brand */}
                 <ContextMenu>
@@ -470,16 +430,6 @@ export function UniversalNavbar() {
 
                   {isAuthenticated ? (
                     <div className="flex items-center gap-2">
-                      {/* Notifications */}
-                      <Button variant="ghost" size="sm" className="rounded-xl relative">
-                        <Bell className="h-4 w-4" />
-                        {notifications > 0 && (
-                          <div className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse">
-                            <span className="text-xs text-white font-bold">{notifications}</span>
-                          </div>
-                        )}
-                      </Button>
-
                       {/* Plus Badge */}
                       {isPlusUser && (
                         <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hidden xl:flex">
