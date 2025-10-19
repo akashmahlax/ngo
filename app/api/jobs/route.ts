@@ -6,25 +6,59 @@ import { z } from "zod"
 import { ObjectId } from "mongodb"
 
 const createSchema = z.object({
+  // Basic Information
   title: z.string().min(3).max(200),
   description: z.string().min(10).max(5000),
   category: z.string().min(1),
   locationType: z.enum(["onsite", "remote", "hybrid"]),
   location: z.string().optional(),
+  timezone: z.enum(["IST", "EST", "PST", "GMT", "CST", "JST", "AEST"]).optional(),
+  
+  // Description & Requirements
+  responsibilities: z.array(z.string()).optional(),
   requirements: z.array(z.string()).optional(),
   benefits: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
+  
+  // Position Details
   duration: z.string().optional(),
   commitment: z.enum(["full-time", "part-time", "flexible"]).optional(),
   applicationDeadline: z.string().optional(),
   numberOfPositions: z.number().min(1).optional(),
-  // Compensation fields
+  startDate: z.string().optional(),
+  
+  // Experience & Qualifications
+  experienceLevel: z.enum(["entry", "intermediate", "advanced", "any"]).optional(),
+  educationRequired: z.enum(["high-school", "bachelors", "masters", "phd", "none"]).optional(),
+  languagesRequired: z.array(z.string()).optional(),
+  certificationRequired: z.string().optional(),
+  
+  // Work Arrangement
+  remoteWorkPolicy: z.enum(["fully-remote", "remote-first", "hybrid-flexible", "occasional-remote"]).optional(),
+  workingHoursFlexible: z.boolean().optional(),
+  timeCommitmentPerWeek: z.string().optional(),
+  
+  // Screening & Selection
+  applicationQuestions: z.array(z.string()).optional(),
+  backgroundCheckRequired: z.boolean().optional(),
+  interviewRequired: z.boolean().optional(),
+  
+  // Compensation
   compensationType: z.enum(["paid", "unpaid", "stipend"]).optional(),
   salaryRange: z.string().optional(),
   stipendAmount: z.string().optional(),
   hourlyRate: z.string().optional(),
   paymentFrequency: z.enum(["hourly", "daily", "monthly", "one-time", "project-based"]).optional(),
   additionalPerks: z.array(z.string()).optional(),
+  
+  // Impact & Organization
+  impactArea: z.array(z.string()).optional(),
+  targetBeneficiaries: z.string().optional(),
+  urgencyLevel: z.enum(["normal", "urgent", "flexible"]).optional(),
+  
+  // Accessibility
+  accessibilityAccommodations: z.boolean().optional(),
+  diversityStatement: z.string().optional(),
 })
 
 export async function GET(req: NextRequest) {
@@ -114,58 +148,65 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date()
-  const { 
-    title, 
-    description, 
-    category, 
-    locationType, 
-    location, 
-    requirements, 
-    benefits, 
-    skills,
-    duration,
-    commitment,
-    applicationDeadline,
-    numberOfPositions,
-    compensationType,
-    salaryRange,
-    stipendAmount,
-    hourlyRate,
-    paymentFrequency,
-    additionalPerks
-  } = parsed.data
+  const data = parsed.data
   
-  const doc: Omit<JobDoc, '_id'> & {
-    duration?: string
-    commitment?: string
-    applicationDeadline?: string
-    numberOfPositions?: number
-    compensationType?: string
-    salaryRange?: string
-    stipendAmount?: string
-    hourlyRate?: number
-    paymentFrequency?: string
-    additionalPerks?: string[]
-  } = {
+  const doc: Omit<JobDoc, '_id'> & Record<string, any> = {
     ngoId: new ObjectId(user._id),
-    title,
-    description,
-    category,
-    locationType,
-    location: location || undefined,
-    requirements: requirements || [],
-    benefits: benefits || [],
-    skills: skills || [],
-    duration: duration || undefined,
-    commitment: commitment || undefined,
-    applicationDeadline: applicationDeadline || undefined,
-    numberOfPositions: numberOfPositions || 1,
-    compensationType: compensationType || undefined,
-    salaryRange: salaryRange || undefined,
-    stipendAmount: stipendAmount || undefined,
-    hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
-    paymentFrequency: paymentFrequency || undefined,
-    additionalPerks: additionalPerks || [],
+    // Basic fields
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    locationType: data.locationType,
+    location: data.location || undefined,
+    timezone: data.timezone || undefined,
+    
+    // Arrays
+    responsibilities: data.responsibilities || [],
+    requirements: data.requirements || [],
+    benefits: data.benefits || [],
+    skills: data.skills || [],
+    languagesRequired: data.languagesRequired || [],
+    applicationQuestions: data.applicationQuestions || [],
+    impactArea: data.impactArea || [],
+    additionalPerks: data.additionalPerks || [],
+    
+    // Position details
+    duration: data.duration || undefined,
+    commitment: data.commitment || undefined,
+    applicationDeadline: data.applicationDeadline || undefined,
+    numberOfPositions: data.numberOfPositions || 1,
+    startDate: data.startDate || undefined,
+    
+    // Experience & qualifications
+    experienceLevel: data.experienceLevel || undefined,
+    educationRequired: data.educationRequired || undefined,
+    certificationRequired: data.certificationRequired || undefined,
+    
+    // Work arrangement
+    remoteWorkPolicy: data.remoteWorkPolicy || undefined,
+    workingHoursFlexible: data.workingHoursFlexible || false,
+    timeCommitmentPerWeek: data.timeCommitmentPerWeek || undefined,
+    
+    // Screening
+    backgroundCheckRequired: data.backgroundCheckRequired || false,
+    interviewRequired: data.interviewRequired !== undefined ? data.interviewRequired : true,
+    
+    // Compensation
+    compensationType: data.compensationType || undefined,
+    salaryRange: data.salaryRange || undefined,
+    stipendAmount: data.stipendAmount || undefined,
+    hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : undefined,
+    paymentFrequency: data.paymentFrequency || undefined,
+    
+    // Impact
+    targetBeneficiaries: data.targetBeneficiaries || undefined,
+    urgencyLevel: data.urgencyLevel || "normal",
+    
+    // Accessibility
+    accessibilityAccommodations: data.accessibilityAccommodations || false,
+    diversityStatement: data.diversityStatement || undefined,
+    
+    // System fields
     status: "open" as const,
     createdAt: now,
     updatedAt: now,
