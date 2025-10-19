@@ -132,11 +132,9 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
                   {volunteer.name}
                 </h3>
               </Link>
-              {volunteer.title && (
-                <p className="text-sm text-muted-foreground font-medium line-clamp-1">
-                  {volunteer.title}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground font-medium line-clamp-1">
+                {volunteer.title || "No title set"}
+              </p>
               {volunteer.location && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                   <MapPin className="h-3 w-3" />
@@ -209,12 +207,10 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
           </div>
 
           {/* Current Work Status */}
-          {volunteer.currentWorkStatus && (
-            <div className="flex items-center gap-2 p-2 bg-accent/30 rounded-lg">
-              <CircleDot className={`h-4 w-4 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
-              <span className="text-sm font-medium">{volunteer.currentWorkStatus}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 p-2 bg-accent/30 rounded-lg">
+            <CircleDot className={`h-4 w-4 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
+            <span className="text-sm font-medium">{volunteer.currentWorkStatus || "Status not set"}</span>
+          </div>
 
           {/* Projects Info */}
           {(volunteer.completedProjects !== undefined || volunteer.activeProjects !== undefined) && (
@@ -235,20 +231,25 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
           )}
 
           {/* Skills - Compact */}
-          {volunteer.skills && volunteer.skills.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {volunteer.skills.slice(0, 3).map((skill, index) => (
-                <Badge key={index} variant="secondary" className="text-[10px] px-2 py-0.5 font-medium">
-                  {skill}
-                </Badge>
-              ))}
-              {volunteer.skills.length > 3 && (
-                <Badge variant="outline" className="text-[10px] px-2 py-0.5">
-                  +{volunteer.skills.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="space-y-1">
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Skills</div>
+            {volunteer.skills && volunteer.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {volunteer.skills.slice(0, 3).map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="text-[10px] px-2 py-0.5 font-medium">
+                    {skill}
+                  </Badge>
+                ))}
+                {volunteer.skills.length > 3 && (
+                  <Badge variant="outline" className="text-[10px] px-2 py-0.5">
+                    +{volunteer.skills.length - 3}
+                  </Badge>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No skills listed</p>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex gap-2 pt-2 border-t">
@@ -301,11 +302,9 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
                   {volunteer.name}
                 </h3>
               </Link>
-              {volunteer.title && (
-                <p className="text-base text-muted-foreground font-medium mt-1">
-                  {volunteer.title}
-                </p>
-              )}
+              <p className="text-base text-muted-foreground font-medium mt-1">
+                {volunteer.title || "No title set"}
+              </p>
               
               <div className="flex flex-wrap gap-3 mt-2 text-sm">
                 {volunteer.location && (
@@ -323,12 +322,10 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
                 )}
               </div>
 
-              {volunteer.currentWorkStatus && (
-                <div className="flex items-center gap-2 mt-2">
-                  <CircleDot className={`h-3.5 w-3.5 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
-                  <span className="text-sm font-medium">{volunteer.currentWorkStatus}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 mt-2">
+                <CircleDot className={`h-3.5 w-3.5 ${getWorkStatusColor(volunteer.currentWorkStatus)}`} />
+                <span className="text-sm font-medium">{volunteer.currentWorkStatus || "Status not set"}</span>
+              </div>
             </div>
           </div>
 
@@ -374,12 +371,12 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
             </div>
 
             {/* Skills */}
-            {volunteer.skills && volunteer.skills.length > 0 && (
-              <div>
-                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-                  <Award className="h-3 w-3" />
-                  SKILLS
-                </div>
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                <Award className="h-3 w-3" />
+                SKILLS
+              </div>
+              {volunteer.skills && volunteer.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {volunteer.skills.slice(0, 8).map((skill, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
@@ -392,8 +389,10 @@ export function VolunteerCard({ volunteer, viewMode = "grid" }: VolunteerCardPro
                     </Badge>
                   )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-muted-foreground italic">No skills listed</p>
+              )}
+            </div>
           </div>
 
           {/* Right: Pricing & Actions */}

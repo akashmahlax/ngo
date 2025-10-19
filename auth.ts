@@ -113,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (u.plan) token.plan = u.plan
         if (u.planExpiresAt) token.planExpiresAt = u.planExpiresAt
         if (u.avatarUrl) token.avatarUrl = u.avatarUrl
+        if (u.coverPhotoUrl) token.coverPhotoUrl = u.coverPhotoUrl
       }
 
       // Ensure token has latest DB values
@@ -134,8 +135,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = dbUser.role ?? token.role
           token.profileComplete = !!dbUser.role
           
-          // Add avatarUrl from database
+          // Add avatarUrl and coverPhotoUrl from database
           token.avatarUrl = (dbUser as any).avatarUrl ?? token.avatarUrl
+          token.coverPhotoUrl = (dbUser as any).coverPhotoUrl ?? token.coverPhotoUrl
           
           // Check if plan has expired and downgrade if needed
           let currentPlan = dbUser.plan ?? token.plan
@@ -170,10 +172,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ;(session as any).planExpiresAt = token.planExpiresAt
         ;(session as any).profileComplete = token.profileComplete
         
-        // Add avatarUrl to session
+        // Add avatarUrl and coverPhotoUrl to session
         if (token.avatarUrl) {
           session.user.image = token.avatarUrl as string
           ;(session.user as any).avatarUrl = token.avatarUrl
+        }
+        if (token.coverPhotoUrl) {
+          ;(session.user as any).coverPhotoUrl = token.coverPhotoUrl
         }
       }
       return session

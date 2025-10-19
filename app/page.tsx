@@ -10,13 +10,10 @@ import { CategoryBento } from "@/components/category-bento"
 import { StatsStrip } from "@/components/stats-strip"
 import { Testimonials } from "@/components/testimonials"
 import { FAQ } from "@/components/faq"
-import { SiteNavbar } from "@/components/site-navbar"
-
 export default function HomePage() {
   return (
     <>
       <main>
-        <SiteNavbar />
         {/* Hero Section */}
         <section className="relative overflow-hidden border-b">
           <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-2 md:py-16 lg:py-20">

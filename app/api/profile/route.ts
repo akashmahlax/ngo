@@ -21,6 +21,7 @@ export async function GET() {
     return NextResponse.json({
       name: user.name,
       bio: user.bio,
+      description: user.description,
       location: user.location,
       skills: user.skills,
       socialLinks: user.socialLinks,
@@ -28,16 +29,23 @@ export async function GET() {
       education: user.education,
       profileVisibility: user.profileVisibility,
       avatarUrl: user.avatarUrl,
+      coverPhotoUrl: user.coverPhotoUrl,
       // NGO specific fields
       orgName: user.orgName,
       website: user.website,
       orgType: user.orgType,
       registrationNumber: user.registrationNumber,
+      yearEstablished: user.yearEstablished,
       phone: user.phone,
       address: user.address,
       focusAreas: user.focusAreas,
       teamSize: user.teamSize,
       verified: user.verified,
+      impactStats: user.impactStats || {
+        volunteersHelped: 0,
+        projectsCompleted: 0,
+        peopleImpacted: 0,
+      },
     })
   } catch (error) {
     console.error("Profile fetch error:", error)
@@ -63,6 +71,7 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {
       name: body.name,
       bio: body.bio,
+      description: body.description,
       location: body.location,
       skills: body.skills,
       socialLinks: body.socialLinks,
@@ -74,11 +83,13 @@ export async function PATCH(request: NextRequest) {
       website: body.website,
       orgType: body.orgType,
       registrationNumber: body.registrationNumber,
+      yearEstablished: body.yearEstablished,
       phone: body.phone,
       address: body.address,
       focusAreas: body.focusAreas,
       teamSize: body.teamSize,
       verified: body.verified,
+      impactStats: body.impactStats,
       updatedAt: new Date(),
     }
 

@@ -21,6 +21,20 @@ export async function GET() {
 
     return NextResponse.json({
       email: user.email,
+      name: user.name,
+      title: user.title,
+      bio: user.bio,
+      location: user.location,
+      skills: user.skills,
+      hourlyRate: user.hourlyRate,
+      ngoHourlyRate: user.ngoHourlyRate,
+      availability: user.availability,
+      responseTime: user.responseTime,
+      currentWorkStatus: user.currentWorkStatus,
+      completedProjects: user.completedProjects,
+      activeProjects: user.activeProjects,
+      successRate: user.successRate,
+      rating: user.rating,
       notifications: user.notifications || {
         emailApplications: true,
         emailMessages: true,
@@ -82,6 +96,24 @@ export async function PATCH(request: NextRequest) {
     // Update privacy settings if provided
     if (body.privacy) {
       updateData.privacy = body.privacy
+    }
+
+    // Update profile settings if provided
+    if (body.profile) {
+      if (body.profile.name !== undefined) updateData.name = body.profile.name
+      if (body.profile.title !== undefined) updateData.title = body.profile.title
+      if (body.profile.bio !== undefined) updateData.bio = body.profile.bio
+      if (body.profile.location !== undefined) updateData.location = body.profile.location
+      if (body.profile.skills !== undefined) updateData.skills = body.profile.skills
+      if (body.profile.hourlyRate !== undefined) updateData.hourlyRate = body.profile.hourlyRate
+      if (body.profile.ngoHourlyRate !== undefined) updateData.ngoHourlyRate = body.profile.ngoHourlyRate
+      if (body.profile.availability !== undefined) updateData.availability = body.profile.availability
+      if (body.profile.responseTime !== undefined) updateData.responseTime = body.profile.responseTime
+      if (body.profile.currentWorkStatus !== undefined) updateData.currentWorkStatus = body.profile.currentWorkStatus
+      if (body.profile.completedProjects !== undefined) updateData.completedProjects = body.profile.completedProjects
+      if (body.profile.activeProjects !== undefined) updateData.activeProjects = body.profile.activeProjects
+      if (body.profile.successRate !== undefined) updateData.successRate = body.profile.successRate
+      if (body.profile.rating !== undefined) updateData.rating = body.profile.rating
     }
 
     await users.updateOne(

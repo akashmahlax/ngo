@@ -20,7 +20,12 @@ import {
   Clock,
   Star,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  DollarSign,
+  Target,
+  Zap,
+  Trophy,
+  CircleDot
 } from "lucide-react"
 import Link from "next/link"
 import { getCollections } from "@/lib/models"
@@ -49,6 +54,7 @@ async function getVolunteer(id: string) {
       email: volunteer.email,
       avatarUrl: volunteer.avatarUrl,
       bio: volunteer.bio || "",
+      title: volunteer.title || "",
       location: volunteer.location || "Location not specified",
       skills: volunteer.skills || [],
       phone: volunteer.phone,
@@ -57,6 +63,15 @@ async function getVolunteer(id: string) {
       education: volunteer.education || [],
       availability: (volunteer as any).availability || "Not specified",
       interests: (volunteer as any).interests || [],
+      // New professional fields
+      hourlyRate: volunteer.hourlyRate || 0,
+      ngoHourlyRate: volunteer.ngoHourlyRate || 0,
+      successRate: volunteer.successRate || 0,
+      responseTime: volunteer.responseTime || "Not specified",
+      currentWorkStatus: volunteer.currentWorkStatus || "Not specified",
+      completedProjects: volunteer.completedProjects || 0,
+      activeProjects: volunteer.activeProjects || 0,
+      rating: volunteer.rating || 0,
       createdAt: volunteer.createdAt,
     }
   } catch (error) {
@@ -106,6 +121,12 @@ export default async function VolunteerPublicProfile({
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">{volunteer.name}</h1>
                 
+                {volunteer.title && (
+                  <p className="text-xl text-primary-foreground/95 font-semibold mb-2">
+                    {volunteer.title}
+                  </p>
+                )}
+                
                 {volunteer.location && (
                   <div className="flex items-center text-primary-foreground/90 mb-3">
                     <MapPin className="h-4 w-4 mr-2" />
@@ -154,47 +175,66 @@ export default async function VolunteerPublicProfile({
       {/* Stats Cards */}
       <div className="container mx-auto px-4 -mt-8">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Success Rate */}
             <Card className="border-2 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Experience</p>
-                    <p className="text-3xl font-bold">{yearsOfExperience}</p>
-                    <p className="text-xs text-muted-foreground">position{yearsOfExperience !== 1 ? 's' : ''}</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                    <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Skills</p>
-                    <p className="text-3xl font-bold">{volunteer.skills?.length || 0}</p>
-                    <p className="text-xs text-muted-foreground">expertise areas</p>
+                    <p className="text-sm text-muted-foreground mb-1">Success Rate</p>
+                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">{volunteer.successRate}%</p>
+                    <p className="text-xs text-muted-foreground">completion rate</p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                    <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    <Target className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Rating */}
             <Card className="border-2 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Member</p>
-                    <p className="text-xl font-bold">{memberSince}</p>
-                    <p className="text-xs text-muted-foreground">joined</p>
+                    <p className="text-sm text-muted-foreground mb-1">Rating</p>
+                    <p className="text-3xl font-bold">{volunteer.rating.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">out of 5.0</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                    <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Completed Projects */}
+            <Card className="border-2 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Completed</p>
+                    <p className="text-3xl font-bold">{volunteer.completedProjects}</p>
+                    <p className="text-xs text-muted-foreground">project{volunteer.completedProjects !== 1 ? 's' : ''}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <Trophy className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Response Time */}
+            <Card className="border-2 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Response</p>
+                    <p className="text-xl font-bold">{volunteer.responseTime}</p>
+                    <p className="text-xs text-muted-foreground">avg. time</p>
                   </div>
                   <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                    <Zap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                   </div>
                 </div>
               </CardContent>
@@ -309,6 +349,71 @@ export default async function VolunteerPublicProfile({
 
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
+              {/* Pricing & Rates */}
+              <Card className="shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Hourly Rates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Volunteer Rate */}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Volunteer Rate</p>
+                    <p className="text-3xl font-bold text-primary">
+                      ₹{volunteer.hourlyRate}
+                      <span className="text-sm text-muted-foreground">/hr</span>
+                    </p>
+                  </div>
+
+                  {/* NGO Rate */}
+                  {volunteer.ngoHourlyRate > 0 && (
+                    <div className="border-t pt-3">
+                      <p className="text-sm text-muted-foreground mb-1">NGO Pays</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        ₹{volunteer.ngoHourlyRate}
+                        <span className="text-sm">/hr</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Inclusive of platform fee
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Current Work Status */}
+              {volunteer.currentWorkStatus && volunteer.currentWorkStatus !== "Not specified" && (
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <CircleDot className="h-5 w-5" />
+                      Current Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-start gap-3">
+                      <div className={`h-3 w-3 rounded-full mt-1.5 ${
+                        volunteer.currentWorkStatus.toLowerCase().includes('available') 
+                          ? 'bg-green-500 animate-pulse' 
+                          : volunteer.currentWorkStatus.toLowerCase().includes('busy')
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="font-semibold">{volunteer.currentWorkStatus}</p>
+                        {volunteer.activeProjects > 0 && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Currently working on {volunteer.activeProjects} project{volunteer.activeProjects > 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Availability */}
               {volunteer.availability && volunteer.availability !== "Not specified" && (
                 <Card className="shadow-lg">
@@ -399,6 +504,10 @@ export default async function VolunteerPublicProfile({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Professional Title</span>
+                    <CheckCircle className={`h-4 w-4 ${volunteer.title ? 'text-green-600' : 'text-gray-300'}`} />
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Bio</span>
                     <CheckCircle className={`h-4 w-4 ${volunteer.bio ? 'text-green-600' : 'text-gray-300'}`} />
                   </div>
@@ -407,8 +516,12 @@ export default async function VolunteerPublicProfile({
                     <CheckCircle className={`h-4 w-4 ${(volunteer.skills?.length || 0) > 0 ? 'text-green-600' : 'text-gray-300'}`} />
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Experience</span>
-                    <CheckCircle className={`h-4 w-4 ${yearsOfExperience > 0 ? 'text-green-600' : 'text-gray-300'}`} />
+                    <span className="text-muted-foreground">Hourly Rates</span>
+                    <CheckCircle className={`h-4 w-4 ${volunteer.hourlyRate > 0 ? 'text-green-600' : 'text-gray-300'}`} />
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Work Status</span>
+                    <CheckCircle className={`h-4 w-4 ${volunteer.currentWorkStatus !== 'Not specified' ? 'text-green-600' : 'text-gray-300'}`} />
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Social Links</span>

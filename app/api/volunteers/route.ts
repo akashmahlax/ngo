@@ -22,6 +22,17 @@ export async function GET(req: NextRequest) {
       role: 1,
       skills: 1,
       title: 1,
+      bio: 1,
+      location: 1,
+      hourlyRate: 1,
+      ngoHourlyRate: 1,
+      availability: 1,
+      responseTime: 1,
+      currentWorkStatus: 1,
+      completedProjects: 1,
+      activeProjects: 1,
+      successRate: 1,
+      rating: 1,
     })
     .sort(sort === "recent" ? { createdAt: -1 } : { _id: 1 })
     .skip(skip)

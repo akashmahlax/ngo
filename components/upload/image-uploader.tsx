@@ -17,6 +17,7 @@ interface ImageUploaderProps {
   maxSize?: number // in MB
   acceptedTypes?: string[]
   className?: string
+  aspectRatio?: "square" | "video" | "auto"
 }
 
 export function ImageUploader({
@@ -26,6 +27,7 @@ export function ImageUploader({
   maxSize = 5,
   acceptedTypes = ["image/jpeg", "image/png", "image/webp"],
   className,
+  aspectRatio = "square",
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)

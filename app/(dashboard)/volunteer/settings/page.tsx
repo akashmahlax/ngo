@@ -15,12 +15,22 @@ import {
   Bell, 
   Lock, 
   CreditCard, 
-  
   Trash2, 
   AlertTriangle,
   Download,
-  FileText
+  FileText,
+  Briefcase,
+  Award,
+  X
 } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -61,6 +71,25 @@ export default function VolunteerSettings() {
     showEmail: false,
   })
 
+  // Profile state
+  const [profile, setProfile] = useState({
+    name: "",
+    title: "",
+    bio: "",
+    location: "",
+    skills: [] as string[],
+    hourlyRate: 0,
+    ngoHourlyRate: 0,
+    availability: "flexible" as "full-time" | "part-time" | "flexible" | "weekends",
+    responseTime: "< 24 hours",
+    currentWorkStatus: "Available",
+    completedProjects: 0,
+    activeProjects: 0,
+    successRate: 0,
+    rating: 0,
+  })
+  const [newSkill, setNewSkill] = useState("")
+
   useEffect(() => {
     async function loadSettings() {
       try {
@@ -76,6 +105,22 @@ export default function VolunteerSettings() {
           setPrivacy(data.privacy || {
             profileVisibility: "public",
             showEmail: false,
+          })
+          setProfile({
+            name: data.name || "",
+            title: data.title || "",
+            bio: data.bio || "",
+            location: data.location || "",
+            skills: data.skills || [],
+            hourlyRate: data.hourlyRate || 0,
+            ngoHourlyRate: data.ngoHourlyRate || 0,
+            availability: data.availability || "flexible",
+            responseTime: data.responseTime || "< 24 hours",
+            currentWorkStatus: data.currentWorkStatus || "Available",
+            completedProjects: data.completedProjects || 0,
+            activeProjects: data.activeProjects || 0,
+            successRate: data.successRate || 0,
+            rating: data.rating || 0,
           })
         }
       } catch (error) {
@@ -169,6 +214,41 @@ export default function VolunteerSettings() {
     }
   }
 
+  async function saveProfileSettings() {
+    setSaving(true)
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile }),
+      })
+      if (!res.ok) throw new Error("Failed to save profile settings")
+      toast.success("Profile settings saved")
+      await update() // Update session
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message || "Failed to save settings")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function addSkill() {
+    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
+      setProfile(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }))
+      setNewSkill("")
+    }
+  }
+
+  function removeSkill(skill: string) {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.filter(s => s !== skill)
+    }))
+  }
+
   async function deleteAccount() {
     try {
       const res = await fetch("/api/settings/delete-account", {
@@ -209,12 +289,266 @@ export default function VolunteerSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Professional Profile
+              </CardTitle>
+              <CardDescription>
+                Update your professional information visible to NGOs
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={profile.name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Your full name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="title">Professional Title</Label>
+                  <Input
+                    id="title"
+                    value={profile.title}
+                    onChange={(e) => setProfile(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Full Stack Developer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={profile.bio}
+                  onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell NGOs about yourself and your experience..."
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={profile.location}
+                  onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="e.g., Mumbai, India"
+                />
+              </div>
+
+              <Separator />
+
+              {/* Rates Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Hourly Rates</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="hourlyRate">Your Hourly Rate (₹)</Label>
+                    <Input
+                      id="hourlyRate"
+                      type="number"
+                      min="0"
+                      value={profile.hourlyRate}
+                      onChange={(e) => setProfile(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 0 }))}
+                      placeholder="500"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Your expected hourly compensation</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="ngoHourlyRate">NGO Pays (₹)</Label>
+                    <Input
+                      id="ngoHourlyRate"
+                      type="number"
+                      min="0"
+                      value={profile.ngoHourlyRate}
+                      onChange={(e) => setProfile(prev => ({ ...prev, ngoHourlyRate: parseInt(e.target.value) || 0 }))}
+                      placeholder="750"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">What NGOs should pay (including platform fees)</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Availability & Status */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Availability & Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="availability">Availability</Label>
+                    <Select
+                      value={profile.availability}
+                      onValueChange={(value) => setProfile(prev => ({ ...prev, availability: value as any }))}
+                    >
+                      <SelectTrigger id="availability">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="flexible">Flexible</SelectItem>
+                        <SelectItem value="weekends">Weekends</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="responseTime">Response Time</Label>
+                    <Select
+                      value={profile.responseTime}
+                      onValueChange={(value) => setProfile(prev => ({ ...prev, responseTime: value }))}
+                    >
+                      <SelectTrigger id="responseTime">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="< 1 hour">Less than 1 hour</SelectItem>
+                        <SelectItem value="< 4 hours">Less than 4 hours</SelectItem>
+                        <SelectItem value="< 24 hours">Less than 24 hours</SelectItem>
+                        <SelectItem value="1-2 days">1-2 days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Label htmlFor="currentWorkStatus">Current Work Status</Label>
+                  <Input
+                    id="currentWorkStatus"
+                    value={profile.currentWorkStatus}
+                    onChange={(e) => setProfile(prev => ({ ...prev, currentWorkStatus: e.target.value }))}
+                    placeholder="e.g., Available, Busy - 2 projects, Not available"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This shows on your card. Use "Available" to show green status indicator.
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Performance Stats */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Performance Stats</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="completedProjects">Completed Projects</Label>
+                    <Input
+                      id="completedProjects"
+                      type="number"
+                      min="0"
+                      value={profile.completedProjects}
+                      onChange={(e) => setProfile(prev => ({ ...prev, completedProjects: parseInt(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="activeProjects">Active Projects</Label>
+                    <Input
+                      id="activeProjects"
+                      type="number"
+                      min="0"
+                      value={profile.activeProjects}
+                      onChange={(e) => setProfile(prev => ({ ...prev, activeProjects: parseInt(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="successRate">Success Rate (%)</Label>
+                    <Input
+                      id="successRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={profile.successRate}
+                      onChange={(e) => setProfile(prev => ({ ...prev, successRate: parseInt(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rating">Rating (0-5)</Label>
+                    <Input
+                      id="rating"
+                      type="number"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={profile.rating}
+                      onChange={(e) => setProfile(prev => ({ ...prev, rating: parseFloat(e.target.value) || 0 }))}
+                      placeholder="0.0"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 These stats are self-reported for now. Keep them accurate to build trust with NGOs!
+                </p>
+              </div>
+
+              <Separator />
+
+              {/* Skills */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Skills</h3>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addSkill()
+                        }
+                      }}
+                      placeholder="Add a skill (press Enter)"
+                    />
+                    <Button type="button" onClick={addSkill}>
+                      Add
+                    </Button>
+                  </div>
+                  {profile.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="pl-3 pr-1 py-1">
+                          {skill}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-1 ml-1 hover:bg-destructive/10"
+                            onClick={() => removeSkill(skill)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={saveProfileSettings} disabled={saving}>
+                  {saving ? "Saving..." : "Save Profile"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Account Tab */}
         <TabsContent value="account" className="space-y-6">

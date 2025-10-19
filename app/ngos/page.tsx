@@ -133,6 +133,7 @@ export default function NgosDirectory() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 dark:from-[#050517] dark:via-[#0A0A1E] dark:to-[#111132]">
+     
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/70 dark:via-primary/80 dark:to-primary/70">
         {/* Decorative blur circles */}
