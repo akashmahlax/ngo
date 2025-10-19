@@ -163,8 +163,8 @@ export function UniversalNavbar() {
                     <Menu className="h-4 w-4" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent className="h-[80vh]">
-                  <div className="p-6 space-y-6">
+                <DrawerContent className="h-[85vh] max-h-[85vh]">
+                  <div className="p-6 pb-8 space-y-6 overflow-y-auto">
                     <div className="text-center">
                       <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                         Navigation
@@ -293,6 +293,9 @@ export function UniversalNavbar() {
                         <SignOut />
                       </div>
                     )}
+                    
+                    {/* Extra bottom padding for mobile browsers */}
+                    <div className="h-8 w-full"></div>
                   </div>
                 </DrawerContent>
               </Drawer>
@@ -323,8 +326,8 @@ export function UniversalNavbar() {
             </div>
           </div>
         </div>
-        {/* Bottom padding for mobile so content isn't hidden */}
-        <div className="h-6 w-full"></div>
+        {/* Bottom padding for mobile so content isn't hidden - increased */}
+        <div className="h-12 w-full"></div>
       </div>
 
       {/* Desktop Navigation */}
