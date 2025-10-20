@@ -3,23 +3,35 @@
 import * as React from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { FloatingNav } from "@/components/ui/floating-navbar"
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { 
-  Menu, 
-  Search, 
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
+import { searchPlatform, SearchResult } from "@/lib/search"
+import {
+  Menu,
+  Search,
   Briefcase,
   Users,
   Building2,
   Heart,
   Home,
   LayoutDashboard,
-  Sparkles
+  Sparkles,
+  MapPin,
+  Tag
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { getDashboardBase } from "@/lib/nav"
@@ -27,7 +39,52 @@ import { getDashboardBase } from "@/lib/nav"
 export function EnhancedNavbar() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchResults, setSearchResults] = React.useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = React.useState(false)
+
+  // Handle search
+  const handleSearch = React.useCallback(async (query: string) => {
+    setSearchQuery(query)
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const results = await searchPlatform(query)
+      setSearchResults(results)
+    } catch (error) {
+      console.error('Search error:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }, [])
+
+  // Handle search result selection
+  const handleSelectResult = (result: SearchResult) => {
+    setSearchOpen(false)
+    setSearchQuery("")
+    setSearchResults([])
+    router.push(result.url)
+  }
+
+  // Keyboard shortcut for search
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setSearchOpen((open) => !open)
+      }
+    }
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
 
   const navItems = [
     {
@@ -175,8 +232,14 @@ export function EnhancedNavbar() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchOpen(true)}
+                className="hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
                 <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
               </Button>
               
               <ThemeToggle />
@@ -216,6 +279,87 @@ export function EnhancedNavbar() {
           </div>
         </div>
       </div>
+
+      {/* Search Command Dialog */}
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput
+          placeholder="Search jobs, volunteers, NGOs..."
+          value={searchQuery}
+          onValueChange={handleSearch}
+        />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          {searchResults.length > 0 && (
+            <>
+              <CommandGroup heading="Jobs">
+                {searchResults
+                  .filter(result => result.type === 'job')
+                  .map((result) => (
+                    <CommandItem
+                      key={`job-${result.id}`}
+                      value={result.title}
+                      onSelect={() => handleSelectResult(result)}
+                      className="flex items-center gap-3"
+                    >
+                      <Briefcase className="h-4 w-4 text-blue-500" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{result.title}</span>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Tag className="h-3 w-3" />
+                          {result.subtitle}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="Volunteers">
+                {searchResults
+                  .filter(result => result.type === 'volunteer')
+                  .map((result) => (
+                    <CommandItem
+                      key={`volunteer-${result.id}`}
+                      value={result.title}
+                      onSelect={() => handleSelectResult(result)}
+                      className="flex items-center gap-3"
+                    >
+                      <Users className="h-4 w-4 text-green-500" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{result.title}</span>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {result.subtitle}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading="NGOs">
+                {searchResults
+                  .filter(result => result.type === 'ngo')
+                  .map((result) => (
+                    <CommandItem
+                      key={`ngo-${result.id}`}
+                      value={result.title}
+                      onSelect={() => handleSelectResult(result)}
+                      className="flex items-center gap-3"
+                    >
+                      <Building2 className="h-4 w-4 text-purple-500" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{result.title}</span>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {result.subtitle}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </>
+          )}
+        </CommandList>
+      </CommandDialog>
     </>
   )
 }
