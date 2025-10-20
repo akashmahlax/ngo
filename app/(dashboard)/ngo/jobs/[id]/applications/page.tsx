@@ -56,6 +56,7 @@ type Application = {
   rating: number | null
   volunteer: VolunteerInfo | null
   job: JobInfo | null
+  timeline: Array<{ status: string; date: string; note?: string }>
 }
 
 type Summary = {
@@ -76,6 +77,7 @@ type ApplicationApiPayload = {
   coverLetter?: string
   ngoNotes?: string
   rating?: number | null
+  timeline?: Array<{ status: string; date: string; note?: string }>
   volunteer?: {
     _id: string
     name?: string
@@ -105,6 +107,11 @@ const STATUS_META: Record<ApplicationStatus, { label: string; badge: "default" |
   accepted: { label: "Accepted", badge: "default" },
   rejected: { label: "Rejected", badge: "destructive" },
   withdrawn: { label: "Withdrawn", badge: "outline" },
+}
+function formatStatus(status: string) {
+  const meta = STATUS_META[status as ApplicationStatus]
+  if (meta) return meta.label
+  return status.replace(/_/g, " ")
 }
 
 const STATUS_FILTERS: ApplicationStatus[] = ["applied", "shortlisted", "accepted", "rejected", "withdrawn"]
@@ -214,6 +221,13 @@ export default function JobApplicationsPage({ params }: { params: { id: string }
         coverLetter: app.coverLetter ?? "",
         ngoNotes: app.ngoNotes ?? "",
         rating: typeof app.rating === "number" ? app.rating : null,
+        timeline: Array.isArray(app.timeline)
+          ? app.timeline.map((entry) => ({
+              status: entry.status,
+              date: entry.date,
+              note: entry.note,
+            }))
+          : [],
         volunteer: app.volunteer
           ? {
               _id: app.volunteer._id,
@@ -393,11 +407,25 @@ export default function JobApplicationsPage({ params }: { params: { id: string }
       if (!res.ok) {
         throw new Error("Failed to update status")
       }
-
+      const data = await res.json().catch(() => null)
+      const updatedFromServer = data?.application
       setApplications((prev) =>
         prev.map((app) =>
           app._id === applicationId
-            ? { ...app, status: nextStatus, updatedAt: new Date().toISOString() }
+            ? {
+                ...app,
+                status: nextStatus,
+                updatedAt: typeof updatedFromServer?.updatedAt === "string"
+                  ? updatedFromServer.updatedAt
+                  : new Date().toISOString(),
+                timeline: Array.isArray(updatedFromServer?.timeline)
+                  ? updatedFromServer.timeline.map((entry: { status: string; date: string; note?: string }) => ({
+                      status: entry.status,
+                      date: entry.date,
+                      note: entry.note,
+                    }))
+                  : app.timeline,
+              }
             : app
         )
       )
@@ -711,32 +739,36 @@ export default function JobApplicationsPage({ params }: { params: { id: string }
                           </div>
                         </div>
                       )}
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                          <Card>
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Applications</p>
-                              <p className="mt-2 text-2xl font-semibold">{summary.total}</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Pending Review</p>
-                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.applied}</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Shortlisted</p>
-                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.shortlisted}</p>
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardContent className="p-4">
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Accepted</p>
-                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.accepted}</p>
-                            </CardContent>
-                          </Card>
-                        </div>
+                        {application.timeline.length > 0 && (
+                          <div className="space-y-3">
+                            <Separator />
+                            <div>
+                              <h4 className="text-sm font-semibold">Activity Timeline</h4>
+                              <div className="space-y-2">
+                                {application.timeline.map((entry, index) => (
+                                  <div key={`${entry.status}-${entry.date}-${index}`} className="flex items-start gap-3 rounded-md border p-3">
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                      {formatStatus(entry.status).slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                      <p className="text-sm font-medium text-foreground">
+                                        {formatStatus(entry.status)}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(entry.date), { addSuffix: true })}
+                                      </p>
+                                      {entry.note && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Note: {entry.note}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
 
                       <div className="space-y-3">
