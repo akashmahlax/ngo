@@ -296,7 +296,7 @@ export default function VolunteerProfile() {
               ))}
             </div>
             <div className="mt-2">
-              <Badge variant={profile.profileVisibility === "public" ? "success" : "secondary"}>
+              <Badge variant={profile.profileVisibility === "public" ? "default" : "secondary"} className={profile.profileVisibility === "public" ? "bg-green-500 hover:bg-green-600" : ""}>
                 {profile.profileVisibility === "public" ? "Public" : "Private"}
               </Badge>
             </div>
@@ -314,7 +314,7 @@ export default function VolunteerProfile() {
                   <span className="font-medium">Plan:</span>
                   <Badge variant={isPlus ? "default" : "secondary"}>{plan?.replace("_", " ")}</Badge>
                   {isPlus && !isExpired && (
-                    <Badge variant="success">Active</Badge>
+                    <Badge variant="default" className="bg-green-500 hover:bg-green-600">Active</Badge>
                   )}
                   {isExpired && (
                     <Badge variant="destructive">Expired</Badge>
