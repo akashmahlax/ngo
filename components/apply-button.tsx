@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,12 +8,41 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import { Lock, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
 
 export function ApplyButton({ jobId }: { jobId: string }) {
   const { data: session } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [existingAppId, setExistingAppId] = useState<string | null>(null)
+  const [existingStatus, setExistingStatus] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    const checkExisting = async () => {
+      if (!session?.user) return
+      try {
+        setChecking(true)
+        const res = await fetch(`/api/applications?jobId=${jobId}`)
+        if (!res.ok) return
+        const data = await res.json().catch(() => ({}))
+        const apps = data.applications || []
+        const app = apps[0]
+        if (!mounted) return
+        if (app) {
+          setExistingAppId(app._id)
+          setExistingStatus(app.status)
+        }
+      } catch {
+        } finally {
+        if (mounted) setChecking(false)
+      }
+    }
+    checkExisting()
+    return () => { mounted = false }
+  }, [jobId, session?.user])
 
   if (!session?.user) {
     return (
@@ -115,6 +144,31 @@ export function ApplyButton({ jobId }: { jobId: string }) {
     }
   }
 
+  async function handleWithdraw() {
+    if (!existingAppId) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/applications/${existingAppId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "withdrawn" }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(body.error || "Failed to withdraw")
+        return
+      }
+      setExistingStatus("withdrawn")
+      toast.success("Application withdrawn")
+      router.push("/volunteer/applications")
+    } catch (err) {
+      console.error(err)
+      setError("Failed to withdraw")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (isExpired) {
     return (
       <div className="space-y-4">
@@ -134,9 +188,15 @@ export function ApplyButton({ jobId }: { jobId: string }) {
             </p>
           </CardContent>
         </Card>
-        <Button onClick={handleApply} disabled={loading} className="w-full">
-          {loading ? "Applying..." : "Apply Now"}
-        </Button>
+        {existingAppId && existingStatus && existingStatus !== "withdrawn" ? (
+          <Button onClick={handleWithdraw} disabled={loading || checking} className="w-full">
+            {loading ? "Withdrawing..." : "Withdraw Application"}
+          </Button>
+        ) : (
+          <Button onClick={handleApply} disabled={loading} className="w-full">
+            {loading ? "Applying..." : "Apply Now"}
+          </Button>
+        )}
         <CheckoutButton plan="volunteer_plus" />
       </div>
     )
@@ -151,9 +211,15 @@ export function ApplyButton({ jobId }: { jobId: string }) {
           </CardContent>
         </Card>
       )}
-      <Button onClick={handleApply} disabled={loading} className="w-full">
-        {loading ? "Applying..." : "Apply Now"}
-      </Button>
+      {existingAppId && existingStatus && existingStatus !== "withdrawn" ? (
+        <Button onClick={handleWithdraw} disabled={loading || checking} className="w-full">
+          {loading ? "Withdrawing..." : "Withdraw Application"}
+        </Button>
+      ) : (
+        <Button onClick={handleApply} disabled={loading} className="w-full">
+          {loading ? "Applying..." : "Apply Now"}
+        </Button>
+      )}
     </div>
   )
 }

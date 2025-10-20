@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { 
   Search, 
@@ -17,9 +18,11 @@ import {
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 
+type ApplicationStatus = "applied" | "shortlisted" | "accepted" | "rejected" | "withdrawn"
+
 interface Application {
   _id: string
-  status: "applied" | "shortlisted" | "accepted" | "rejected"
+  status: ApplicationStatus
   coverLetter: string
   appliedAt: string
   job: {
@@ -42,9 +45,9 @@ export default function VolunteerApplications() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState("all")
+  const [activeTab, setActiveTab] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<ApplicationStatus[]>([])
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -75,23 +78,41 @@ export default function VolunteerApplications() {
     return true
   })
 
-  const getStatusVariant = (s: string): "secondary" | "default" | "destructive" => {
+  const handleWithdraw = async (applicationId: string) => {
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "withdrawn" }),
+      })
+      if (!res.ok) throw new Error("Failed to withdraw")
+      setApplications((prev) => prev.map(a => a._id === applicationId ? { ...a, status: "withdrawn" } : a))
+      toast.success("Application withdrawn")
+    } catch (err) {
+      console.error(err)
+      toast.error("Unable to withdraw application")
+    }
+  }
+
+  const getStatusVariant = (s: ApplicationStatus): "secondary" | "default" | "destructive" | "outline" => {
     if (s === "rejected") return "destructive"
     if (s === "applied") return "secondary"
+    if (s === "withdrawn") return "outline"
     return "default"
   }
 
-  const getStatusText = (s: string) => {
+  const getStatusText = (s: ApplicationStatus) => {
     const map: Record<string, string> = {
-      applied: "Applied",
+      applied: "Pending Review",
       shortlisted: "Shortlisted",
       accepted: "Accepted",
-      rejected: "Rejected"
+      rejected: "Rejected",
+      withdrawn: "Withdrawn"
     }
     return map[s] || s
   }
 
-  const toggleStatus = (s: string) => {
+  const toggleStatus = (s: ApplicationStatus) => {
     setSelectedStatus(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])
   }
 
@@ -168,7 +189,7 @@ export default function VolunteerApplications() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {["applied", "shortlisted", "accepted", "rejected"].map((status) => (
+          {(["applied", "shortlisted", "accepted", "rejected", "withdrawn"] as ApplicationStatus[]).map((status) => (
             <Button
               key={status}
               variant={selectedStatus.includes(status) ? "default" : "outline"}
@@ -195,6 +216,7 @@ export default function VolunteerApplications() {
           <TabsTrigger value="shortlisted">Shortlisted</TabsTrigger>
           <TabsTrigger value="accepted">Accepted</TabsTrigger>
           <TabsTrigger value="rejected">Rejected</TabsTrigger>
+          <TabsTrigger value="withdrawn">Withdrawn</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
@@ -252,12 +274,19 @@ export default function VolunteerApplications() {
                         )}
                       </div>
                       {app.job && (
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/jobs/${app.job._id}`}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Job
-                          </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/jobs/${app.job._id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Job
+                            </Link>
+                          </Button>
+                          {app.status !== "withdrawn" && (
+                            <Button variant="ghost" size="sm" onClick={() => handleWithdraw(app._id)}>
+                              Withdraw
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </CardContent>

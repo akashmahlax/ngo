@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { ButtonBorder } from "./ui/moving-border";
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -278,15 +279,16 @@ export function UniversalNavbar() {
                         >
                           Sign up
                         </Button>
-                        <Button 
-                          className="rounded-xl"
+                        <ButtonBorder
+                           borderRadius="1.75rem"
+                          className="rounded-xl bg-green-500 dark:bg-green-500 text-black dark:text-white border-2 border-green-00 dark:border-green-300"
                           onClick={() => {
                             router.push("/signin")
                             setMobileOpen(false)
                           }}
                         >
                           Sign in
-                        </Button>
+                        </ButtonBorder>
                       </div>
                     ) : (
                       <div className="pt-4 border-t">

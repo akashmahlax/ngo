@@ -4,10 +4,10 @@ import { getCollections } from "@/lib/models"
 import { ObjectId } from "mongodb"
 import { z } from "zod"
 
-const schema = z.object({ 
+const schema = z.object({
   status: z.enum(["applied", "shortlisted", "accepted", "rejected", "withdrawn"]).optional(),
-  ngoNotes: z.string().optional(),
-  rating: z.number().min(1).max(5).optional(),
+  ngoNotes: z.string().max(5000).optional(),
+  rating: z.union([z.number().min(1).max(5), z.null()]).optional(),
 })
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -30,52 +30,79 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: "INVALID_BODY" }, { status: 400 })
 
+  const { status, ngoNotes, rating } = parsed.data
+
   // Authorization
   if (role === "ngo") {
     const job = await jobs.findOne({ _id: app.jobId })
     if (!job || String(job.ngoId) !== String(user._id)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
+    if (status === "withdrawn") {
+      return NextResponse.json({ error: "INVALID_STATUS" }, { status: 400 })
+    }
   } else if (role === "volunteer") {
     if (String(app.volunteerId) !== String(user._id)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
     // Volunteers can only withdraw
-    if (parsed.data.status && parsed.data.status !== "withdrawn") {
+    if (status && status !== "withdrawn") {
       return NextResponse.json({ error: "VOLUNTEERS_CAN_ONLY_WITHDRAW" }, { status: 403 })
+    }
+    if (ngoNotes !== undefined || rating !== undefined) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
     }
   } else {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
   }
 
   // Build update object
-  const updateObj: Record<string, Date | string | number> = {
-    updatedAt: new Date()
+  const now = new Date()
+  const updateFields: Record<string, unknown> = { updatedAt: now }
+
+  const nextStatus = status && status !== app.status ? status : undefined
+  if (nextStatus) {
+    updateFields.status = nextStatus
+  }
+  if (ngoNotes !== undefined) {
+    updateFields.ngoNotes = ngoNotes
+  }
+  if (rating !== undefined) {
+    updateFields.rating = rating ?? null
   }
 
-  if (parsed.data.status) {
-    updateObj.status = parsed.data.status
-  }
-  if (parsed.data.ngoNotes !== undefined) {
-    updateObj.ngoNotes = parsed.data.ngoNotes
-  }
-  if (parsed.data.rating !== undefined) {
-    updateObj.rating = parsed.data.rating
+  const updateQuery: Record<string, unknown> = {
+    $set: updateFields,
   }
 
-  // Add timeline entry if status changed
-  const timelineUpdate = parsed.data.status ? {
-    $push: {
+  if (nextStatus) {
+    updateQuery.$push = {
       timeline: {
-        status: parsed.data.status,
-        date: new Date(),
-        note: parsed.data.ngoNotes || undefined,
-      }
+        status: nextStatus,
+        date: now,
+        note: role === "volunteer" ? "Volunteer withdrew application" : ngoNotes || undefined,
+      },
     }
-  } : {}
+  }
 
-  await applications.updateOne(
-    { _id: app._id },
-    { $set: updateObj, ...timelineUpdate }
-  )
+  await applications.updateOne({ _id: app._id }, updateQuery)
 
-  return NextResponse.json({ ok: true, status: parsed.data.status || app.status })
+  const result = await applications.findOne({ _id: app._id })
+  if (!result) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 })
+  }
+
+  return NextResponse.json({
+    ok: true,
+    application: {
+      _id: result._id.toString(),
+      status: result.status,
+      ngoNotes: result.ngoNotes ?? "",
+      rating: result.rating ?? null,
+      updatedAt: result.updatedAt,
+      timeline: (result.timeline ?? []).map((entry) => ({
+        status: entry.status,
+        date: entry.date,
+        note: entry.note,
+      })),
+    },
+  })
 }
 
 

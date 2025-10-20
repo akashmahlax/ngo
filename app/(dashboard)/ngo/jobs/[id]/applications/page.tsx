@@ -1,221 +1,595 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { useSession } from "next-auth/react"
+import { formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  Search, 
-  Filter,
-  X,
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Search,
   Download,
+  X,
+  ChevronLeft,
+  Calendar,
+  MapPin,
   Star,
   StarOff,
-  Mail,
   User,
-  Calendar,
+  Mail,
   Check,
   XCircle,
-  ChevronLeft
+  Undo2,
 } from "lucide-react"
-import { formatDistanceToNow, format } from "date-fns"
-import Link from "next/link"
 
-// Mock data for demonstration
-const mockApplications = [
-  {
-    id: "1",
-    volunteerId: "vol1",
-    volunteerName: "Alex Johnson",
-    volunteerAvatar: "/placeholder.svg",
-    volunteerSkills: ["Conservation", "Research", "Data Analysis"],
-    volunteerBio: "Passionate environmentalist with 3 years of experience in wildlife conservation.",
-    status: "review",
-    appliedDate: new Date(Date.now() - 86400000), // 1 day ago
-    rating: 4,
-    notes: "",
+type ApplicationStatus = "applied" | "shortlisted" | "accepted" | "rejected" | "withdrawn"
+
+type VolunteerInfo = {
+  _id: string
+  name?: string
+  email?: string
+  avatarUrl?: string
+  location?: string
+  skills: string[]
+  bio?: string
+}
+
+type JobInfo = {
+  _id: string
+  title: string
+}
+
+type Application = {
+  _id: string
+  status: ApplicationStatus
+  appliedAt: string
+  updatedAt: string
+  coverLetter: string
+  ngoNotes: string
+  rating: number | null
+  volunteer: VolunteerInfo | null
+  job: JobInfo | null
+}
+
+type Summary = {
+  total: number
+  byStatus: Record<ApplicationStatus, number>
+}
+
+type JobDetails = {
+  _id: string
+  title: string
+}
+
+type ApplicationApiPayload = {
+  _id: string
+  status: ApplicationStatus
+  appliedAt: string
+  updatedAt: string
+  coverLetter?: string
+  ngoNotes?: string
+  rating?: number | null
+  volunteer?: {
+    _id: string
+    name?: string
+    email?: string
+    avatarUrl?: string
+    location?: string
+    skills?: string[]
+    bio?: string
+  } | null
+  job?: {
+    _id: string
+    title: string
+  } | null
+}
+
+type ApplicationsApiResponse = {
+  applications?: ApplicationApiPayload[]
+  summary?: {
+    total?: number
+    byStatus?: Partial<Record<ApplicationStatus, number>>
+  }
+}
+
+const STATUS_META: Record<ApplicationStatus, { label: string; badge: "default" | "secondary" | "destructive" | "outline" }> = {
+  applied: { label: "Pending Review", badge: "secondary" },
+  shortlisted: { label: "Shortlisted", badge: "default" },
+  accepted: { label: "Accepted", badge: "default" },
+  rejected: { label: "Rejected", badge: "destructive" },
+  withdrawn: { label: "Withdrawn", badge: "outline" },
+}
+
+const STATUS_FILTERS: ApplicationStatus[] = ["applied", "shortlisted", "accepted", "rejected", "withdrawn"]
+
+const EMPTY_SUMMARY: Summary = {
+  total: 0,
+  byStatus: {
+    applied: 0,
+    shortlisted: 0,
+    accepted: 0,
+    rejected: 0,
+    withdrawn: 0,
   },
-  {
-    id: "2",
-    volunteerId: "vol2",
-    volunteerName: "Maria Garcia",
-    volunteerAvatar: "/placeholder.svg",
-    volunteerSkills: ["Education", "Teaching", "Spanish"],
-    volunteerBio: "Experienced educator looking to contribute to community development projects.",
-    status: "interview",
-    appliedDate: new Date(Date.now() - 172800000), // 2 days ago
-    rating: 5,
-    notes: "Excellent communication skills, perfect for our education program.",
-  },
-  {
-    id: "3",
-    volunteerId: "vol3",
-    volunteerName: "James Wilson",
-    volunteerAvatar: "/placeholder.svg",
-    volunteerSkills: ["Marketing", "Social Media", "Graphic Design"],
-    volunteerBio: "Digital marketing specialist passionate about using skills for social good.",
-    status: "offered",
-    appliedDate: new Date(Date.now() - 259200000), // 3 days ago
-    rating: 3,
-    notes: "Strong creative skills, good fit for our outreach initiatives.",
-  },
-  {
-    id: "4",
-    volunteerId: "vol4",
-    volunteerName: "Sarah Chen",
-    volunteerAvatar: "/placeholder.svg",
-    volunteerSkills: ["Project Management", "Fundraising", "Event Planning"],
-    volunteerBio: "Experienced project manager looking to make a difference in the nonprofit sector.",
-    status: "rejected",
-    appliedDate: new Date(Date.now() - 345600000), // 4 days ago
-    rating: 2,
-    notes: "Overqualified for this position but not the right cultural fit.",
-  },
-]
+}
+
+function buildSummaryFromApps(apps: Application[]): Summary {
+  return apps.reduce<Summary>(
+    (acc, app) => {
+      acc.total += 1
+      acc.byStatus[app.status] += 1
+      return acc
+    },
+    {
+      total: 0,
+      byStatus: {
+        applied: 0,
+        shortlisted: 0,
+        accepted: 0,
+        rejected: 0,
+        withdrawn: 0,
+      },
+    }
+  )
+}
+
+function updateSummaryForStatusChange(summary: Summary, from: ApplicationStatus, to: ApplicationStatus): Summary {
+  if (from === to) return summary
+  return {
+    total: summary.total,
+    byStatus: {
+      ...summary.byStatus,
+      [from]: Math.max(0, summary.byStatus[from] - 1),
+      [to]: summary.byStatus[to] + 1,
+    },
+  }
+}
+
+function escapeCsvValue(value: string) {
+  const needsQuotes = value.includes(",") || value.includes("\n") || value.includes("\"")
+  const sanitized = value.replace(/"/g, '""')
+  return needsQuotes ? `"${sanitized}"` : sanitized
+}
+
+function buildCsv(applications: Application[]) {
+  const header = ["Volunteer", "Email", "Status", "Applied", "Job"]
+  const rows = applications.map((app) => [
+    app.volunteer?.name ?? "Unknown",
+    app.volunteer?.email ?? "N/A",
+    STATUS_META[app.status].label,
+    new Date(app.appliedAt).toLocaleDateString(),
+    app.job?.title ?? "N/A",
+  ])
+  return [header, ...rows]
+    .map((row) => row.map((value) => escapeCsvValue(String(value))).join(","))
+    .join("\n")
+}
 
 export default function JobApplicationsPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [applications, setApplications] = useState<Application[]>([])
+  const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY)
+  const [job, setJob] = useState<JobDetails | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([])
-  const [applications, setApplications] = useState(mockApplications)
-  const [newNotes, setNewNotes] = useState<Record<string, string>>({})
+  const [statusFilters, setStatusFilters] = useState<ApplicationStatus[]>([])
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({})
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [notesLoading, setNotesLoading] = useState<string | null>(null)
+  const [ratingLoading, setRatingLoading] = useState<string | null>(null)
 
-  // Filter applications based on search and status
-  const filteredApplications = applications.filter(app => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      if (!app.volunteerName.toLowerCase().includes(query) && 
-          !app.volunteerSkills.some(skill => skill.toLowerCase().includes(query))) {
+  const fetchApplications = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [jobRes, appsRes] = await Promise.all([
+        fetch(`/api/jobs/${params.id}`),
+        fetch(`/api/applications?jobId=${params.id}`),
+      ])
+
+      if (jobRes.ok) {
+        const jobData = await jobRes.json()
+        setJob(jobData?.job ? { _id: jobData.job._id, title: jobData.job.title } : null)
+      } else if (jobRes.status === 404) {
+        setJob(null)
+      }
+
+      if (!appsRes.ok) {
+        throw new Error("Failed to load applications")
+      }
+
+      const appsData: ApplicationsApiResponse = await appsRes.json()
+      const normalizedApps: Application[] = (appsData.applications ?? []).map((app) => ({
+        _id: app._id,
+        status: app.status,
+        appliedAt: app.appliedAt,
+        updatedAt: app.updatedAt,
+        coverLetter: app.coverLetter ?? "",
+        ngoNotes: app.ngoNotes ?? "",
+        rating: typeof app.rating === "number" ? app.rating : null,
+        volunteer: app.volunteer
+          ? {
+              _id: app.volunteer._id,
+              name: app.volunteer.name,
+              email: app.volunteer.email,
+              avatarUrl: app.volunteer.avatarUrl,
+              location: app.volunteer.location,
+              skills: Array.isArray(app.volunteer.skills) ? app.volunteer.skills : [],
+              bio: app.volunteer.bio,
+            }
+          : null,
+        job: app.job ? { _id: app.job._id, title: app.job.title } : null,
+      }))
+
+      const summaryData: Summary = appsData.summary
+        ? {
+            total: appsData.summary.total ?? normalizedApps.length,
+            byStatus: {
+              applied: appsData.summary.byStatus?.applied ?? 0,
+              shortlisted: appsData.summary.byStatus?.shortlisted ?? 0,
+              accepted: appsData.summary.byStatus?.accepted ?? 0,
+              rejected: appsData.summary.byStatus?.rejected ?? 0,
+              withdrawn: appsData.summary.byStatus?.withdrawn ?? 0,
+            },
+          }
+        : buildSummaryFromApps(normalizedApps)
+
+      const drafts = normalizedApps.reduce<Record<string, string>>((acc, app) => {
+        acc[app._id] = app.ngoNotes
+        return acc
+      }, {})
+
+      setApplications(normalizedApps)
+      setSummary(summaryData)
+      setNotesDraft(drafts)
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError("Failed to load applications. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }, [params.id])
+
+  useEffect(() => {
+    if (session?.user) {
+      void fetchApplications()
+    }
+  }, [session?.user, fetchApplications])
+
+  const filteredApplications = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return applications.filter((app) => {
+      if (statusFilters.length > 0 && !statusFilters.includes(app.status)) {
         return false
       }
-    }
-    
-    // Status filter
-    if (selectedStatus.length > 0 && !selectedStatus.includes(app.status)) {
-      return false
-    }
-    
-    return true
-  })
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "review": return "secondary"
-      case "interview": return "default"
-      case "offered": return "default"
-      case "rejected": return "destructive"
-      default: return "secondary"
-    }
-  }
+      if (query) {
+        const volunteerName = app.volunteer?.name?.toLowerCase() ?? ""
+        const volunteerSkills = (app.volunteer?.skills || []).join(" ").toLowerCase()
+        if (!volunteerName.includes(query) && !volunteerSkills.includes(query)) {
+          return false
+        }
+      }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "review": return "Under Review"
-      case "interview": return "Interview Scheduled"
-      case "offered": return "Offer Sent"
-      case "rejected": return "Not Selected"
-      default: return status
-    }
-  }
+      return true
+    })
+  }, [applications, searchQuery, statusFilters])
 
-  const toggleStatusFilter = (status: string) => {
-    setSelectedStatus(prev => 
-      prev.includes(status) 
-        ? prev.filter(s => s !== status) 
-        : [...prev, status]
+  const handleStatusFilterToggle = (status: ApplicationStatus) => {
+    setStatusFilters((prev) =>
+      prev.includes(status) ? prev.filter((item) => item !== status) : [...prev, status]
     )
   }
 
   const clearFilters = () => {
     setSearchQuery("")
-    setSelectedStatus([])
+    setStatusFilters([])
   }
 
-  const exportToCSV = () => {
-    // In a real implementation, this would export the filtered applications to CSV
-    alert("Export to CSV functionality would be implemented here")
+  const handleExport = () => {
+    if (filteredApplications.length === 0) {
+      toast.info("No applications to export.")
+      return
+    }
+
+    const csv = buildCsv(filteredApplications)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `applications-${params.id}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
-  const updateRating = (appId: string, rating: number) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === appId ? { ...app, rating } : app
-      )
-    )
+  const handleNotesChange = (applicationId: string, value: string) => {
+    setNotesDraft((prev) => ({ ...prev, [applicationId]: value }))
   }
 
-  const updateNotes = (appId: string, notes: string) => {
-    setNewNotes(prev => ({ ...prev, [appId]: notes }))
-  }
+  const handleNotesSave = async (applicationId: string) => {
+    const application = applications.find((app) => app._id === applicationId)
+    if (!application) return
 
-  const saveNotes = (appId: string) => {
-    const notes = newNotes[appId]
-    if (notes !== undefined) {
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === appId ? { ...app, notes } : app
+    const note = notesDraft[applicationId] ?? ""
+    if (note === application.ngoNotes) return
+
+    setNotesLoading(applicationId)
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ngoNotes: note }),
+      })
+      if (!res.ok) {
+        throw new Error("Failed to update notes")
+      }
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id === applicationId
+            ? { ...app, ngoNotes: note, updatedAt: new Date().toISOString() }
+            : app
         )
       )
-      setNewNotes(prev => {
-        const newNotes = { ...prev }
-        delete newNotes[appId]
-        return newNotes
-      })
+      toast.success("Notes updated")
+    } catch (err) {
+      console.error(err)
+      toast.error("Unable to update notes.")
+    } finally {
+      setNotesLoading(null)
     }
   }
 
+  const handleRatingChange = async (applicationId: string, rating: number) => {
+    const application = applications.find((app) => app._id === applicationId)
+    if (!application || application.rating === rating) return
+
+    setRatingLoading(applicationId)
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating }),
+      })
+      if (!res.ok) {
+        throw new Error("Failed to update rating")
+      }
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id === applicationId
+            ? { ...app, rating, updatedAt: new Date().toISOString() }
+            : app
+        )
+      )
+      toast.success("Rating saved")
+    } catch (err) {
+      console.error(err)
+      toast.error("Unable to update rating.")
+    } finally {
+      setRatingLoading(null)
+    }
+  }
+
+  const handleStatusUpdate = async (applicationId: string, nextStatus: ApplicationStatus) => {
+    const application = applications.find((app) => app._id === applicationId)
+    if (!application || application.status === nextStatus) return
+
+    setActionLoading(applicationId)
+    try {
+      const res = await fetch(`/api/applications/${applicationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+      if (!res.ok) {
+        throw new Error("Failed to update status")
+      }
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id === applicationId
+            ? { ...app, status: nextStatus, updatedAt: new Date().toISOString() }
+            : app
+        )
+      )
+      setSummary((prev) => updateSummaryForStatusChange(prev, application.status, nextStatus))
+      toast.success(`Application marked as ${STATUS_META[nextStatus].label.toLowerCase()}`)
+    } catch (err) {
+      console.error(err)
+      toast.error("Unable to update status.")
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const actionButtonsForStatus = (application: Application) => {
+    const disabled = actionLoading === application._id
+    switch (application.status) {
+      case "applied":
+        return [
+          <Button
+            key="shortlist"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "shortlisted")}
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Shortlist
+          </Button>,
+          <Button
+            key="accept"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "accepted")}
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Accept
+          </Button>,
+          <Button
+            key="reject"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "rejected")}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            Reject
+          </Button>,
+        ]
+      case "shortlisted":
+        return [
+          <Button
+            key="accept"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "accepted")}
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Accept
+          </Button>,
+          <Button
+            key="reject"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "rejected")}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            Reject
+          </Button>,
+          <Button
+            key="reopen"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "applied")}
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            Move to Pending
+          </Button>,
+        ]
+      case "accepted":
+        return [
+          <Button
+            key="reopen"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "shortlisted")}
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            Reopen
+          </Button>,
+          <Button
+            key="reject"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "rejected")}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            Mark Rejected
+          </Button>,
+        ]
+      case "rejected":
+        return [
+          <Button
+            key="reopen"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => handleStatusUpdate(application._id, "applied")}
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            Reopen
+          </Button>,
+        ]
+      default:
+        return [
+          <p key="no-actions" className="text-xs text-muted-foreground">
+            No additional actions available.
+          </p>,
+        ]
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-8 w-full max-w-sm" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Card>
+          <CardContent className="py-12 text-center space-y-4">
+            <p className="text-destructive">{error}</p>
+            <Button onClick={() => fetchApplications()}>Retry</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Button variant="ghost" asChild className="mb-6">
-        <Link href="/dashboard/ngo/jobs">
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
+      <Button variant="ghost" asChild className="w-fit">
+        <Link href="/dashboard/ngo">
           <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Jobs
+          Back to Dashboard
         </Link>
       </Button>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Job Applications</h1>
-        <p className="text-muted-foreground">
-          Review and manage applications for "Environmental Conservation Volunteer"
+      <div>
+        <h1 className="text-3xl font-bold">
+          {job?.title ?? "Job Applications"}
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Manage volunteer applications, record internal notes, and move candidates through each stage.
         </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by volunteer name or skills..."
-              className="pl-10"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search by volunteer or skills..."
+              className="pl-10"
             />
           </div>
-          <Button variant="outline" onClick={exportToCSV}>
+          <Button variant="outline" onClick={handleExport} disabled={!filteredApplications.length}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
-
         <div className="flex flex-wrap gap-2">
-          {["review", "interview", "offered", "rejected"].map((status) => (
+          {STATUS_FILTERS.map((status) => (
             <Button
               key={status}
-              variant={selectedStatus.includes(status) ? "default" : "outline"}
+              variant={statusFilters.includes(status) ? "default" : "outline"}
               size="sm"
-              onClick={() => toggleStatusFilter(status)}
+              onClick={() => handleStatusFilterToggle(status)}
               className="capitalize"
             >
-              {getStatusText(status)}
+              {STATUS_META[status].label}
             </Button>
           ))}
-          {(searchQuery || selectedStatus.length > 0) && (
+          {(searchQuery || statusFilters.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               <X className="h-4 w-4 mr-1" />
               Clear
@@ -224,180 +598,234 @@ export default function JobApplicationsPage({ params }: { params: { id: string }
         </div>
       </div>
 
-      {/* Applications Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">12</div>
-            <div className="text-sm text-muted-foreground">Total Applications</div>
-          </CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+            <CardDescription>All time</CardDescription>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{summary.total}</CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">5</div>
-            <div className="text-sm text-muted-foreground">Under Review</div>
-          </CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <CardDescription>Awaiting action</CardDescription>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{summary.byStatus.applied}</CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">3</div>
-            <div className="text-sm text-muted-foreground">Interviews Scheduled</div>
-          </CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Shortlisted</CardTitle>
+            <CardDescription>Next up</CardDescription>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{summary.byStatus.shortlisted}</CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">2</div>
-            <div className="text-sm text-muted-foreground">Offers Sent</div>
-          </CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+            <CardDescription>Hired volunteers</CardDescription>
+          </CardHeader>
+          <CardContent className="text-2xl font-bold">{summary.byStatus.accepted}</CardContent>
         </Card>
       </div>
 
-      {/* Applications List */}
       {filteredApplications.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No applications found</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search or filters
-            </p>
-            <Button onClick={clearFilters}>Clear Filters</Button>
+          <CardContent className="py-12 text-center space-y-4">
+            <Search className="h-10 w-10 mx-auto text-muted-foreground" />
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">No applications found</h3>
+              <p className="text-muted-foreground text-sm">
+                Try adjusting filters or encourage volunteers to apply to this role.
+              </p>
+            </div>
+            {(searchQuery || statusFilters.length > 0) && (
+              <Button onClick={clearFilters}>Reset Filters</Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredApplications.map((app) => (
-            <Card key={app.id}>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* Volunteer Info */}
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                          {app.volunteerName.charAt(0)}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold">{app.volunteerName}</h3>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span>
-                              Applied {formatDistanceToNow(app.appliedDate, { addSuffix: true })}
-                            </span>
+          {filteredApplications.map((application) => {
+            const volunteer = application.volunteer
+            const notesDraftValue = notesDraft[application._id] ?? application.ngoNotes
+            const noteChanged = notesDraftValue !== application.ngoNotes
+            return (
+              <Card key={application._id} className="border-2">
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:justify-between">
+                    <div className="flex-1 space-y-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-12 w-12">
+                            {volunteer?.avatarUrl && <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name ?? "Volunteer"} />}
+                            <AvatarFallback>{volunteer?.name?.charAt(0)?.toUpperCase() ?? "V"}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {volunteer?.name ?? "Volunteer"}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                Applied {formatDistanceToNow(new Date(application.appliedAt), { addSuffix: true })}
+                              </span>
+                              {volunteer?.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {volunteer.location}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <Badge variant={getStatusVariant(app.status)}>
-                        {getStatusText(app.status)}
-                      </Badge>
-                    </div>
-
-                    <p className="text-muted-foreground mb-3">
-                      {app.volunteerBio}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {app.volunteerSkills.map((skill, index) => (
-                        <Badge key={index} variant="secondary">
-                          {skill}
+                        <Badge variant={STATUS_META[application.status].badge} className="self-start">
+                          {STATUS_META[application.status].label}
                         </Badge>
-                      ))}
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-sm text-muted-foreground">Rating:</span>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => updateRating(app.id, star)}
-                            className="text-muted-foreground hover:text-yellow-500"
-                          >
-                            {star <= app.rating ? (
-                              <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                            ) : (
-                              <StarOff className="h-5 w-5" />
-                            )}
-                          </button>
-                        ))}
                       </div>
-                      <span className="text-sm text-muted-foreground">({app.rating}/5)</span>
-                    </div>
 
-                    {/* Notes */}
-                    <div className="space-y-2 mb-4">
-                      {app.notes && (
-                        <div className="p-3 bg-muted rounded-md">
-                          <p className="text-sm">{app.notes}</p>
+                      {volunteer?.bio && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {volunteer.bio}
+                        </p>
+                      )}
+
+                      {volunteer?.skills?.length ? (
+                        <div className="flex flex-wrap gap-2">
+                          {volunteer.skills.map((skill) => (
+                            <Badge key={skill} variant="secondary" className="capitalize">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {application.coverLetter && (
+                        <div className="space-y-3">
+                          <Separator />
+                          <div>
+                            <h4 className="text-sm font-semibold">Cover Letter</h4>
+                            <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
+                              {application.coverLetter}
+                            </p>
+                          </div>
                         </div>
                       )}
-                      <Label htmlFor={`notes-${app.id}`}>Private Notes</Label>
-                      <Textarea
-                        id={`notes-${app.id}`}
-                        value={newNotes[app.id] || ""}
-                        onChange={(e) => updateNotes(app.id, e.target.value)}
-                        placeholder="Add private notes about this candidate..."
-                        rows={2}
-                      />
-                      <Button 
-                        size="sm" 
-                        onClick={() => saveNotes(app.id)}
-                        disabled={!newNotes[app.id]}
-                      >
-                        Save Notes
-                      </Button>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Applications</p>
+                              <p className="mt-2 text-2xl font-semibold">{summary.total}</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Pending Review</p>
+                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.applied}</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Shortlisted</p>
+                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.shortlisted}</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4">
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Accepted</p>
+                              <p className="mt-2 text-2xl font-semibold">{summary.byStatus.accepted}</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold">Internal Notes</h4>
+                          <span className="text-xs text-muted-foreground">
+                            Updated {formatDistanceToNow(new Date(application.updatedAt), { addSuffix: true })}
+                          </span>
+                        </div>
+                        {application.ngoNotes && !noteChanged && (
+                          <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                            {application.ngoNotes}
+                          </div>
+                        )}
+                        <Textarea
+                          value={notesDraftValue}
+                          onChange={(event) => handleNotesChange(application._id, event.target.value)}
+                          rows={3}
+                          placeholder="Add private notes visible only to your team"
+                        />
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            onClick={() => handleNotesSave(application._id)}
+                            disabled={notesLoading === application._id || !noteChanged}
+                          >
+                            Save Notes
+                          </Button>
+                          {notesLoading === application._id && (
+                            <span className="text-xs text-muted-foreground">Saving…</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold">Rating</h4>
+                        <div className="flex items-center gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => handleRatingChange(application._id, star)}
+                              disabled={ratingLoading === application._id}
+                              className="text-muted-foreground transition-colors hover:text-yellow-500 disabled:cursor-not-allowed"
+                              aria-label={`Set rating to ${star}`}
+                            >
+                              {star <= (application.rating ?? 0) ? (
+                                <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                              ) : (
+                                <StarOff className="h-5 w-5" />
+                              )}
+                            </button>
+                          ))}
+                          <span className="text-xs text-muted-foreground">
+                            {application.rating ? `${application.rating}/5` : "Not rated"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full max-w-xs space-y-3">
+                      {volunteer && (
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/volunteers/${volunteer._id}`}>
+                            <User className="h-4 w-4 mr-2" />
+                            View Profile
+                          </Link>
+                        </Button>
+                      )}
+                      {volunteer?.email && (
+                        <Button asChild variant="outline" className="w-full">
+                          <a href={`mailto:${volunteer.email}`}>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email Candidate
+                          </a>
+                        </Button>
+                      )}
+                      <Separator className="my-4" />
+                      <div className="space-y-2">
+                        {actionButtonsForStatus(application).map((button, index) => (
+                          <div key={index}>{button}</div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="md:w-48 flex flex-col gap-3">
-                    <Button asChild>
-                      <Link href={`/volunteers/${app.volunteerId}`}>
-                        <User className="h-4 w-4 mr-2" />
-                        View Profile
-                      </Link>
-                    </Button>
-                    <Button variant="outline">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email Candidate
-                    </Button>
-                    {app.status === "review" && (
-                      <>
-                        <Button variant="outline">
-                          Schedule Interview
-                        </Button>
-                        <Button>
-                          Send Offer
-                        </Button>
-                        <Button variant="outline" className="text-destructive hover:text-destructive">
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    {app.status === "interview" && (
-                      <>
-                        <Button>
-                          Send Offer
-                        </Button>
-                        <Button variant="outline" className="text-destructive hover:text-destructive">
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    {app.status === "offered" && (
-                      <Button variant="outline" className="text-destructive hover:text-destructive">
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Revoke Offer
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

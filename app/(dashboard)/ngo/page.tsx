@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { getCollections } from "@/lib/models"
+import { getCollections, type ApplicationDoc, type JobDoc, type UserDoc } from "@/lib/models"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,14 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Progress } from "@/components/ui/progress"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { BarChart } from "@/components/charts/bar-chart"
 import { LineChart } from "@/components/charts/line-chart"
 import { PieChart } from "@/components/charts/pie-chart"
-import { 
-  Briefcase, 
-  Users, 
-  TrendingUp, 
+import { format } from "date-fns"
+import {
+  Briefcase,
+  TrendingUp,
   Plus,
   ArrowRight,
   CheckCircle,
@@ -23,37 +22,52 @@ import {
   Send,
   AlertCircle,
   Eye,
-  Calendar,
   Clock,
   Target,
   Award,
   BarChart3,
   Activity,
   Zap,
-  Sparkles
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import { ObjectId } from "mongodb"
 import { redirect } from "next/navigation"
 
+type JobWithMetrics = JobDoc & {
+  applicationCount: number
+  appliedCount: number
+  shortlistedCount: number
+  acceptedCount: number
+}
+
+type PendingApplication = ApplicationDoc & {
+  job: JobDoc
+  volunteer: UserDoc
+}
+
 export default async function NgoDashboard() {
   const session = await auth()
   if (!session?.user) redirect("/signin")
 
+  const sessionData = session as { userId?: string; plan?: string; role?: "volunteer" | "ngo" }
+  if (!sessionData.userId) redirect("/signin")
+
+  const ngoId = new ObjectId(sessionData.userId)
+
   const { jobs, applications, users } = await getCollections()
-  const ngoId = new ObjectId((session as any).userId)
-  
+
   // Get NGO data
-  const ngo = await users.findOne({ _id: ngoId } as any)
+  const ngo = await users.findOne({ _id: ngoId })
   if (!ngo) redirect("/signin")
   
-  const plan = (session as any).plan
+  const plan = sessionData.plan
   const isPlus = plan?.includes("plus")
   const baseJobLimit = 3
 
   // Get all jobs with application counts
   const allJobs = await jobs
-    .aggregate([
+    .aggregate<JobWithMetrics>([
       { $match: { ngoId } },
       {
         $lookup: {
@@ -104,7 +118,7 @@ export default async function NgoDashboard() {
 
   // Get recent applications needing review
   const pendingApplications = await applications
-    .aggregate([
+    .aggregate<PendingApplication>([
       { 
         $match: { 
           ngoId,
@@ -159,6 +173,112 @@ export default async function NgoDashboard() {
     ? Math.round((acceptedApplications / processedApplications) * 100)
     : 0
 
+  const trendStart = new Date()
+  trendStart.setHours(0, 0, 0, 0)
+  trendStart.setDate(trendStart.getDate() - 6)
+
+  const trendAggregation = await applications
+    .aggregate<{ _id: string; count: number }>([
+      {
+        $match: {
+          ngoId,
+          createdAt: { $gte: trendStart },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+    .toArray()
+
+  const trendMap = new Map(trendAggregation.map((item) => [item._id, item.count]))
+
+  const trendDates = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(trendStart)
+    day.setDate(trendStart.getDate() + index)
+    return day
+  })
+
+  const applicationTrendData = trendDates.map((date) => {
+    const key = date.toISOString().slice(0, 10)
+    return {
+      name: format(date, "EEE"),
+      applications: trendMap.get(key) ?? 0,
+    }
+  })
+
+  const categoryCounts = allJobs.reduce<Record<string, number>>((acc, job) => {
+    const key = job.category || "Uncategorized"
+    const count = job.applicationCount || 0
+    acc[key] = (acc[key] || 0) + count
+    return acc
+  }, {})
+
+  const applicationsByCategoryData = Object.entries(categoryCounts)
+    .map(([name, count]) => ({ name, applications: count }))
+    .sort((a, b) => b.applications - a.applications)
+
+  const responseAggregation = await applications
+    .aggregate<{ avgMs: number }>([
+      {
+        $match: {
+          ngoId,
+          status: { $in: ["accepted", "rejected"] },
+        },
+      },
+      {
+        $project: {
+          diffMs: { $subtract: ["$updatedAt", "$createdAt"] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgMs: { $avg: "$diffMs" },
+        },
+      },
+    ])
+    .toArray()
+
+  const averageResponseMs = responseAggregation[0]?.avgMs ?? null
+  const averageResponseDays = averageResponseMs !== null ? averageResponseMs / (1000 * 60 * 60 * 24) : null
+  const responsePerformance = averageResponseDays !== null
+    ? Math.max(0, Math.min(100, (5 / Math.max(averageResponseDays, 0.25)) * 100))
+    : 0
+  const responseLabel = averageResponseDays !== null
+    ? (averageResponseDays < 1 ? "<1 day" : `${averageResponseDays.toFixed(1)} days`)
+    : "No data yet"
+
+  const ratingAggregation = await applications
+    .aggregate<{ avgRating: number }>([
+      {
+        $match: {
+          ngoId,
+          rating: { $type: "number" },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: "$rating" },
+        },
+      },
+    ])
+    .toArray()
+
+  const averageRating = ratingAggregation[0]?.avgRating ?? null
+  const qualityScoreOutOfTen = averageRating !== null ? Number((averageRating * 2).toFixed(1)) : null
+  const qualityProgress = averageRating !== null ? Math.min(100, (averageRating / 5) * 100) : 0
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
@@ -196,7 +316,7 @@ export default async function NgoDashboard() {
                   Job Posting Limit Reached
                 </h3>
                 <p className="text-sm text-amber-700 dark:text-amber-200 mt-1">
-                  You've reached the limit of {baseJobLimit} active jobs on the free plan.
+                  You&apos;ve reached the limit of {baseJobLimit} active jobs on the free plan.
                 </p>
                 <Button asChild size="sm" variant="outline" className="mt-3 border-amber-600">
                   <Link href="/upgrade">
@@ -279,7 +399,7 @@ export default async function NgoDashboard() {
             {/* Job Performance */}
             <BarChart
               title="Job Applications per Position"
-              data={activeJobs.slice(0, 5).map((job: any) => ({
+              data={activeJobs.slice(0, 5).map((job) => ({
                 name: job.title.substring(0, 20) + (job.title.length > 20 ? '...' : ''),
                 applications: job.applicationCount || 0,
               }))}
@@ -293,20 +413,13 @@ export default async function NgoDashboard() {
           {/* Weekly Application Trends */}
           <LineChart
             title="Application Trends (Last 7 Days)"
-            data={[
-              { name: 'Mon', applications: Math.floor(Math.random() * 20) + 5 },
-              { name: 'Tue', applications: Math.floor(Math.random() * 20) + 8 },
-              { name: 'Wed', applications: Math.floor(Math.random() * 20) + 12 },
-              { name: 'Thu', applications: Math.floor(Math.random() * 20) + 10 },
-              { name: 'Fri', applications: Math.floor(Math.random() * 20) + 15 },
-              { name: 'Sat', applications: Math.floor(Math.random() * 20) + 6 },
-              { name: 'Sun', applications: Math.floor(Math.random() * 20) + 4 },
-            ]}
+            data={applicationTrendData}
             lines={[
               { dataKey: 'applications', stroke: '#06b6d4', name: 'Applications Received' }
             ]}
             className="h-[300px]"
           />
+
         </TabsContent>
 
         <TabsContent value="applications" className="space-y-6">
@@ -320,11 +433,11 @@ export default async function NgoDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2.3 days</div>
+                <div className="text-2xl font-bold">{responseLabel}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Industry avg: 4.1 days
+                  Average time from application to decision
                 </div>
-                <Progress value={75} className="mt-3" />
+                <Progress value={responsePerformance} className="mt-3" />
               </CardContent>
             </Card>
 
@@ -352,11 +465,13 @@ export default async function NgoDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">8.7/10</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Volunteer feedback
+                <div className="text-2xl font-bold">
+                  {qualityScoreOutOfTen !== null ? `${qualityScoreOutOfTen}/10` : "No ratings yet"}
                 </div>
-                <Progress value={87} className="mt-3" />
+                <div className="text-xs text-muted-foreground mt-1">
+                  {averageRating !== null ? `Avg rating ${averageRating.toFixed(1)}/5` : "Collect feedback to unlock insights"}
+                </div>
+                <Progress value={qualityProgress} className="mt-3" />
               </CardContent>
             </Card>
           </div>
@@ -364,13 +479,7 @@ export default async function NgoDashboard() {
           {/* Application Volume by Category */}
           <BarChart
             title="Applications by Job Category"
-            data={[
-              { name: 'Education', applications: 45 },
-              { name: 'Healthcare', applications: 32 },
-              { name: 'Environment', applications: 28 },
-              { name: 'Community', applications: 21 },
-              { name: 'Technology', applications: 15 },
-            ]}
+            data={applicationsByCategoryData.slice(0, 8)}
             bars={[
               { dataKey: 'applications', fill: '#f97316', name: 'Applications' }
             ]}
@@ -509,7 +618,7 @@ export default async function NgoDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {activeJobs.slice(0, 5).map((job: any) => (
+                {activeJobs.slice(0, 5).map((job) => (
                   <div
                     key={job._id.toString()}
                     className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
@@ -559,12 +668,12 @@ export default async function NgoDashboard() {
                       </div>
                       <div className="flex items-center gap-2 mt-3">
                         <Button asChild size="sm" variant="outline">
-                          <Link href={`/ngo/jobs/${job._id}/applications`}>
+                          <Link href={`/dashboard/ngo/jobs/${job._id}/applications`}>
                             Review Applications
                           </Link>
                         </Button>
                         <Button asChild size="sm" variant="ghost">
-                          <Link href={`/ngo/jobs/${job._id}/edit`}>
+                          <Link href={`/dashboard/ngo/jobs/${job._id}/edit`}>
                             Edit
                           </Link>
                         </Button>
@@ -598,10 +707,10 @@ export default async function NgoDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {pendingApplications.slice(0, 5).map((app: any) => (
+                  {pendingApplications.slice(0, 5).map((app) => (
                     <Link
                       key={app._id.toString()}
-                      href={`/ngo/jobs/${app.jobId}/applications`}
+                      href={`/dashboard/ngo/jobs/${app.jobId}/applications`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
                     >
                       <Avatar className="h-8 w-8">
