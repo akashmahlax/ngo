@@ -100,19 +100,19 @@ export function UniversalFooter() {
   const isAuthenticated = !!session
 
   return (
-    <footer className="bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-neutral-950 dark:via-purple-950/10 dark:to-pink-950/10 border-t-2 border-purple-200 dark:border-purple-800">
+    <footer className="bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-muted/5 dark:to-muted/10 border-t">
       <div className="container mx-auto px-4 py-12">
         
         {/* Authenticated User Section */}
         {isAuthenticated && (
           <div className="mb-12">
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-2 border-purple-200 dark:border-purple-800 rounded-3xl p-6 shadow-lg shadow-purple-500/10">
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border border-primary/20 rounded-3xl p-6">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center relative shadow-lg">
-                    <Heart className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center relative">
+                    <Heart className="h-6 w-6 text-primary" />
                     {isPlusUser && (
-                      <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center border-2 border-white dark:border-neutral-950 shadow-lg">
+                      <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
                         <Sparkles className="h-3 w-3 text-white" />
                       </div>
                     )}
@@ -121,7 +121,7 @@ export function UniversalFooter() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-lg">Welcome back, {user?.name?.split(' ')[0] || 'there'}!</h3>
                       {isPlusUser && (
-                        <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-lg">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
                           <Crown className="h-3 w-3 mr-1" />
                           Plus
                         </Badge>
@@ -141,10 +141,10 @@ export function UniversalFooter() {
                     <Link 
                       key={action.title}
                       href={action.href}
-                      className="group flex items-center gap-3 p-3 rounded-2xl bg-white/60 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-900 border-2 border-transparent hover:border-purple-300 dark:hover:border-purple-700 transition-all"
+                      className="group flex items-center gap-3 p-3 rounded-2xl bg-background/60 hover:bg-background/80 border border-transparent hover:border-primary/30 transition-all"
                     >
-                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center group-hover:shadow-lg transition-all">
-                        <action.icon className="h-4 w-4 text-white" />
+                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center group-hover:from-primary/30 group-hover:to-primary/20 transition-all">
+                        <action.icon className="h-4 w-4 text-primary" />
                       </div>
                       <div className="hidden xl:block">
                         <p className="font-semibold text-sm">{action.title}</p>
@@ -160,34 +160,30 @@ export function UniversalFooter() {
 
         {/* Newsletter Signup */}
         <div className="mb-12">
-          <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-3xl p-8 text-center overflow-hidden shadow-xl">
-            {/* Decorative elements */}
-            <div className="absolute -top-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-            <div className="absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-            
-            <div className="relative max-w-2xl mx-auto">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 dark:from-primary/5 dark:via-primary/2 dark:to-primary/5 rounded-3xl p-8 text-center">
+            <div className="max-w-2xl mx-auto">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                   <Mail className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   Stay Connected
                 </h3>
               </div>
-              <p className="text-white/90 mb-6 text-lg">
+              <p className="text-muted-foreground mb-6 text-lg">
                 Get the latest opportunities, success stories, and platform updates delivered to your inbox
               </p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <Input 
                   placeholder="Enter your email address..." 
-                  className="rounded-2xl border-2 border-white/30 focus:border-white bg-white/20 backdrop-blur-sm text-white placeholder:text-white/70"
+                  className="rounded-2xl border-primary/20 focus:border-primary/40 bg-background/60"
                 />
-                <Button className="rounded-2xl bg-white text-purple-600 hover:bg-white/90 px-6 font-semibold shadow-lg">
+                <Button className="rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 px-6">
                   Subscribe
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
-              <p className="text-xs text-white/70 mt-3">
+              <p className="text-xs text-muted-foreground mt-3">
                 Join 10,000+ changemakers. Unsubscribe anytime.
               </p>
             </div>
@@ -198,7 +194,7 @@ export function UniversalFooter() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
           {Object.entries(footerSections).map(([key, section]) => (
             <div key={key} className="space-y-4">
-              <h4 className="font-bold text-sm uppercase tracking-wide bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h4 className="font-bold text-sm uppercase tracking-wide text-foreground/90">
                 {section.title}
               </h4>
               <ul className="space-y-3">
@@ -206,7 +202,7 @@ export function UniversalFooter() {
                   <li key={link.href}>
                     <Link 
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 transition-colors hover:underline underline-offset-4"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4"
                     >
                       {link.title}
                     </Link>
@@ -217,18 +213,18 @@ export function UniversalFooter() {
           ))}
         </div>
 
-        <Separator className="mb-8 bg-gradient-to-r from-transparent via-purple-300 dark:via-purple-800 to-transparent" />
+        <Separator className="mb-8" />
 
         {/* Bottom Section */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Brand & Copyright */}
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all">
+              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary/25 transition-all">
                 <Heart className="h-5 w-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+                <span className="font-bold text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                   Just Because Asia
                 </span>
                 <p className="text-xs text-muted-foreground -mt-1">
@@ -241,23 +237,17 @@ export function UniversalFooter() {
           {/* Contact Info */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Mail className="h-3 w-3 text-purple-600" />
-              </div>
-              <a href="mailto:hello@justbecauseasia.org" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+              <Mail className="h-4 w-4" />
+              <a href="mailto:hello@justbecauseasia.org" className="hover:text-primary transition-colors">
                 hello@justbecauseasia.org
               </a>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                <Phone className="h-3 w-3 text-pink-600" />
-              </div>
+              <Phone className="h-4 w-4" />
               <span>+1 (555) 123-4567</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <MapPin className="h-3 w-3 text-orange-600" />
-              </div>
+              <MapPin className="h-4 w-4" />
               <span>Singapore, Asia</span>
             </div>
           </div>
@@ -265,16 +255,16 @@ export function UniversalFooter() {
           {/* Social Links */}
           <div className="flex items-center gap-3">
             {[
-              { icon: Twitter, href: "https://twitter.com", label: "Twitter", color: "hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600" },
-              { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn", color: "hover:bg-pink-100 dark:hover:bg-pink-900/30 hover:text-pink-600" },
-              { icon: Instagram, href: "https://instagram.com", label: "Instagram", color: "hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-600" },
-              { icon: Github, href: "https://github.com", label: "GitHub", color: "hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600" },
+              { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+              { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+              { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+              { icon: Github, href: "https://github.com", label: "GitHub" },
             ].map((social) => (
               <Button
                 key={social.label}
                 variant="ghost"
                 size="sm"
-                className={`h-10 w-10 rounded-2xl ${social.color} transition-all`}
+                className="h-10 w-10 rounded-2xl hover:bg-primary/10 hover:text-primary"
                 asChild
               >
                 <a 
@@ -290,20 +280,20 @@ export function UniversalFooter() {
           </div>
         </div>
 
-        <Separator className="mt-8 mb-6 bg-gradient-to-r from-transparent via-purple-300 dark:via-purple-800 to-transparent" />
+        <Separator className="mt-8 mb-6" />
 
         {/* Final Copyright */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-center sm:text-left">
           <p className="text-sm text-muted-foreground">
             © 2025 Just Because Asia. All rights reserved. Made with{" "}
-            <Heart className="inline h-4 w-4 text-pink-600" />{" "}
+            <Heart className="inline h-4 w-4 text-red-500" />{" "}
             for changemakers worldwide.
           </p>
           <div className="flex items-center justify-center sm:justify-end gap-6 text-xs text-muted-foreground">
-            <Link href="/privacy" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Terms</Link>
-            <Link href="/cookies" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors">Cookies</Link>
-            <Link href="/accessibility" className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Accessibility</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <Link href="/cookies" className="hover:text-primary transition-colors">Cookies</Link>
+            <Link href="/accessibility" className="hover:text-primary transition-colors">Accessibility</Link>
           </div>
         </div>
       </div>
