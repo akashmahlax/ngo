@@ -1,6 +1,6 @@
 'use client'
 
-import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
@@ -118,101 +118,100 @@ export function RecentJobsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
+              whileHover={{ y: -8, transition: { duration: 0.3 } }}
             >
-              <CardContainer className="w-full">
-                <CardBody className="group/card relative h-full w-full rounded-xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
-                  {/* Image */}
-                  <CardItem translateZ="100" className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
-                    <Image
-                      src={job.image}
-                      alt={job.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover/card:scale-110"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    
-                    {/* Category Badge */}
-                    <div className="absolute left-3 top-3">
-                      <Badge className="bg-white/90 text-neutral-900 dark:bg-neutral-900/90 dark:text-white">
-                        <job.icon className="mr-1 h-3 w-3" />
-                        {job.category}
-                      </Badge>
-                    </div>
-
-                    {/* Posted Date */}
-                    <div className="absolute bottom-3 right-3">
-                      <Badge variant="secondary" className="bg-white/90 text-xs dark:bg-neutral-900/90">
-                        {job.postedDate}
-                      </Badge>
-                    </div>
-                  </CardItem>
-
-                  {/* Content */}
-                  <div className="space-y-4">
-                    {/* NGO Info */}
-                    <CardItem translateZ="50" className="flex items-center gap-3">
-                      <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-neutral-200 dark:border-neutral-700">
-                        <Image
-                          src={job.ngoLogo}
-                          alt={job.ngo}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-neutral-900 dark:text-white">{job.ngo}</p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">Verified NGO</p>
-                      </div>
-                    </CardItem>
-
-                    {/* Title */}
-                    <CardItem translateZ="60" as="h3" className="text-xl font-bold text-neutral-900 dark:text-white">
-                      {job.title}
-                    </CardItem>
-
-                    {/* Description */}
-                    <CardItem translateZ="50" className="text-sm text-neutral-600 dark:text-neutral-400">
-                      {job.description}
-                    </CardItem>
-
-                    {/* Meta Info */}
-                    <CardItem translateZ="40" className="flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {job.location}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {job.duration}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {job.volunteersNeeded} needed
-                      </div>
-                    </CardItem>
-
-                    {/* Skills */}
-                    <CardItem translateZ="30" className="flex flex-wrap gap-2">
-                      {job.skills.map((skill) => (
-                        <Badge key={skill} variant="outline" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </CardItem>
-
-                    {/* CTA */}
-                    <CardItem translateZ="80" className="pt-2">
-                      <Link href={`/jobs/${job.id}`} className="w-full">
-                        <Button className="group w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                          Apply Now
-                          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                      </Link>
-                    </CardItem>
+              <Card className="group relative h-full w-full overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-2xl hover:border-purple-300 transition-all dark:border-neutral-800 dark:bg-neutral-900 dark:hover:shadow-purple-500/20">
+                {/* Image */}
+                <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
+                  <Image
+                    src={job.image}
+                    alt={job.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  
+                  {/* Category Badge */}
+                  <div className="absolute left-3 top-3">
+                    <Badge className="bg-white/90 text-neutral-900 dark:bg-neutral-900/90 dark:text-white">
+                      <job.icon className="mr-1 h-3 w-3" />
+                      {job.category}
+                    </Badge>
                   </div>
-                </CardBody>
-              </CardContainer>
+
+                  {/* Posted Date */}
+                  <div className="absolute bottom-3 right-3">
+                    <Badge variant="secondary" className="bg-white/90 text-xs dark:bg-neutral-900/90">
+                      {job.postedDate}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-4">
+                  {/* NGO Info */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-neutral-200 dark:border-neutral-700">
+                      <Image
+                        src={job.ngoLogo}
+                        alt={job.ngo}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-white">{job.ngo}</p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">Verified NGO</p>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
+                    {job.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    {job.description}
+                  </p>
+
+                  {/* Meta Info */}
+                  <div className="flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {job.location}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {job.duration}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {job.volunteersNeeded} needed
+                    </div>
+                  </div>
+
+                  {/* Skills */}
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.map((skill) => (
+                      <Badge key={skill} variant="outline" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* CTA */}
+                  <div className="pt-2">
+                    <Link href={`/jobs/${job.id}`} className="w-full">
+                      <Button className="group w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                        Apply Now
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
             </motion.div>
           ))}
         </div>

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
+import { Card } from "@/components/ui/card"
 import { Heart, Users, Target, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -145,44 +145,34 @@ export function Hero() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
                   className={index === 1 || index === 2 ? "mt-6 sm:mt-8" : ""}
                 >
-                  <CardContainer className="w-full">
-                    <CardBody className="group/card relative h-full w-full rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-all hover:shadow-xl dark:border-neutral-800 dark:bg-neutral-950 dark:hover:shadow-2xl dark:hover:shadow-purple-500/[0.1] sm:p-4">
-                      <CardItem
-                        translateZ="100"
-                        className="relative aspect-[3/4] w-full overflow-hidden rounded-lg"
-                      >
-                        <Image
-                          src={volunteer.url}
-                          alt={volunteer.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover/card:scale-110"
-                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                        
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-purple-600/0 transition-all duration-300 group-hover/card:bg-purple-600/10">
-                          <div className="scale-0 text-white transition-transform duration-300 group-hover/card:scale-100">
-                            <Heart className="h-8 w-8" />
-                          </div>
+                  <Card className="group relative h-full w-full overflow-hidden rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-all hover:shadow-2xl hover:border-purple-300 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:shadow-purple-500/20 sm:p-4">
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg">
+                      <Image
+                        src={volunteer.url}
+                        alt={volunteer.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                      
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-purple-600/0 transition-all duration-300 group-hover:bg-purple-600/10">
+                        <div className="scale-0 text-white transition-transform duration-300 group-hover:scale-100">
+                          <Heart className="h-8 w-8" />
                         </div>
-                        
-                        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                          <CardItem translateZ="50" className="text-xs font-semibold sm:text-sm">
-                            {volunteer.name}
-                          </CardItem>
-                          <CardItem translateZ="60" className="text-[10px] text-neutral-300 sm:text-xs">
-                            {volunteer.role}
-                          </CardItem>
-                          <CardItem translateZ="70" className="mt-1 text-[10px] text-purple-300 sm:text-xs">
-                            {volunteer.volunteers} volunteers
-                          </CardItem>
-                        </div>
-                      </CardItem>
-                    </CardBody>
-                  </CardContainer>
+                      </div>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                        <p className="text-xs font-semibold sm:text-sm">{volunteer.name}</p>
+                        <p className="text-[10px] text-neutral-300 sm:text-xs">{volunteer.role}</p>
+                        <p className="mt-1 text-[10px] text-purple-300 sm:text-xs">{volunteer.volunteers} volunteers</p>
+                      </div>
+                    </div>
+                  </Card>
                 </motion.div>
               ))}
             </div>
