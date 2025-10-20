@@ -87,7 +87,7 @@ const footerSections = {
 const quickActions = [
   { title: "Dashboard", href: "/dashboard", icon: Briefcase, description: "Access your dashboard" },
   { title: "Applications", href: "/applications", icon: FileText, description: "Track your applications" },
-  { title: "Messages", href: "/messages", icon: Mail, description: "View conversations" },
+  // { title: "Messages", href: "/messages", icon: Mail, description: "View conversations" },
   { title: "Settings", href: "/settings", icon: Shield, description: "Account settings" },
 ]
 

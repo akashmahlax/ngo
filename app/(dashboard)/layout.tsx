@@ -180,10 +180,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="flex items-center gap-1">
                   <ThemeToggle />
 
-                  <Button variant="ghost" size="icon" className="relative hover:bg-accent/50 rounded-lg transition-colors">
+                  {/* <Button variant="ghost" size="icon" className="relative hover:bg-accent/50 rounded-lg transition-colors">
                     <Bell className="h-4 w-4" />
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-pulse"></span>
-                  </Button>
+                  </Button> */}
 
                   <Separator orientation="vertical" className="h-6 mx-2" />
 
