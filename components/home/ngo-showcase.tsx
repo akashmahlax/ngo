@@ -1,9 +1,11 @@
 'use client'
 
-import { PinContainer } from "@/components/ui/3d-pin"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Users, Award } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+import { motion } from "framer-motion"
 
 const ngos = [
   {
@@ -57,54 +59,60 @@ export function NGOShowcase() {
           </p>
         </div>
 
-        <div className="grid gap-20 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {ngos.map((ngo, index) => (
-            <PinContainer
-              key={index}
-              title={ngo.title}
-              href={ngo.href}
-            >
-              <div className="flex h-[250px] w-[280px] flex-col p-4">
-                <div className="relative mb-4 h-32 w-full overflow-hidden rounded-lg">
-                  <Image
-                    src="/hero1.png"
-                    alt={ngo.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                
-                <div className="flex-1">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 text-base font-bold text-slate-100">
-                      {ngo.title}
-                    </h3>
-                    {ngo.verified && (
-                      <Award className="size-4 shrink-0 text-blue-400" />
-                    )}
-                  </div>
-                  
-                  <p className="mb-3 line-clamp-2 text-xs text-slate-400">
-                    {ngo.description}
-                  </p>
-                  
-                  <div className="space-y-1 text-xs text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="size-3" />
-                      <span>{ngo.location}</span>
+            <Link key={index} href={ngo.href}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -8, scale: 1.02 }}
+              >
+                <Card className="h-full overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700 hover:border-purple-500 transition-colors">
+                  <div className="flex h-full flex-col p-4">
+                    <div className="relative mb-4 h-32 w-full overflow-hidden rounded-lg">
+                      <Image
+                        src="/hero1.png"
+                        alt={ngo.title}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="size-3" />
-                      <span>{ngo.volunteers} Volunteers</span>
+                    
+                    <div className="flex-1">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-2 text-base font-bold text-white">
+                          {ngo.title}
+                        </h3>
+                        {ngo.verified && (
+                          <Award className="size-4 shrink-0 text-blue-400" />
+                        )}
+                      </div>
+                      
+                      <p className="mb-3 line-clamp-2 text-xs text-neutral-400">
+                        {ngo.description}
+                      </p>
+                      
+                      <div className="space-y-1 text-xs text-neutral-500">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="size-3" />
+                          <span>{ngo.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="size-3" />
+                          <span>{ngo.volunteers} Volunteers</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        <Badge className="text-xs">{ngo.category}</Badge>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-3">
-                    <Badge className="text-xs">{ngo.category}</Badge>
-                  </div>
-                </div>
-              </div>
-            </PinContainer>
+                </Card>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>

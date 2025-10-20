@@ -1,6 +1,7 @@
 'use client'
 
-import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards"
+import { Card } from "@/components/ui/card"
+import { Star } from "lucide-react"
 
 const testimonials = [
   {
@@ -54,12 +55,33 @@ export function VolunteerStories() {
           </p>
         </div>
 
-        <InfiniteMovingCards
-          items={testimonials}
-          direction="right"
-          speed="slow"
-          pauseOnHover
-        />
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} className="min-w-[300px] md:min-w-[400px] flex-shrink-0 bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700">
+              <div className="p-6">
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-4 italic">
+                  &quot;{testimonial.quote}&quot;
+                </p>
+                <div>
+                  <p className="font-semibold text-sm text-neutral-900 dark:text-white">
+                    {testimonial.name}
+                  </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                    {testimonial.title}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   )

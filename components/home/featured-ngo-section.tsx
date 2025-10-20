@@ -1,6 +1,6 @@
 'use client'
 
-import { PinContainer } from "@/components/ui/3d-pin"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
@@ -117,7 +117,7 @@ export function FeaturedNGOSection() {
           </p>
         </motion.div>
 
-        {/* NGO Cards Grid with 3D Pin Effect */}
+        {/* NGO Cards Grid */}
         <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:gap-12">
           {featuredNGOs.map((ngo, index) => (
             <motion.div
@@ -126,20 +126,18 @@ export function FeaturedNGOSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="flex w-full items-center justify-center"
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.3 } }}
+              className="w-full"
             >
-              <PinContainer
-                title={ngo.name}
-                href={`/ngos/${ngo.id}`}
-              >
-                <div className="flex h-[24rem] w-[20rem] flex-col p-4 tracking-tight text-slate-100/50 sm:h-[26rem] sm:w-[22rem]">
+              <Link href={`/ngos/${ngo.id}`} className="block">
+                <Card className="group relative h-full overflow-hidden border-2 border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-6 shadow-lg transition-all hover:shadow-2xl hover:border-purple-400 dark:border-neutral-800 dark:from-neutral-900 dark:to-neutral-950 dark:hover:border-purple-600 dark:hover:shadow-purple-500/20">
                   {/* Image */}
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
                     <Image
                       src={ngo.image}
                       alt={ngo.name}
                       fill
-                      className="object-cover"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
                       sizes="(max-width: 640px) 100vw, 50vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -176,58 +174,58 @@ export function FeaturedNGOSection() {
                         />
                       </div>
                       <div className="flex-1">
-                        <h3 className="mb-1 text-base font-bold text-slate-100 sm:text-lg">
+                        <h3 className="mb-1 text-base font-bold text-neutral-900 dark:text-white sm:text-lg">
                           {ngo.name}
                         </h3>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-neutral-600 dark:text-neutral-400">
                           {ngo.tagline}
                         </p>
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">
+                    <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 sm:text-sm">
                       {ngo.description}
                     </p>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-800/50 p-3">
+                    <div className="grid grid-cols-2 gap-2 rounded-lg bg-neutral-100 p-3 dark:bg-neutral-800/50">
                       <div>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
+                        <div className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
                           <Users className="h-3 w-3" />
                           Volunteers
                         </div>
-                        <p className="mt-1 text-sm font-bold text-white">
+                        <p className="mt-1 text-sm font-bold text-neutral-900 dark:text-white">
                           {ngo.volunteers.toLocaleString()}+
                         </p>
                       </div>
                       <div>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
+                        <div className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
                           <Star className="h-3 w-3 fill-current text-yellow-400" />
                           Rating
                         </div>
-                        <p className="mt-1 text-sm font-bold text-white">
+                        <p className="mt-1 text-sm font-bold text-neutral-900 dark:text-white">
                           {ngo.rating}/5.0
                         </p>
                       </div>
                     </div>
 
                     {/* Impact */}
-                    <div className="flex items-center gap-2 rounded-lg bg-purple-500/10 px-3 py-2">
-                      <Heart className="h-4 w-4 fill-current text-purple-400" />
-                      <span className="text-xs font-medium text-purple-300">
+                    <div className="flex items-center gap-2 rounded-lg bg-purple-100 px-3 py-2 dark:bg-purple-500/10">
+                      <Heart className="h-4 w-4 fill-current text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs font-medium text-purple-900 dark:text-purple-300">
                         {ngo.impact}
                       </span>
                     </div>
 
                     {/* Location */}
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                       <MapPin className="h-3 w-3" />
                       {ngo.location} • Founded {ngo.founded}
                     </div>
                   </div>
-                </div>
-              </PinContainer>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>

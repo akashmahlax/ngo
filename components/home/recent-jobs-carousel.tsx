@@ -1,8 +1,11 @@
 'use client'
 
-import { Carousel, Card } from "@/components/ui/apple-cards-carousel"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Clock, Users } from "lucide-react"
+import { MapPin, Clock, Users, ChevronLeft, ChevronRight } from "lucide-react"
+import { useState } from "react"
+import Image from "next/image"
 
 const jobs = [
   {
@@ -198,9 +201,15 @@ const jobs = [
 ]
 
 export function RecentJobsCarousel() {
-  const cards = jobs.map((job, index) => (
-    <Card key={index} card={job} index={index} />
-  ))
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % jobs.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + jobs.length) % jobs.length)
+  }
 
   return (
     <section className="relative bg-neutral-50 py-20 dark:bg-neutral-900">
@@ -213,8 +222,73 @@ export function RecentJobsCarousel() {
             Explore the newest volunteer positions from verified NGOs
           </p>
         </div>
+
+        {/* Carousel */}
+        <div className="relative overflow-hidden rounded-xl">
+          <div 
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {jobs.map((job, index) => (
+              <div key={index} className="min-w-full px-4">
+                <Card className="overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
+                  <div className="grid md:grid-cols-2 gap-6 p-6 lg:p-8">
+                    {/* Image */}
+                    <div className="relative h-64 md:h-full rounded-lg overflow-hidden">
+                      <Image
+                        src={job.src}
+                        alt={job.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="text-white">
+                      {job.content}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Carousel Controls */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 pointer-events-none">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={prevSlide}
+            className="pointer-events-auto bg-white/90 hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={nextSlide}
+            className="pointer-events-auto bg-white/90 hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Dots Indicator */}
+        <div className="flex justify-center gap-2 mt-6">
+          {jobs.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === currentIndex ? 'w-8 bg-purple-600' : 'w-2 bg-neutral-300 dark:bg-neutral-700'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
-      <Carousel items={cards} />
     </section>
   )
 }

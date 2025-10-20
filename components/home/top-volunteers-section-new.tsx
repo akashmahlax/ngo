@@ -1,10 +1,12 @@
 'use client'
 
-import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards"
-import { Carousel, Card } from "@/components/ui/apple-cards-carousel"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Award, Heart, Clock, MapPin } from "lucide-react"
+import { Award, Heart, Clock, MapPin, Star, ChevronLeft, ChevronRight } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
 
 const topVolunteersTestimonials = [
   {
@@ -29,7 +31,7 @@ const topVolunteersTestimonials = [
     quote: "Mentoring youth from disadvantaged backgrounds is the most fulfilling work I've done. Seeing them grow into confident leaders is my biggest achievement. This platform connected me with my purpose.",
     name: "Arjun Patel",
     title: "Youth Mentor • 2.5 Years • 900+ Hours",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687"
+    image: "https://plus.unsplash.com/premium_photo-1689551670902-19b441a6afde?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687"
   },
   {
     quote: "As a software engineer, I wanted to use my skills for social good. This platform helped me find NGOs needing digital transformation. Technology can change lives!",
@@ -265,6 +267,16 @@ const topVolunteersCards = [
 ]
 
 export function TopVolunteersSection() {
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % topVolunteersCards.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + topVolunteersCards.length) % topVolunteersCards.length)
+  }
+
   return (
     <section className="relative bg-neutral-50 py-20 dark:bg-neutral-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -288,20 +300,81 @@ export function TopVolunteersSection() {
           </p>
         </motion.div>
 
-        {/* Apple Cards Carousel */}
+        {/* Featured Volunteers Carousel */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
-          className="mb-20"
+          className="mb-20 relative"
         >
-          <Carousel items={topVolunteersCards.map((item, index) => (
-            <Card key={`card-${index}`} card={item} index={index} />
-          ))} />
+          <div className="relative overflow-hidden rounded-xl">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {topVolunteersCards.map((volunteer, index) => (
+                <div key={index} className="min-w-full px-4">
+                  <Card className="overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
+                    <div className="grid md:grid-cols-2 gap-6 p-6 lg:p-8">
+                      {/* Image */}
+                      <div className="relative h-64 md:h-full rounded-lg overflow-hidden">
+                        <Image
+                          src={volunteer.src}
+                          alt={volunteer.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="text-white">
+                        {volunteer.content}
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Carousel Controls */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 pointer-events-none">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={prevSlide}
+              className="pointer-events-auto bg-white/90 hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={nextSlide}
+              className="pointer-events-auto bg-white/90 hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-6">
+            {topVolunteersCards.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-2 rounded-full transition-all ${
+                  index === currentIndex ? 'w-8 bg-purple-600' : 'w-2 bg-neutral-300 dark:bg-neutral-700'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </motion.div>
 
-        {/* Infinite Moving Cards - Testimonials */}
+        {/* Testimonials Carousel */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -317,13 +390,42 @@ export function TopVolunteersSection() {
             </p>
           </div>
           
-          <div className="overflow-hidden">
-            <InfiniteMovingCards
-              items={topVolunteersTestimonials}
-              direction="right"
-              speed="slow"
-              pauseOnHover
-            />
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {topVolunteersTestimonials.map((testimonial, index) => (
+              <Card key={index} className="min-w-[300px] md:min-w-[400px] flex-shrink-0 bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700">
+                <div className="p-6">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-4 italic">
+                    &quot;{testimonial.quote}&quot;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 rounded-full overflow-hidden bg-neutral-200 dark:bg-neutral-700">
+                      <Image
+                        src={testimonial.image}
+                        alt={testimonial.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-neutral-900 dark:text-white">
+                        {testimonial.name}
+                      </p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                        {testimonial.title}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </motion.div>
       </div>
