@@ -1,10 +1,9 @@
-﻿import { RecentJobsSection } from "@/components/home/recent-jobs-section"
+﻿import { Hero } from "@/components/hero"
+import { RecentJobsSection } from "@/components/home/recent-jobs-section"
 import { TopVolunteersSection } from "@/components/home/top-volunteers-section"
 import { NGOSpotlightSection } from "@/components/home/ngo-spotlight-section"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
 import { FeatureCards } from "@/components/feature-cards"
 import { CategoryBento } from "@/components/category-bento"
 import { StatsStrip } from "@/components/stats-strip"
@@ -15,32 +14,7 @@ export default function HomePage() {
     <>
       <main>
         {/* Hero Section */}
-        <section className="relative overflow-hidden border-b">
-          <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-2 md:py-16 lg:py-20">
-            <div className="flex flex-col justify-center gap-6">
-              <Badge className="w-fit" variant="secondary">
-                NGOs + Volunteers
-              </Badge>
-              <h1 className="text-balance text-4xl font-semibold leading-tight md:text-5xl">
-                Connect NGOs with skilled volunteers for real impact
-              </h1>
-              <p className="text-pretty text-muted-foreground md:text-lg">
-                Discover mission-aligned projects, streamline applications, and track outcomes with professional analytics.
-              </p>
-            </div>
-
-            {/* Hero Image */}
-            <div className="relative order-first aspect-[4/3] overflow-hidden rounded-xl border md:order-last md:aspect-auto">
-              <Image
-                src="/hero1.png"
-                alt="Volunteers collaborating"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          </div>
-        </section>
+        <Hero />
 
         {/* Stats Section */}
         <StatsStrip />
