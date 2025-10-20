@@ -302,17 +302,17 @@ export function FeaturedVolunteersCarousel() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.05 }}
                 viewport={{ once: true }}
-                className="snap-start flex-shrink-0 w-[45%] sm:w-[30%] lg:w-[23%]"
+                className="snap-start flex-shrink-0 w-[75%] sm:w-[45%] md:w-[30%] lg:w-[23%]"
               >
                 <Link href={`/volunteers/${volunteer.id}`} className="block group">
-                  <div className="relative h-[400px] overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+                  <div className="relative h-[50vh] sm:h-[400px] overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800 shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
                     {/* Volunteer Image */}
                     <Image
                       src={volunteer.avatar}
                       alt={volunteer.name}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 23vw"
+                      sizes="(max-width: 640px) 75vw, (max-width: 1024px) 30vw, 23vw"
                     />
                     
                     {/* Gradient Overlay */}
@@ -370,11 +370,11 @@ export function FeaturedVolunteersCarousel() {
             ))}
           </div>
 
-          {/* Scroll Indicator - Left (Blur Effect) */}
-          <div className="pointer-events-none absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-neutral-50 via-neutral-50/80 to-transparent dark:from-neutral-950 dark:via-neutral-950/80 backdrop-blur-sm"></div>
+          {/* Scroll Indicator - Left (Blur Effect) - Hidden on mobile */}
+          <div className="pointer-events-none absolute left-0 top-0 bottom-8 w-20 bg-gradient-to-r from-neutral-50 via-neutral-50/80 to-transparent dark:from-neutral-950 dark:via-neutral-950/80 backdrop-blur-sm hidden sm:block"></div>
           
-          {/* Scroll Indicator - Right (Blur Effect) */}
-          <div className="pointer-events-none absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-neutral-50 via-neutral-50/80 to-transparent dark:from-neutral-950 dark:via-neutral-950/80 backdrop-blur-sm"></div>
+          {/* Scroll Indicator - Right (Blur Effect) - Hidden on mobile */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-8 w-20 bg-gradient-to-l from-neutral-50 via-neutral-50/80 to-transparent dark:from-neutral-950 dark:via-neutral-950/80 backdrop-blur-sm hidden sm:block"></div>
         </div>
 
         {/* View All Button */}

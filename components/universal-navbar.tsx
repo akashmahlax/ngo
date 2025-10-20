@@ -155,19 +155,19 @@ export function UniversalNavbar() {
         {/* Add padding to body so content doesn't hide behind fixed navbar */}
         <div className="h-20 w-full"></div>
         <div className="fixed top-4 left-4 right-4 z-50 max-w-screen-sm mx-auto">
-          <div className="bg-background/95 backdrop-blur-xl border rounded-2xl shadow-2xl px-4 py-3 mx-2">
+          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-2 border-purple-200 dark:border-purple-800 rounded-2xl shadow-2xl shadow-purple-500/20 px-4 py-3 mx-2">
             <div className="flex items-center justify-between">
               {/* Mobile Menu */}
               <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-xl">
+                  <Button variant="ghost" size="sm" className="rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30">
                     <Menu className="h-4 w-4" />
                   </Button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[85vh] max-h-[85vh]">
                   <div className="p-6 pb-8 space-y-6 overflow-y-auto">
                     <div className="text-center">
-                      <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                      <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
                         Navigation
                       </h2>
                       <p className="text-sm text-muted-foreground">Quick access to everything</p>
@@ -175,22 +175,22 @@ export function UniversalNavbar() {
 
                     {/* User Section */}
                     {isAuthenticated && (
-                      <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-4">
+                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-2 border-purple-200 dark:border-purple-800 rounded-2xl p-4">
                         <div className="flex items-center gap-3 mb-3">
-                          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                          <Avatar className="h-10 w-10 ring-2 ring-purple-400 dark:ring-purple-600">
                             <AvatarImage src={user?.avatarUrl} />
-                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
                               {user?.name?.slice(0,2)?.toUpperCase() || "ME"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <p className="font-semibold text-sm">{user?.name}</p>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs capitalize">
+                              <Badge variant="outline" className="text-xs capitalize border-purple-300 dark:border-purple-700">
                                 {role}
                               </Badge>
                               {isPlusUser && (
-                                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-xs">
+                                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 text-xs">
                                   <Crown className="h-3 w-3 mr-1" />
                                   Plus
                                 </Badge>
@@ -203,7 +203,7 @@ export function UniversalNavbar() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="rounded-xl" 
+                            className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30" 
                             onClick={() => {
                               router.push(getDashboardBase(role))
                               setMobileOpen(false)
@@ -215,7 +215,7 @@ export function UniversalNavbar() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="rounded-xl"
+                            className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30"
                             onClick={() => {
                               router.push(getDashboardProfilePath(role))
                               setMobileOpen(false)
@@ -233,14 +233,14 @@ export function UniversalNavbar() {
                       {navData.main.map((item) => (
                         <div key={item.title} className="space-y-2">
                           <div 
-                            className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-background to-muted/50 border hover:border-primary/30 transition-all cursor-pointer"
+                            className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-white to-purple-50 dark:from-neutral-900 dark:to-purple-950/20 border-2 border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600 transition-all cursor-pointer"
                             onClick={() => {
                               router.push(item.href)
                               setMobileOpen(false)
                             }}
                           >
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                              <item.icon className="h-5 w-5 text-primary" />
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                              <item.icon className="h-5 w-5 text-white" />
                             </div>
                             <div className="flex-1">
                               <h3 className="font-semibold text-sm">{item.title}</h3>
@@ -252,7 +252,7 @@ export function UniversalNavbar() {
                             {item.items.slice(0, 2).map((subItem) => (
                               <button
                                 key={subItem.title}
-                                className="text-left p-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-all"
+                                className="text-left p-2 text-sm text-muted-foreground hover:text-purple-600 dark:hover:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-all"
                                 onClick={() => {
                                   router.push(subItem.href)
                                   setMobileOpen(false)
@@ -271,7 +271,7 @@ export function UniversalNavbar() {
                       <div className="grid grid-cols-2 gap-3 pt-4 border-t">
                         <Button 
                           variant="outline" 
-                          className="rounded-xl"
+                          className="rounded-xl border-purple-300 dark:border-purple-700"
                           onClick={() => {
                             router.push("/signup")
                             setMobileOpen(false)
@@ -280,8 +280,7 @@ export function UniversalNavbar() {
                           Sign up
                         </Button>
                         <Button
-                        
-                          className="rounded-xl bg-green-500 dark:bg-green-500 text-black dark:text-white border-2 border-green-00 dark:border-green-300"
+                          className="rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white border-0"
                           onClick={() => {
                             router.push("/signin")
                             setMobileOpen(false)
@@ -304,10 +303,10 @@ export function UniversalNavbar() {
 
               {/* Brand */}
               <Link href="/" className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center shadow-lg">
                   <Heart className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-bold text-sm bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text">
+                <span className="font-bold text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   JBA
                 </span>
               </Link>
@@ -317,7 +316,7 @@ export function UniversalNavbar() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="rounded-xl"
+                  className="rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30"
                   onClick={() => setCmdOpen(true)}
                 >
                   <Search className="h-4 w-4" />
@@ -335,18 +334,18 @@ export function UniversalNavbar() {
       {/* Desktop Navigation */}
       <div className="hidden md:block">
         <div className="sticky top-0 z-50 w-full pt-4 px-4">
-          <div className="bg-background/95 backdrop-blur-xl border rounded-2xl shadow-lg max-w-7xl mx-auto">
+          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-2 border-purple-200 dark:border-purple-800 rounded-2xl shadow-lg shadow-purple-500/10 max-w-7xl mx-auto">
             <div className="container mx-auto px-6">
               <div className="flex h-16 items-center justify-between">
                 {/* Brand */}
                 <ContextMenu>
                   <ContextMenuTrigger>
                     <Link href="/" className="flex items-center gap-3 group">
-                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary/25 transition-all duration-300">
+                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300">
                         <Heart className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <span className="font-bold text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                        <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
                           Just Because Asia
                         </span>
                         <p className="text-xs text-muted-foreground -mt-1">Volunteer Platform</p>
@@ -375,15 +374,17 @@ export function UniversalNavbar() {
                   <NavigationMenuList>
                     {navData.main.map((item) => (
                       <NavigationMenuItem key={item.title}>
-                        <NavigationMenuTrigger className="bg-transparent hover:bg-muted/50 data-[active]:bg-muted/50 data-[state=open]:bg-muted/50 rounded-xl">
-                          <item.icon className="h-4 w-4 mr-2" />
+                        <NavigationMenuTrigger className="bg-transparent hover:bg-purple-100 dark:hover:bg-purple-900/30 data-[active]:bg-purple-100 dark:data-[active]:bg-purple-900/30 data-[state=open]:bg-purple-100 dark:data-[state=open]:bg-purple-900/30 rounded-xl">
+                          <item.icon className="h-4 w-4 mr-2 text-purple-600" />
                           {item.title}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent>
                           <div className="grid gap-3 p-6 w-[400px]">
                             <div className="grid gap-1">
                               <h3 className="font-semibold text-lg flex items-center gap-2">
-                                <item.icon className="h-5 w-5 text-primary" />
+                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                                  <item.icon className="h-4 w-4 text-white" />
+                                </div>
                                 {item.title}
                               </h3>
                               <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -394,9 +395,9 @@ export function UniversalNavbar() {
                                 <Link
                                   key={subItem.title}
                                   href={subItem.href}
-                                  className="group grid gap-1 rounded-lg p-3 hover:bg-muted/50 transition-all"
+                                  className="group grid gap-1 rounded-lg p-3 hover:bg-purple-50 dark:hover:bg-purple-950/20 border-2 border-transparent hover:border-purple-200 dark:hover:border-purple-800 transition-all"
                                 >
-                                  <div className="font-medium text-sm group-hover:text-primary transition-colors">
+                                  <div className="font-medium text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                     {subItem.title}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
@@ -420,10 +421,10 @@ export function UniversalNavbar() {
                       <TooltipTrigger asChild>
                         <Button
                           variant="outline"
-                          className="gap-2 rounded-xl bg-muted/20 border-muted hover:bg-muted/50 hover:border-primary/30"
+                          className="gap-2 rounded-xl bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:border-purple-400 dark:hover:border-purple-600"
                           onClick={() => setCmdOpen(true)}
                         >
-                          <CommandIcon className="h-4 w-4" />
+                          <CommandIcon className="h-4 w-4 text-purple-600" />
                           <span className="hidden lg:inline">Search...</span>
                           <div className="hidden lg:flex items-center gap-1">
                             <Kbd>⌘</Kbd>
@@ -443,7 +444,7 @@ export function UniversalNavbar() {
                     <div className="flex items-center gap-2">
                       {/* Plus Badge */}
                       {isPlusUser && (
-                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hidden xl:flex">
+                        <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hidden xl:flex shadow-lg">
                           <Crown className="h-3 w-3 mr-1" />
                           Plus
                         </Badge>
@@ -452,15 +453,15 @@ export function UniversalNavbar() {
                       {/* User Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="relative p-1 rounded-xl hover:bg-muted/50">
-                            <Avatar className="h-8 w-8 ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                          <Button variant="ghost" className="relative p-1 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30">
+                            <Avatar className="h-8 w-8 ring-2 ring-purple-400 dark:ring-purple-600 hover:ring-purple-500 dark:hover:ring-purple-500 transition-all">
                               <AvatarImage src={user?.avatarUrl} />
-                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold">
+                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
                                 {user?.name?.slice(0,2)?.toUpperCase() || "ME"}
                               </AvatarFallback>
                             </Avatar>
                             {isPlusUser && (
-                              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 border-2 border-background flex items-center justify-center">
+                              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-2 border-background flex items-center justify-center shadow-lg">
                                 <Sparkles className="h-2.5 w-2.5 text-white" />
                               </div>
                             )}
@@ -473,7 +474,7 @@ export function UniversalNavbar() {
                               <p className="text-xs text-muted-foreground">{user?.email}</p>
                             </div>
                             {isPlusUser && (
-                              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
+                              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
                                 Plus
                               </Badge>
                             )}
@@ -536,10 +537,10 @@ export function UniversalNavbar() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" className="rounded-xl" onClick={() => router.push("/signup")}>
+                      <Button variant="outline" className="rounded-xl border-purple-300 dark:border-purple-700" onClick={() => router.push("/signup")}>
                         Sign up
                       </Button>
-                      <Button className="rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" onClick={() => router.push("/signin")}>
+                      <Button className="rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white shadow-lg" onClick={() => router.push("/signin")}>
                         Sign in
                       </Button>
                     </div>

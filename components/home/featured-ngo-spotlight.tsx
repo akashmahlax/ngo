@@ -310,18 +310,18 @@ export function FeaturedNGOSpotlight() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                     
                     {/* Floating Stats */}
-                    <div className="absolute bottom-6 left-6 right-6 flex gap-4">
+                    <div className="absolute bottom-4 left-4 right-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="flex-1 rounded-lg bg-white/95 p-4 backdrop-blur-sm dark:bg-neutral-900/95"
+                        className="flex-1 rounded-lg bg-white/95 p-3 sm:p-4 backdrop-blur-sm dark:bg-neutral-900/95"
                       >
                         <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-                          <Briefcase className="h-4 w-4" />
+                          <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="text-xs font-medium">Active Opportunities</span>
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
+                        <p className="mt-1 text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
                           {spotlightNGO.activeJobs}
                         </p>
                       </motion.div>
@@ -330,13 +330,13 @@ export function FeaturedNGOSpotlight() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="flex-1 rounded-lg bg-white/95 p-4 backdrop-blur-sm dark:bg-neutral-900/95"
+                        className="flex-1 rounded-lg bg-white/95 p-3 sm:p-4 backdrop-blur-sm dark:bg-neutral-900/95"
                       >
                         <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="text-xs font-medium">Volunteers</span>
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
+                        <p className="mt-1 text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
                           {spotlightNGO.volunteers?.toLocaleString()}+
                         </p>
                       </motion.div>
@@ -344,13 +344,13 @@ export function FeaturedNGOSpotlight() {
                   </div>
 
                   {/* Content Side */}
-                  <div className="flex flex-1 flex-col justify-between p-8 lg:p-12">
+                  <div className="flex flex-1 flex-col justify-between p-6 sm:p-8 lg:p-12">
                     {/* Top Section */}
                     <div>
                       {/* Logo and Badges */}
-                      <div className="mb-6 flex items-start justify-between">
+                      <div className="mb-6 flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-neutral-200 dark:border-neutral-700">
+                          <div className="relative h-16 w-16 overflow-hidden rounded-xl border-2 border-neutral-200 dark:border-neutral-700 flex-shrink-0">
                             <Image
                               src={spotlightNGO.logo || ''}
                               alt={`${spotlightNGO.name} logo`}
@@ -358,27 +358,27 @@ export function FeaturedNGOSpotlight() {
                               className="object-cover"
                             />
                           </div>
-                          <div>
-                            <h3 className="text-2xl font-bold text-neutral-900 dark:text-white">
+                          <div className="min-w-0">
+                            <h3 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white line-clamp-2">
                               {spotlightNGO.name}
                             </h3>
                             <div className="mt-1 flex items-center gap-2">
-                              <MapPin className="h-3 w-3 text-neutral-500" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                              <MapPin className="h-3 w-3 text-neutral-500 flex-shrink-0" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
                                 {spotlightNGO.location}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-row sm:flex-col gap-2">
                           {spotlightNGO.verified && (
-                            <Badge className="bg-green-500 text-white">
+                            <Badge className="bg-green-500 text-white whitespace-nowrap">
                               <CheckCircle2 className="mr-1 h-3 w-3" />
                               Verified
                             </Badge>
                           )}
-                          <Badge variant="secondary" className={config.color}>
+                          <Badge variant="secondary" className={`${config.color} whitespace-nowrap`}>
                             <IconComponent className="mr-1 h-3 w-3" />
                             {spotlightNGO.category}
                           </Badge>
@@ -386,21 +386,21 @@ export function FeaturedNGOSpotlight() {
                       </div>
 
                       {/* Description */}
-                      <p className="mb-6 text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+                      <p className="mb-6 text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
                         {spotlightNGO.description}
                       </p>
 
                       {/* Impact Highlight */}
                       <div className="mb-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 dark:from-purple-500/20 dark:to-pink-500/20">
                         <div className="flex items-center gap-3">
-                          <div className="rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-3">
-                            <TrendingUp className="h-5 w-5 text-white" />
+                          <div className="rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 sm:p-3 flex-shrink-0">
+                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
                               Total Impact
                             </p>
-                            <p className="text-lg font-bold text-neutral-900 dark:text-white">
+                            <p className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white truncate">
                               {spotlightNGO.impact}
                             </p>
                           </div>
@@ -408,23 +408,23 @@ export function FeaturedNGOSpotlight() {
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800/50">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        <div className="rounded-lg bg-neutral-100 p-3 sm:p-4 dark:bg-neutral-800/50">
                           <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-                            <Star className="h-4 w-4 fill-current text-yellow-400" />
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current text-yellow-400" />
                             <span className="text-xs font-medium">Rating</span>
                           </div>
-                          <p className="mt-1 text-xl font-bold text-neutral-900 dark:text-white">
+                          <p className="mt-1 text-lg sm:text-xl font-bold text-neutral-900 dark:text-white">
                             {spotlightNGO.rating}/5.0
                           </p>
                         </div>
                         
-                        <div className="rounded-lg bg-neutral-100 p-4 dark:bg-neutral-800/50">
+                        <div className="rounded-lg bg-neutral-100 p-3 sm:p-4 dark:bg-neutral-800/50">
                           <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                             <span className="text-xs font-medium">Founded</span>
                           </div>
-                          <p className="mt-1 text-xl font-bold text-neutral-900 dark:text-white">
+                          <p className="mt-1 text-lg sm:text-xl font-bold text-neutral-900 dark:text-white">
                             {spotlightNGO.founded}
                           </p>
                         </div>
@@ -432,7 +432,7 @@ export function FeaturedNGOSpotlight() {
                     </div>
 
                     {/* Bottom Section - CTA */}
-                    <div className="mt-8">
+                    <div className="mt-6 sm:mt-8">
                       <Button size="lg" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600">
                         View Opportunities
                         <ArrowRight className="ml-2 h-4 w-4" />
