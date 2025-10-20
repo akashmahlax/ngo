@@ -1,7 +1,7 @@
 ﻿import { Hero } from "@/components/hero"
-import { RecentJobsSection } from "@/components/home/recent-jobs-section-new"
-import { TopVolunteersSection } from "@/components/home/top-volunteers-section-new"
-import { FeaturedNGOSection } from "@/components/home/featured-ngo-section"
+import { FeaturedVolunteersCarousel } from "@/components/home/featured-volunteers-carousel"
+import { RecentJobsStacked } from "@/components/home/recent-jobs-stacked"
+import { FeaturedNGOSpotlight } from "@/components/home/featured-ngo-spotlight"
 import { FAQ } from "@/components/faq"
 
 export default function HomePage() {
@@ -11,14 +11,14 @@ export default function HomePage() {
         {/* Hero Section with Volunteer Photos & 3D Cards */}
         <Hero />
 
-        {/* Recent Volunteer Opportunities */}
-        <RecentJobsSection />
+        {/* Featured Volunteers Carousel - Horizontally Scrollable */}
+        <FeaturedVolunteersCarousel />
 
-        {/* Top Volunteers with Apple Carousel & Infinite Moving Cards */}
-        <TopVolunteersSection />
+        {/* Recent Volunteer Opportunities - Stacked Cards */}
+        <RecentJobsStacked />
 
-        {/* Featured NGO Partners with 3D Pins */}
-        <FeaturedNGOSection />
+        {/* Featured NGO Partners - Spotlight with Carousel */}
+        <FeaturedNGOSpotlight />
 
         {/* FAQ Section */}
         <FAQ />

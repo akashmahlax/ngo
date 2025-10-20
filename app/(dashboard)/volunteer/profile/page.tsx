@@ -254,7 +254,9 @@ export default function VolunteerProfile() {
   const isExpired = planExpiresAt && planExpiresAt < new Date()
   const displayName = session?.user?.name || profile.name
   const displayEmail = session?.user?.email
-  const displayAvatar = session?.user?.image || session?.user?.avatarUrl || profile.avatarUrl
+  const displayAvatar = session?.user?.image || session?.user?.avatarUrl || profile.avatarUrl || ""
+  const hasValidAvatar = displayAvatar && displayAvatar.trim() !== ""
+  
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
@@ -270,7 +272,7 @@ export default function VolunteerProfile() {
           {/* Avatar & Account Info */}
           <div className="flex flex-col items-center gap-4">
             <div className="h-32 w-32 rounded-full bg-gray-100 border flex items-center justify-center overflow-hidden">
-              {displayAvatar ? (
+              {hasValidAvatar ? (
                 <Image
                   src={displayAvatar}
                   alt="Profile"

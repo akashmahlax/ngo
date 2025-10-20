@@ -10,7 +10,15 @@ export async function GET(req: NextRequest) {
   const sort = req.nextUrl.searchParams.get("sort") || "recent"
 
   // Build query with proper typing
-  const query = { role: "volunteer" } as any
+  const query = { role: "volunteer" as const }
+
+  // Determine sort order
+  const sortOrder =
+    sort === "rating"
+      ? ({ rating: -1, completedProjects: -1 } as const)
+      : sort === "projects"
+        ? ({ completedProjects: -1 } as const)
+        : ({ createdAt: -1 } as const)
 
   // Get volunteers
   const volunteers = await users
@@ -33,13 +41,18 @@ export async function GET(req: NextRequest) {
       activeProjects: 1,
       successRate: 1,
       rating: 1,
+      hoursWorked: 1,
+      avatarUrl: 1,
+      createdAt: 1,
     })
-    .sort(sort === "recent" ? { createdAt: -1 } : { _id: 1 })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .sort(sortOrder as any)
     .skip(skip)
     .limit(limit)
     .toArray()
 
   return NextResponse.json({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     volunteers: volunteers.map((v: any) => ({
       ...v,
       _id: v._id?.toString(),
