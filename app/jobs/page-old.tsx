@@ -8,20 +8,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { JobCard } from "@/components/job-card"
 import { 
   Search, 
   MapPin, 
+  Calendar, 
+  Users, 
   Filter,
   X,
   Grid,
   List,
+  Bookmark,
   CheckCircle,
-  Briefcase,
-  Loader2
+  Crown
 } from "lucide-react"
 import { JobDoc } from "@/lib/models"
+import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
 
 type EnrichedJob = {
   _id: string
@@ -30,7 +35,6 @@ type EnrichedJob = {
   description: string
   category?: string
   locationType?: string
-  location?: string
   skills?: string[]
   benefits?: string[]
   requirements?: string[]
@@ -43,11 +47,59 @@ type EnrichedJob = {
   ngoLogoUrl?: string | null
   ngoVerified?: boolean
   ngoPlan?: string
-  compensationType?: string
-  salaryRange?: any
-  stipendAmount?: number
-  commitment?: string
 }
+
+// Mock data for demonstration
+const mockJobs: JobDoc[] = [
+  {
+    _id: "1" as any,
+    ngoId: "ngo1" as any,
+    title: "Environmental Conservation Volunteer",
+    description: "Join our team to help protect local wildlife and natural habitats.",
+    category: "Environment",
+    locationType: "onsite",
+    skills: ["Conservation", "Research", "Teamwork"],
+    benefits: ["Training provided", "Certificate"],
+    requirements: ["Background check", "Physical fitness"],
+    applicationCount: 12,
+    viewCount: 156,
+    status: "open",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    _id: "2" as any,
+    ngoId: "ngo2" as any,
+    title: "Digital Marketing Specialist",
+    description: "Help us promote our causes through social media and digital campaigns.",
+    category: "Marketing",
+    locationType: "remote",
+    skills: ["Social Media", "Content Creation", "Analytics"],
+    benefits: ["Flexible hours", "Remote work"],
+    requirements: ["2+ years experience", "Portfolio"],
+    applicationCount: 8,
+    viewCount: 92,
+    status: "open",
+    createdAt: new Date(Date.now() - 86400000), // 1 day ago
+    updatedAt: new Date(),
+  },
+  {
+    _id: "3" as any,
+    ngoId: "ngo3" as any,
+    title: "Tutor for Underprivileged Children",
+    description: "Provide educational support to children in need in our community center.",
+    category: "Education",
+    locationType: "onsite",
+    skills: ["Teaching", "Patience", "Communication"],
+    benefits: ["Meal provided", "Transportation allowance"],
+    requirements: ["Teaching certification", "Background check"],
+    applicationCount: 15,
+    viewCount: 203,
+    status: "open",
+    createdAt: new Date(Date.now() - 172800000), // 2 days ago
+    updatedAt: new Date(),
+  },
+]
 
 // Categories for filtering
 const CATEGORIES = [
@@ -81,6 +133,7 @@ export default function JobsPage() {
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("newest")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch jobs from API
   useEffect(() => {
@@ -98,7 +151,8 @@ export default function JobsPage() {
         }
       } catch (error) {
         console.error('Failed to fetch jobs:', error)
-        setJobs([])
+        // Fall back to mock data if API fails
+        setJobs(mockJobs)
       } finally {
         setLoading(false)
       }
@@ -178,10 +232,19 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-950 dark:to-neutral-900">
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+      
+      <div className="container mx-auto px-4 py-12">
+       
+        <div className="animate-pulse space-y-8">
+          <div className="h-12 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="h-96 bg-gray-200 rounded"></div>
+            <div className="md:col-span-3 space-y-4">
+              <div className="h-12 bg-gray-200 rounded"></div>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -288,163 +351,159 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pb-12">
+      <div className="container mx-auto px-4 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filter Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4 bg-white/80 dark:bg-neutral-900/90 border-neutral-200 dark:border-neutral-800 shadow-lg">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                  </CardTitle>
-                  {hasActiveFilters && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={clearFilters}
-                      className="text-xs h-8"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Categories */}
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Categories</h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {CATEGORIES.map((category) => (
-                      <div key={category} className="flex items-center">
-                        <Checkbox
-                          id={`category-${category}`}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => toggleCategory(category)}
-                        />
-                        <Label
-                          htmlFor={`category-${category}`}
-                          className="ml-2 text-sm font-normal cursor-pointer"
-                        >
-                          {category}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Location Type */}
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Location Type</h3>
-                  <div className="space-y-2">
-                    {LOCATION_TYPES.map((type) => (
-                      <div key={type.id} className="flex items-center">
-                        <Checkbox
-                          id={`location-${type.id}`}
-                          checked={selectedLocationTypes.includes(type.id)}
-                          onCheckedChange={() => toggleLocationType(type.id)}
-                        />
-                        <Label
-                          htmlFor={`location-${type.id}`}
-                          className="ml-2 text-sm font-normal cursor-pointer"
-                        >
-                          {type.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Job Listings */}
-          <div className="lg:col-span-3">
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{filteredJobs.length}</span> of <span className="font-semibold text-foreground">{jobs.length}</span> opportunities
-                </p>
+        {/* Filter Sidebar */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </CardTitle>
+                {hasActiveFilters && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearFilters}
+                    className="text-xs h-8"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                )}
               </div>
-              <div className="flex gap-2">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="applications">Most Applications</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                >
-                  {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
-                </Button>
+              <CardDescription>
+                Refine your job search
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Categories */}
+              <div>
+                <h3 className="font-medium mb-3">Categories</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {CATEGORIES.map((category) => (
+                    <div key={category} className="flex items-center">
+                      <Checkbox
+                        id={`category-${category}`}
+                        checked={selectedCategories.includes(category)}
+                        onCheckedChange={() => toggleCategory(category)}
+                      />
+                      <Label
+                        htmlFor={`category-${category}`}
+                        className="ml-2 text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {category}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* Location Type */}
+              <div>
+                <h3 className="font-medium mb-3">Location</h3>
+                <div className="space-y-2">
+                  {LOCATION_TYPES.map((type) => (
+                    <div key={type.id} className="flex items-center">
+                      <Checkbox
+                        id={`location-${type.id}`}
+                        checked={selectedLocationTypes.includes(type.id)}
+                        onCheckedChange={() => toggleLocationType(type.id)}
+                      />
+                      <Label
+                        htmlFor={`location-${type.id}`}
+                        className="ml-2 text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {type.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Job Listings */}
+        <div className="md:col-span-3">
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredJobs.length} of {jobs.length} jobs
+              </p>
             </div>
-
-            {/* Empty State */}
-            {filteredJobs.length === 0 ? (
-              <Card className="bg-white/80 dark:bg-neutral-900/90">
-                <CardContent className="py-16 text-center">
-                  <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                  <h3 className="text-xl font-semibold mb-2">No opportunities found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    {hasActiveFilters 
-                      ? "Try adjusting your search or filters to find more opportunities"
-                      : "No volunteer opportunities are currently available"}
-                  </p>
-                  {hasActiveFilters && (
-                    <Button onClick={clearFilters}>Clear All Filters</Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              // Job Listings
-              <div className={viewMode === "grid" 
-                ? "grid grid-cols-1 md:grid-cols-2 gap-6" 
-                : "space-y-4"
-              }>
-                {filteredJobs.map((job) => {
-                  const enrichedJob = job as unknown as EnrichedJob
-                  return (
-                    <JobCard 
-                      key={job._id.toString()}
-                      job={{
-                        _id: job._id.toString(),
-                        title: job.title,
-                        description: job.description,
-                        category: job.category,
-                        location: job.location,
-                        locationType: job.locationType,
-                        createdAt: new Date(job.createdAt),
-                        skills: job.skills,
-                        compensationType: job.compensationType,
-                        salaryRange: job.salaryRange,
-                        stipendAmount: job.stipendAmount,
-                        commitment: job.commitment,
-                        applicationCount: job.applicationCount
-                      }}
-                      ngo={{
-                        name: enrichedJob.ngoName || "Unknown NGO",
-                        logoUrl: enrichedJob.ngoLogoUrl,
-                        verified: enrichedJob.ngoVerified,
-                        plan: enrichedJob.ngoPlan
-                      }}
-                      viewMode={viewMode}
-                    />
-                  )
-                })}
-              </div>
-            )}
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="applications">Most Applications</SelectItem>
+                  <SelectItem value="popular">Most Popular</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              >
+                {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
+
+          {/* Empty State */}
+          {filteredJobs.length === 0 ? (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No jobs found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search or filters to find more opportunities
+              </p>
+              <Button onClick={clearFilters}>Clear Filters</Button>
+            </div>
+          ) : (
+            // Job Listings
+            <div className={viewMode === "grid" 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+              : "space-y-4"
+            }>
+              {filteredJobs.map((job) => {
+                const enrichedJob = job as unknown as EnrichedJob
+                return (
+                  <JobCard 
+                    key={job._id.toString()}
+                    job={{
+                      _id: job._id.toString(),
+                      title: job.title,
+                      description: job.description,
+                      category: job.category,
+                      location: job.location,
+                      locationType: job.locationType,
+                      createdAt: new Date(job.createdAt),
+                      skills: job.skills,
+                      compensationType: job.compensationType,
+                      salaryRange: job.salaryRange,
+                      stipendAmount: job.stipendAmount,
+                      commitment: job.commitment,
+                      applicationCount: job.applicationCount
+                    }}
+                    ngo={{
+                      name: enrichedJob.ngoName || "Unknown NGO",
+                      logoUrl: enrichedJob.ngoLogoUrl,
+                      verified: enrichedJob.ngoVerified,
+                      plan: enrichedJob.ngoPlan
+                    }}
+                    viewMode={viewMode}
+                  />
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
