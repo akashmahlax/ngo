@@ -668,7 +668,7 @@ export default async function NgoDashboard() {
                       </div>
                       <div className="flex items-center gap-2 mt-3">
                         <Button asChild size="sm" variant="outline">
-                          <Link href={`/dashboard/ngo/jobs/${job._id}/applications`}>
+                          <Link href={`/ngo/jobs/${job._id}/applications`}>
                             Review Applications
                           </Link>
                         </Button>
@@ -710,7 +710,7 @@ export default async function NgoDashboard() {
                   {pendingApplications.slice(0, 5).map((app) => (
                     <Link
                       key={app._id.toString()}
-                      href={`/dashboard/ngo/jobs/${app.jobId}/applications`}
+                      href={`/ngo/jobs/${app.jobId}/applications`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
                     >
                       <Avatar className="h-8 w-8">
