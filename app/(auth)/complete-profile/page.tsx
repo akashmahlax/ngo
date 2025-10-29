@@ -9,24 +9,66 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { AlertCircle, Check, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
 export default function CompleteProfilePage() {
-  const { data: session, status, update } = useSession()
+  const { status, update } = useSession()
   const router = useRouter()
   
-  const [step, setStep] = useState<"role" | "details">("role")
+  const [step, setStep] = useState<"role" | "details" | "plan">("role")
   const [role, setRole] = useState<"volunteer" | "ngo" | null>(null)
   const [orgName, setOrgName] = useState("")
+  const [selectedPlan, setSelectedPlan] = useState<"volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const plansByRole: Record<"volunteer" | "ngo", { value: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"; label: string; description: string; price: string; features: string[] }[]> = {
+    volunteer: [
+      {
+        value: "volunteer_free",
+        label: "Free",
+        description: "Perfect for getting started",
+        price: "₹0",
+        features: ["1 application per month", "Basic profile", "Job browsing"],
+      },
+      {
+        value: "volunteer_plus",
+        label: "Plus",
+        description: "Unlimited access",
+        price: "₹199/mo",
+        features: ["Unlimited applications", "Priority support", "Advanced analytics"],
+      },
+    ],
+    ngo: [
+      {
+        value: "ngo_base",
+        label: "Base",
+        description: "For small organizations",
+        price: "₹0",
+        features: ["Up to 3 active postings", "Basic dashboard", "Volunteer management"],
+      },
+      {
+        value: "ngo_plus",
+        label: "Plus",
+        description: "Full platform access",
+        price: "₹499/mo",
+        features: ["Unlimited postings", "Advanced analytics", "Priority placement"],
+      },
+    ],
+  }
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/signin")
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (role) {
+      setSelectedPlan(role === "ngo" ? "ngo_base" : "volunteer_free")
+    }
+  }, [role])
 
   async function handleCompleteProfile() {
     if (!role) {
@@ -39,19 +81,21 @@ export default function CompleteProfilePage() {
       return
     }
 
+    if (!selectedPlan) {
+      setError("Please choose a plan")
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      // Determine plan based on role
-      const plan = role === "ngo" ? "ngo_base" : "volunteer_free"
-      
       const res = await fetch("/api/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role,
-          plan,
+          plan: selectedPlan,
           orgName: role === "ngo" ? orgName : undefined,
         }),
       })
@@ -66,6 +110,11 @@ export default function CompleteProfilePage() {
 
       // Update session
       await update()
+
+      if (data.requiresUpgrade && data.targetPlan) {
+        router.push(`/upgrade?plan=${data.targetPlan}`)
+        return
+      }
 
       // Redirect to dashboard
       const dashboardUrl = role === "ngo" ? "/(dashboard)/ngo" : "/(dashboard)/volunteer"
@@ -111,7 +160,7 @@ export default function CompleteProfilePage() {
                 >
                   <RadioGroupItem value="volunteer" id="volunteer" />
                   <Label htmlFor="volunteer" className="cursor-pointer flex-1">
-                    <div className="font-medium">I'm a Volunteer</div>
+                    <div className="font-medium">I&apos;m a Volunteer</div>
                     <div className="text-sm text-muted-foreground">
                       Find and apply for volunteering opportunities
                     </div>
@@ -124,7 +173,7 @@ export default function CompleteProfilePage() {
                 >
                   <RadioGroupItem value="ngo" id="ngo" />
                   <Label htmlFor="ngo" className="cursor-pointer flex-1">
-                    <div className="font-medium">I'm from an NGO</div>
+                    <div className="font-medium">I&apos;m from an NGO</div>
                     <div className="text-sm text-muted-foreground">
                       Post jobs and find volunteers
                     </div>
@@ -171,13 +220,85 @@ export default function CompleteProfilePage() {
                   Back
                 </Button>
                 <Button
-                  onClick={handleCompleteProfile}
+                  onClick={() => setStep("plan")}
                   disabled={!role || (role === "ngo" && !orgName.trim()) || loading}
                   className="flex-1"
                 >
-                  {loading ? "Completing..." : "Complete Profile"}
+                  Continue
                 </Button>
               </div>
+            </div>
+          )}
+
+          {step === "plan" && role && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Choose the plan that fits you best. You can upgrade or downgrade anytime.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {plansByRole[role].map((planOption) => {
+                  const isActive = selectedPlan === planOption.value
+                  return (
+                    <button
+                      key={planOption.value}
+                      type="button"
+                      onClick={() => !loading && setSelectedPlan(planOption.value)}
+                      className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
+                        isActive
+                          ? "border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 shadow-lg"
+                          : "border-muted hover:border-purple-300 dark:hover:border-purple-700"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{planOption.label}</h3>
+                            {isActive && (
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+                                <Check className="h-3 w-3" />
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{planOption.description}</p>
+                        </div>
+                        <p className="font-semibold text-base bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          {planOption.price}
+                        </p>
+                      </div>
+                      <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                        {planOption.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-1.5">
+                            <Check className="h-3 w-3 text-green-600 mt-0.5" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" onClick={() => setStep("details")} disabled={loading} className="flex-1">
+                  Back
+                </Button>
+                <Button
+                  onClick={handleCompleteProfile}
+                  disabled={loading || !selectedPlan}
+                  className="flex-1"
+                >
+                  {loading ? "Finishing..." : "Finish setup"}
+                </Button>
+              </div>
+
+              {selectedPlan && selectedPlan.endsWith("plus") && (
+                <p className="text-xs text-muted-foreground">
+                  We&apos;ll guide you through secure payment on the next step to activate your Plus benefits.
+                </p>
+              )}
             </div>
           )}
         </CardContent>

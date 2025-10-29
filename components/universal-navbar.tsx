@@ -154,8 +154,8 @@ export function UniversalNavbar() {
       <div className="md:hidden">
         {/* Add padding to body so content doesn't hide behind fixed navbar */}
         <div className="h-20 w-full"></div>
-        <div className="fixed top-4 left-4 right-4 z-50 max-w-screen-sm mx-auto">
-          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-2 border-purple-200 dark:border-purple-800 rounded-2xl shadow-2xl shadow-purple-500/20 px-4 py-3 mx-2">
+        <div className="fixed top-4 left-4 rounded-4xl right-4 z-50 max-w-screen-sm mx-auto">
+          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-2 border-purple-200 dark:border-purple-800 rounded-4xl shadow-2xl shadow-purple-500/20 px-4 py-3 mx-2">
             <div className="flex items-center justify-between">
               {/* Mobile Menu */}
               <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -333,8 +333,8 @@ export function UniversalNavbar() {
 
       {/* Desktop Navigation */}
       <div className="hidden md:block">
-        <div className="sticky top-0 z-50 w-full pt-4 px-4">
-          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-2 border-purple-200 dark:border-purple-800 rounded-2xl shadow-lg shadow-purple-500/10 max-w-7xl mx-auto">
+        <div className="fixed top-0 z-50 w-full pt-4 px-4">
+          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-purple-200 dark:border-purple-800 rounded-4xl shadow-lg shadow-purple-500/10 max-w-7xl mx-auto">
             <div className="container mx-auto px-6">
               <div className="flex h-16 items-center justify-between">
                 {/* Brand */}

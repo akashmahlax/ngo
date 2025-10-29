@@ -36,6 +36,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ORDER_NOT_FOUND", success: false }, { status: 404 })
     }
 
+    // Ensure the order belongs to the authenticated user
+    const user = await users.findOne({ email: session.user.email })
+    if (!user || String(order.userId) !== String(user._id)) {
+      return NextResponse.json({ error: "FORBIDDEN", success: false }, { status: 403 })
+    }
+
     // Update order status
     await orders.updateOne(
       { _id: order._id },
@@ -43,8 +49,8 @@ export async function POST(req: NextRequest) {
         $set: { 
           status: "paid", 
           paidAt: new Date(),
-          paymentId: razorpay_payment_id,
-          signature: razorpay_signature
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature
         } 
       }
     )
@@ -57,7 +63,11 @@ export async function POST(req: NextRequest) {
         $set: { 
           plan: order.planTarget, 
           planExpiresAt,
-          planActivatedAt: new Date()
+          planActivatedAt: new Date(),
+          pendingPlan: null,
+          planCancelled: false,
+          planCancelledAt: null,
+          updatedAt: new Date()
         } 
       }
     )

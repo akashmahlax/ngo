@@ -15,6 +15,10 @@ export type UserDoc = {
   planActivatedAt?: Date | null
   planCancelled?: boolean
   planCancelledAt?: Date | null
+  passwordResetToken?: string | null
+  passwordResetExpiry?: Date | null
+  pendingPlan?: UserPlan | null
+  onboardingStep?: "role" | "profile" | "plan" | "completed"
   monthlyApplicationCount: number
   monthlyApplicationResetAt: Date
   bio?: string
@@ -41,6 +45,10 @@ export type UserDoc = {
     year: string
     description?: string
   }>
+  // Email verification fields
+  emailVerified?: Date | null
+  emailVerificationToken?: string
+  emailVerificationExpiry?: Date
   // Volunteer-specific fields
   expectedSalary?: string // e.g., "₹15,000 - ₹20,000/month"
   hourlyRate?: number // e.g., 500 (₹500/hour)
@@ -85,6 +93,12 @@ export type UserDoc = {
     profileVisibility: "public" | "private"
     showEmail: boolean
   }
+  // Security and audit fields
+  lastLoginAt?: Date
+  lastPasswordChangeAt?: Date
+  failedLoginAttempts?: number
+  accountLockedUntil?: Date | null
+  // Metadata
   createdAt: Date
   updatedAt: Date
 }

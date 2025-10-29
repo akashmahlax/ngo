@@ -30,14 +30,24 @@ export async function POST(req: NextRequest) {
     if (user.role) {
       return NextResponse.json({ error: "PROFILE_ALREADY_COMPLETE" }, { status: 400 })
     }
-
     const now = new Date()
-    const updateData: any = {
+    const freePlan = role === "ngo" ? "ngo_base" : "volunteer_free"
+    const isPlusPlan = plan.endsWith("plus")
+    const effectivePlan = isPlusPlan ? freePlan : plan
+
+    const updateData: Record<string, unknown> = {
       role,
-      plan,
+      plan: effectivePlan,
+      planExpiresAt: null,
+      pendingPlan: isPlusPlan ? plan : null,
+      onboardingStep: "completed",
       monthlyApplicationCount: 0,
       monthlyApplicationResetAt: now,
       updatedAt: now,
+    }
+
+    if (!isPlusPlan) {
+      updateData.planActivatedAt = now
     }
     
     // If NGO, set orgName
@@ -50,7 +60,11 @@ export async function POST(req: NextRequest) {
       { $set: updateData }
     )
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({
+      ok: true,
+      requiresUpgrade: isPlusPlan,
+      targetPlan: isPlusPlan ? plan : null,
+    })
   } catch (e) {
     console.error("Complete profile error:", e)
     return NextResponse.json({ error: "Server error" }, { status: 500 })
