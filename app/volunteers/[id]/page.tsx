@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import { ShareButton } from "@/components/share-button"
 import { 
   MapPin, 
   Mail,
@@ -11,7 +12,6 @@ import {
   Linkedin,
   Github,
   Twitter,
-  Share2,
   MessageSquare,
   Briefcase,
   GraduationCap,
@@ -162,10 +162,11 @@ export default async function VolunteerPublicProfile({
                     </Link>
                   </Button>
                 )}
-                <Button variant="outline" size="lg" className="border-primary-foreground/30 dark:border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 dark:hover:bg-primary-foreground/10">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
+                <ShareButton 
+                  title={`${volunteer.name} - Volunteer Profile`}
+                  text={volunteer.bio || `Check out ${volunteer.name}'s volunteer profile`}
+                  className="border-primary-foreground/30 dark:border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 dark:hover:bg-primary-foreground/10"
+                />
               </div>
             </div>
           </div>

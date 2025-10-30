@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { AlertCircle, Check, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
-export default function CompleteProfilePage() {
+function CompleteProfileContent() {
   const { status, update } = useSession()
   const router = useRouter()
   const sp = useSearchParams()
@@ -313,5 +313,20 @@ export default function CompleteProfilePage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function CompleteProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CompleteProfileContent />
+    </Suspense>
   )
 }

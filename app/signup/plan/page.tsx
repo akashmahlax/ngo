@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, Suspense } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
@@ -64,7 +64,7 @@ const ngoPlans = {
   },
 }
 
-export default function SignupPlanPage() {
+function SignupPlanContent() {
   const { status, data, update } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -279,5 +279,17 @@ export default function SignupPlanPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    }>
+      <SignupPlanContent />
+    </Suspense>
   )
 }

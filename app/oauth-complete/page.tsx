@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-export default function OAuthCompletePage() {
+function OAuthCompleteContent() {
   const sp = useSearchParams()
   const router = useRouter()
   const { status, data, update } = useSession()
@@ -100,5 +100,17 @@ export default function OAuthCompletePage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function OAuthCompletePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    }>
+      <OAuthCompleteContent />
+    </Suspense>
   )
 }

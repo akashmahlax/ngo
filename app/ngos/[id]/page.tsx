@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ShareButton } from "@/components/share-button"
 import { 
   MapPin, 
   Mail,
   Globe,
-  Share2,
   CheckCircle,
   Calendar,
   Briefcase,
@@ -224,14 +224,11 @@ export default async function NgoPublicProfile({
                     </Link>
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  size="lg" 
+                <ShareButton 
+                  title={`${ngo.name} - NGO Profile`}
+                  text={ngo.bio || `Check out ${ngo.name}'s profile`}
                   className="border-white/40 text-white hover:bg-white/10 backdrop-blur-sm"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
+                />
               </div>
             </div>
           </div>

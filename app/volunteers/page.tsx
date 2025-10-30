@@ -100,9 +100,10 @@ export default function VolunteersDirectory() {
       }
     }
     
-    if (locationFilter && volunteer.location &&
-        !volunteer.location.toLowerCase().includes(locationFilter.toLowerCase())) {
-      return false
+    if (locationFilter) {
+      if (!volunteer.location || !volunteer.location.toLowerCase().includes(locationFilter.toLowerCase())) {
+        return false
+      }
     }
     
     return true

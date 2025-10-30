@@ -107,9 +107,10 @@ export default function NgosDirectory() {
     }
     
     // Location filter
-    if (locationFilter && ngo.location &&
-        !ngo.location.toLowerCase().includes(locationFilter.toLowerCase())) {
-      return false
+    if (locationFilter) {
+      if (!ngo.location || !ngo.location.toLowerCase().includes(locationFilter.toLowerCase())) {
+        return false
+      }
     }
     
     return true

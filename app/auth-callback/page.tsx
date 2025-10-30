@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const sp = useSearchParams()
   const router = useRouter()
   const { status, data, update } = useSession()
@@ -109,3 +109,17 @@ export default function AuthCallbackPage() {
   )
 }
 
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
+  )
+}
