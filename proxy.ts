@@ -9,23 +9,21 @@ export async function proxy(request: NextRequest) {
   const volunteerDashboardRoute = "/volunteer"
   const ngoDashboardRoute = "/ngo"
   const ngoPostRoute = "/ngos/post"
-  const completeProfileRoute = "/complete-profile"
   const upgradeRoute = "/upgrade"
-  const oauthCompleteRoute = "/oauth-complete"
+  const authCallbackRoute = "/auth-callback"
   
   const isVolunteerRoute = pathname.startsWith(volunteerDashboardRoute)
   const isNgoRoute = pathname.startsWith(ngoDashboardRoute)
   const isNgoPostRoute = pathname.startsWith(ngoPostRoute)
-  const isCompleteProfileRoute = pathname.startsWith(completeProfileRoute)
   const isUpgradeRoute = pathname.startsWith(upgradeRoute)
-  const isOAuthCompleteRoute = pathname.startsWith(oauthCompleteRoute)
+  const isAuthCallbackRoute = pathname.startsWith(authCallbackRoute)
   const isProtectedRoute = isVolunteerRoute || isNgoRoute || isNgoPostRoute || isUpgradeRoute
 
   // Check session
   const session = await auth()
 
-  // If not authenticated, redirect to signin
-  if ((isProtectedRoute || isCompleteProfileRoute || isOAuthCompleteRoute) && !session?.user) {
+  // If not authenticated, redirect to signin (except auth-callback which handles its own auth check)
+  if (isProtectedRoute && !session?.user) {
     const url = new URL('/signin', request.url)
     url.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(url)
@@ -36,19 +34,27 @@ export async function proxy(request: NextRequest) {
     const sessionWithProfile = session as { 
       profileComplete?: boolean
       role?: "volunteer" | "ngo"
-      plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
+      plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
       planExpiresAt?: string
+      onboardingStep?: "role" | "profile" | "plan" | "completed" | null
     }
     
-    // Legacy complete-profile -> new oauth-complete light flow
-    if (isCompleteProfileRoute) {
-      return NextResponse.redirect(new URL('/oauth-complete', request.url))
+    // If user doesn't have a role yet (new OAuth user who hasn't been through auth-callback),
+    // redirect them to sign-up to choose role
+    if (isProtectedRoute && !sessionWithProfile.role) {
+      return NextResponse.redirect(new URL('/signup', request.url))
     }
 
     const userRole = sessionWithProfile.role
     const userPlan = sessionWithProfile.plan
     const planExpiresAt = sessionWithProfile.planExpiresAt ? new Date(sessionWithProfile.planExpiresAt) : null
     const isPlanExpired = planExpiresAt && new Date() > planExpiresAt
+    const onboardingStep = sessionWithProfile.onboardingStep
+
+    // Only redirect to plan page if explicitly in plan onboarding step
+    if (onboardingStep === "plan" && !isUpgradeRoute) {
+      return NextResponse.redirect(new URL('/signup/plan', request.url))
+    }
 
     // Role-based access control - Prevent cross-role access
     if (isVolunteerRoute && userRole !== "volunteer") {
@@ -97,8 +103,7 @@ export const config = {
   matcher: [
     "/volunteer/:path*",
     "/ngo/:path*",
-    "/complete-profile",
-    "/oauth-complete",
+    "/auth-callback",
     "/ngos/post/:path*",
     "/upgrade",
   ],

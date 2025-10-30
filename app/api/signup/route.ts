@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       role,
       plan: freeTierPlan, // Always free tier - only upgrade after payment
       planExpiresAt: null as Date | null, // set upon payment for plus plans
+      onboardingStep: "plan" as "plan",
       monthlyApplicationCount: 0,
       monthlyApplicationResetAt: now,
       createdAt: now,

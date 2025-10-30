@@ -27,6 +27,7 @@ export interface AuthUser {
   planExpiresAt: Date | null
   profileComplete: boolean
   avatarUrl?: string
+  onboardingStep?: "role" | "profile" | "plan" | "completed"
 }
 
 export interface AuthStore {
@@ -126,7 +127,7 @@ export const useAuthStore = create<AuthStore>()(
  * Call this in layout or auth wrapper component
  */
 export function syncAuthStore(
-  session: { user?: Record<string, unknown>; role?: string; plan?: string; userId?: string; planExpiresAt?: string; profileComplete?: boolean } | null
+  session: { user?: Record<string, unknown>; role?: string | null; plan?: string | null; userId?: string; planExpiresAt?: string; profileComplete?: boolean; onboardingStep?: string } | null
 ) {
   if (session?.user) {
     const sessionData = session as Record<string, unknown>
@@ -144,6 +145,12 @@ export function syncAuthStore(
         avatarUrl:
           (session.user.image as string) ||
           (session.user.avatarUrl as string),
+        onboardingStep: sessionData.onboardingStep as
+          | "role"
+          | "profile"
+          | "plan"
+          | "completed"
+          | undefined,
       },
       isAuthenticated: true,
     })

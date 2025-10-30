@@ -29,7 +29,6 @@ function SignInPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"volunteer" | "ngo">("volunteer");
   const [error, setError] = useState<string | null>(null);
   const callbackUrl = sp.get("callbackUrl") || "/";
 
@@ -37,14 +36,25 @@ function SignInPageInner() {
     if (status === "authenticated") {
       const sessionWithProfile = session as typeof session & { 
         profileComplete?: boolean;
-        role?: string;
+        role?: "volunteer" | "ngo" | null;
+        onboardingStep?: "role" | "profile" | "plan" | "completed" | null;
       };
-      // Check profileComplete flag from session (set in auth.ts)
-      if (!sessionWithProfile?.profileComplete) {
-        r.push("/complete-profile");
-      } else {
-        r.push(callbackUrl);
+      
+      // If no role, redirect to signup to choose one
+      if (!sessionWithProfile?.role) {
+        r.push("/signup");
+        return;
       }
+      
+      // If in plan selection step, redirect there
+      if (sessionWithProfile.onboardingStep === "plan") {
+        r.push("/signup/plan");
+        return;
+      }
+      
+      // Otherwise, go to callback URL or role-specific dashboard
+      const dashboard = sessionWithProfile.role === "ngo" ? "/ngo" : "/volunteer";
+      r.push(callbackUrl === "/" ? dashboard : callbackUrl);
     }
   }, [session, status, r, callbackUrl]);
 
@@ -95,9 +105,8 @@ function SignInPageInner() {
     setError(null);
     setLoading(true);
     try {
-      const redirectParam = encodeURIComponent(callbackUrl || "/")
-      const cb = `/oauth-complete?role=${selectedRole}&redirect=${redirectParam}`
-      await signIn(provider, { callbackUrl: cb });
+      // Returning users go directly; new users will be caught by middleware
+      await signIn(provider, { callbackUrl });
     } catch (error) {
       console.error(`${provider} sign in error:`, error)
       const label = provider.charAt(0).toUpperCase() + provider.slice(1)
@@ -109,7 +118,7 @@ function SignInPageInner() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+  <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -124,7 +133,7 @@ function SignInPageInner() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+  <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -137,7 +146,7 @@ function SignInPageInner() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full blur-3xl opacity-30"
+          className="absolute -top-40 -left-40 w-96 h-96 bg-linear-to-br from-purple-400 to-pink-400 rounded-full blur-3xl opacity-30"
         />
         <motion.div
           animate={{
@@ -149,7 +158,7 @@ function SignInPageInner() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -bottom-40 -right-40 w-96 h-96 bg-gradient-to-br from-pink-400 to-orange-400 rounded-full blur-3xl opacity-30"
+          className="absolute -bottom-40 -right-40 w-96 h-96 bg-linear-to-br from-pink-400 to-orange-400 rounded-full blur-3xl opacity-30"
         />
         <motion.div
           animate={{
@@ -161,7 +170,7 @@ function SignInPageInner() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 rounded-full blur-3xl opacity-20"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-linear-to-br from-purple-400 via-pink-400 to-orange-400 rounded-full blur-3xl opacity-20"
         />
       </div>
 
@@ -179,11 +188,11 @@ function SignInPageInner() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-white mb-4 shadow-xl"
+              className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-linear-to-br from-purple-600 to-pink-600 text-white mb-4 shadow-xl"
             >
               <LogIn className="h-8 w-8" />
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
               Welcome Back
             </h1>
             <p className="text-muted-foreground">
@@ -204,20 +213,6 @@ function SignInPageInner() {
             </CardHeader>
             
             <CardContent className="grid gap-6">
-              {/* Choose role (used if account is new during OAuth) */}
-              <div className="grid gap-2">
-                <Label className="text-sm font-semibold">I am a</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant={selectedRole === "volunteer" ? "default" : "outline"} onClick={() => setSelectedRole("volunteer")}>
-                    Volunteer
-                  </Button>
-                  <Button type="button" variant={selectedRole === "ngo" ? "default" : "outline"} onClick={() => setSelectedRole("ngo")}>
-                    NGO
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">We&apos;ll use this if your social account is new.</p>
-              </div>
-
               {error && (
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
@@ -382,7 +377,7 @@ function SignInPageInner() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 text-base font-semibold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all mt-2"
+                  className="w-full h-12 text-base font-semibold bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all mt-2"
                   disabled={loading || !email || !password}
                 >
                   {loading ? (

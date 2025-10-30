@@ -21,6 +21,7 @@ type AppUser = {
   role?: "volunteer" | "ngo"
   plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
   planExpiresAt?: Date | null
+  onboardingStep?: "role" | "profile" | "plan" | "completed" | null
   emailVerified?: Date | null
   image?: string | null
 }
@@ -97,9 +98,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: user._id.toString(),
             name: user.name ?? null,
             email: user.email ?? null,
-            role: user.role ?? "volunteer",
-            plan: user.plan ?? "volunteer_free",
+            role: user.role ?? null,
+            plan: user.plan ?? null,
             planExpiresAt: user.planExpiresAt?.toISOString() ?? null,
+            onboardingStep: user.onboardingStep ?? null,
           }
         } catch (error) {
           console.error("Credentials auth error:", error)
@@ -120,34 +122,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Check if user exists
           const existingUser = await users.findOne({ email: user.email })
           
-          if (!existingUser) {
-            // Create new user for OAuth - NO role/plan yet, must complete profile
-            const now = new Date()
-            await users.insertOne({
-              name: user.name,
-              email: user.email,
-              image: user.image,
-              emailVerified: now, // OAuth users are email verified
-              role: null, // Will be set in complete-profile page
-              plan: null,
-              passwordHash: null, // OAuth users don't have passwords initially
-              createdAt: now,
-              updatedAt: now,
-            })
-          } else {
+          if (existingUser) {
             // Update existing user with latest OAuth info
+            const updates: Record<string, unknown> = {
+              name: user.name || existingUser.name,
+              image: user.image || existingUser.image,
+              emailVerified: existingUser.emailVerified || new Date(),
+              updatedAt: new Date()
+            }
+            
+            // Mark old users without onboardingStep as completed (backward compatibility)
+            if (!existingUser.onboardingStep && existingUser.role) {
+              updates.onboardingStep = "completed"
+            }
+            
             await users.updateOne(
               { email: user.email },
-              { 
-                $set: { 
-                  name: user.name || existingUser.name,
-                  image: user.image || existingUser.image,
-                  emailVerified: existingUser.emailVerified || new Date(),
-                  updatedAt: new Date() 
-                } 
-              }
+              { $set: updates }
             )
           }
+          // If user doesn't exist, MongoDB adapter will create them automatically
+          // We'll set role/plan later in /auth-callback after user chooses role
           
           return true
         } catch (error) {
@@ -162,9 +157,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         const u = user as AppUser
         token.userId = u._id
-        if (u.role) token.role = u.role
-        if (u.plan) token.plan = u.plan
+        token.role = u.role ?? null
+        token.plan = u.plan ?? null
         if (u.planExpiresAt) token.planExpiresAt = u.planExpiresAt.toISOString()
+        token.onboardingStep = u.onboardingStep ?? null
       }
 
       // Refresh token data from DB to ensure consistency
@@ -183,9 +179,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         
         // Update token with latest DB values
-        token.userId = dbUser._id.toString()
-        token.role = dbUser.role ?? token.role
-        token.profileComplete = !!dbUser.role // Profile is complete if role is set
+  token.userId = dbUser._id.toString()
+  token.role = dbUser.role ?? null
+  token.onboardingStep = dbUser.onboardingStep ?? token.onboardingStep ?? null
         
         const extendedUser = dbUser as AppUser & { avatarUrl?: string; coverPhotoUrl?: string }
         token.avatarUrl = extendedUser.avatarUrl ?? token.avatarUrl
@@ -193,7 +189,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null
         
         // Handle plan expiration
-        let currentPlan = dbUser.plan ?? token.plan
+        let currentPlan = dbUser.plan ?? (token.plan as typeof token.plan | null) ?? null
         if (dbUser.planExpiresAt && new Date() > new Date(dbUser.planExpiresAt)) {
           // Plan expired - downgrade to free tier
           const freePlan = dbUser.role === "volunteer" ? "volunteer_free" : "ngo_base"
@@ -210,8 +206,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           currentPlan = freePlan
         }
         
-        token.plan = currentPlan
+  token.plan = currentPlan ?? null
         token.planExpiresAt = dbUser.planExpiresAt?.toISOString() ?? token.planExpiresAt
+        token.profileComplete = (token.onboardingStep === "completed")
       } catch (error) {
         console.error("Error refreshing token:", error)
       }
@@ -222,17 +219,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         const extendedSession = session as typeof session & {
           userId: string
-          role?: "volunteer" | "ngo"
-          plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
+          role?: "volunteer" | "ngo" | null
+          plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
           planExpiresAt?: string | null
+          onboardingStep?: "role" | "profile" | "plan" | "completed" | null
           profileComplete: boolean
         }
         
         extendedSession.userId = token.userId as string
-        extendedSession.role = token.role as "volunteer" | "ngo"
-        extendedSession.plan = token.plan as "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
+        extendedSession.role = token.role as "volunteer" | "ngo" | null
+        extendedSession.plan = token.plan as "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
         extendedSession.planExpiresAt = token.planExpiresAt as string | null
         extendedSession.profileComplete = token.profileComplete as boolean
+        if (token.onboardingStep && token.onboardingStep !== null) {
+          extendedSession.onboardingStep = token.onboardingStep as
+            | "role"
+            | "profile"
+            | "plan"
+            | "completed"
+        } else {
+          extendedSession.onboardingStep = undefined
+        }
         
         // Add avatarUrl and coverPhotoUrl to session
         if (token.avatarUrl) {

@@ -141,7 +141,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const role = session.role || "volunteer"
   const plan = session.plan
   const planExpiresAt = session.planExpiresAt ? new Date(session.planExpiresAt) : null
-  const isPlus = plan?.includes("plus")
+  const isPlus = plan?.includes("plus") || false
   const isExpired = planExpiresAt && new Date() > planExpiresAt
   const daysUntilExpiry = planExpiresAt 
     ? Math.ceil((planExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -152,7 +152,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
-        <AppSidebar role={role} plan={plan} isPlus={isPlus} daysUntilExpiry={daysUntilExpiry} />
+        <AppSidebar role={role} plan={plan || "free"} isPlus={isPlus} daysUntilExpiry={daysUntilExpiry} />
         
         <main className="flex-1 flex flex-col">
           {/* Creative Floating Navbar */}

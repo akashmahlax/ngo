@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -15,6 +15,7 @@ import { toast } from "sonner"
 export default function CompleteProfilePage() {
   const { status, update } = useSession()
   const router = useRouter()
+  const sp = useSearchParams()
   
   const [step, setStep] = useState<"role" | "details" | "plan">("role")
   const [role, setRole] = useState<"volunteer" | "ngo" | null>(null)
@@ -63,6 +64,14 @@ export default function CompleteProfilePage() {
       router.push("/signin")
     }
   }, [status, router])
+
+  // Prefill role from query param if provided (e.g., social signup selected role earlier)
+  useEffect(() => {
+    const r = sp?.get("role")
+    if ((r === "volunteer" || r === "ngo") && role === null) {
+      setRole(r)
+    }
+  }, [sp, role])
 
   useEffect(() => {
     if (role) {

@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
         pendingPlan: null,
         planCancelled: false,
         planCancelledAt: null,
+        onboardingStep: "completed",
         updatedAt: new Date(),
       } }
     )
