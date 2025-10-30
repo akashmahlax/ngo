@@ -338,8 +338,8 @@ export function UniversalNavbar() {
 
       {/* Desktop Navigation */}
       <div className="hidden md:block">
-        <div className="fixed top-0 z-50 w-full pt-4 px-4">
-          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border border-purple-200 dark:border-purple-400 rounded-b-4xl shadow-lg shadow-purple-500/10 max-w-7xl mx-auto">
+        <div className="fixed top-0 z-10 pt-4 px-4 w-full ">  {/* pt-4 px-4*/}
+          <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border   rounded-full shadow-lg shadow-purple-500/10 max-w-7xl mx-auto">
             <div className="container mx-auto px-6">
               <div className="flex h-16 items-center justify-between">
                 {/* Brand */}
