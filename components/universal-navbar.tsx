@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -303,9 +304,13 @@ export function UniversalNavbar() {
 
               {/* Brand */}
               <Link href="/" className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center shadow-lg">
-                  <Heart className="h-4 w-4 text-white" />
-                </div>
+                <Image
+                  src="/ASIA.png"
+                  alt="Just Because Asia"
+                  width={28}
+                  height={28}
+                  className="rounded-lg"
+                />
                 <span className="font-bold text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   JBA
                 </span>
@@ -341,9 +346,13 @@ export function UniversalNavbar() {
                 <ContextMenu>
                   <ContextMenuTrigger>
                     <Link href="/" className="flex items-center gap-3 group">
-                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300">
-                        <Heart className="h-4 w-4 text-white" />
-                      </div>
+                      <Image
+                        src="/ASIA.png"
+                        alt="Just Because Asia"
+                        width={32}
+                        height={32}
+                        className="rounded-xl group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300"
+                      />
                       <div>
                         <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
                           Just Because Asia

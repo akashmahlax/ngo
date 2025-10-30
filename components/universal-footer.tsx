@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +27,7 @@ import {
   Zap,
   Sparkles
 } from "lucide-react"
+import image from "next/image"
 
 const footerSections = {
   platform: {
@@ -106,11 +108,11 @@ export function UniversalFooter() {
         {/* Authenticated User Section */}
         {isAuthenticated && (
           <div className="mb-12">
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-2 border-purple-200 dark:border-purple-800 rounded-3xl p-6 shadow-lg shadow-purple-500/10">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 rounded-4xl p-6 shadow-lg shadow-purple-500/10">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center relative shadow-lg">
-                    <Heart className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 rounded-4xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center relative shadow-lg">
+                    <Image src={"/ASIA.png"} alt="Just Because Asia" width={100} height={100} className="h-12 w-12 rounded-4xl text-white" />
                     {isPlusUser && (
                       <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center border-2 border-white dark:border-neutral-950 shadow-lg">
                         <Sparkles className="h-3 w-3 text-white" />
@@ -224,9 +226,13 @@ export function UniversalFooter() {
           {/* Brand & Copyright */}
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all">
-                <Heart className="h-5 w-5 text-white" />
-              </div>
+              <Image
+                src="/ASIA.png"
+                alt="Just Because Asia"
+                width={40}
+                height={40}
+                className="rounded-2xl group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all"
+              />
               <div>
                 <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
                   Just Because Asia
