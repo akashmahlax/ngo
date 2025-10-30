@@ -15,14 +15,10 @@ import {
   Bell, 
   Lock, 
   CreditCard, 
-  Eye, 
-  EyeOff, 
   Trash2, 
   AlertTriangle,
   Download,
-  FileText,
-  Users,
-  FileCheck
+  FileText
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -64,6 +60,10 @@ export default function NgoSettings() {
     showEmail: false,
   })
 
+  // Billing state
+  const [payments, setPayments] = useState<any[]>([])
+  const [loadingPayments, setLoadingPayments] = useState(true)
+
   useEffect(() => {
     async function loadSettings() {
       try {
@@ -88,7 +88,22 @@ export default function NgoSettings() {
       }
     }
 
+    async function loadPaymentHistory() {
+      try {
+        const res = await fetch("/api/billing/history")
+        if (res.ok) {
+          const data = await res.json()
+          setPayments(data.payments || [])
+        }
+      } catch (error) {
+        console.error("Error loading payment history:", error)
+      } finally {
+        setLoadingPayments(false)
+      }
+    }
+
     loadSettings()
+    loadPaymentHistory()
   }, [])
 
   async function saveAccountSettings() {
@@ -210,12 +225,11 @@ export default function NgoSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
         </TabsList>
 
         {/* Account Tab */}
@@ -516,87 +530,53 @@ export default function NgoSettings() {
               
               <div className="space-y-4">
                 <h3 className="font-medium">Payment History</h3>
-                <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No payment history yet</p>
-                  <Button variant="outline" className="mt-4" asChild>
-                    <a href="/upgrade">
-                      <Download className="h-4 w-4 mr-2" />
-                      View Plans
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Team Tab */}
-        <TabsContent value="team" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Team Management
-              </CardTitle>
-              <CardDescription>
-                Manage team members and their permissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">Team Members</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Invite team members to manage your organization
-                    </p>
+                {loadingPayments ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">Loading payment history...</p>
                   </div>
-                  <Button>
-                    <User className="h-4 w-4 mr-2" />
-                    Invite Member
-                  </Button>
-                </div>
-                
-                <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No team members added yet</p>
-                  <Button variant="outline" className="mt-4">
-                    Invite Team Member
-                  </Button>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-4">
-                <h3 className="font-medium">Verification Status</h3>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium">Organization Verification</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Verify your organization to build trust with volunteers
-                    </p>
-                  </div>
-                  <Badge variant="secondary">
-                    Not Verified
-                  </Badge>
-                </div>
-                
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">Submit Verification Documents</h3>
-                      <p className="text-sm text-blue-700">
-                        Upload your registration documents to get verified
-                      </p>
-                    </div>
-                    <Button variant="outline">
-                      <FileCheck className="h-4 w-4 mr-2" />
-                      Upload Documents
+                ) : payments.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No payment history yet</p>
+                    <Button variant="outline" className="mt-4" asChild>
+                      <a href="/upgrade">
+                        <Download className="h-4 w-4 mr-2" />
+                        View Plans
+                      </a>
                     </Button>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {payments.map((payment) => (
+                      <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium capitalize">{payment.plan.replace(/_/g, " ")} Plan</h4>
+                            <Badge variant={payment.status === "paid" ? "default" : payment.status === "pending" ? "secondary" : "destructive"}>
+                              {payment.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(payment.createdAt).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                          {payment.orderId && (
+                            <p className="text-xs text-muted-foreground mt-1">Order ID: {payment.orderId}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">₹{payment.amount.toFixed(2)}</p>
+                          {payment.paymentId && (
+                            <p className="text-xs text-muted-foreground">ID: {payment.paymentId.slice(0, 12)}...</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

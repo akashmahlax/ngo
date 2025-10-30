@@ -71,6 +71,10 @@ export default function VolunteerSettings() {
     showEmail: false,
   })
 
+  // Billing state
+  const [payments, setPayments] = useState<any[]>([])
+  const [loadingPayments, setLoadingPayments] = useState(true)
+
   // Profile state
   const [profile, setProfile] = useState({
     name: "",
@@ -130,7 +134,22 @@ export default function VolunteerSettings() {
       }
     }
 
+    async function loadPaymentHistory() {
+      try {
+        const res = await fetch("/api/billing/history")
+        if (res.ok) {
+          const data = await res.json()
+          setPayments(data.payments || [])
+        }
+      } catch (error) {
+        console.error("Error loading payment history:", error)
+      } finally {
+        setLoadingPayments(false)
+      }
+    }
+
     loadSettings()
+    loadPaymentHistory()
   }, [])
 
   async function saveAccountSettings() {
@@ -848,16 +867,53 @@ export default function VolunteerSettings() {
               
               <div className="space-y-4">
                 <h3 className="font-medium">Payment History</h3>
-                <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No payment history yet</p>
-                  <Button variant="outline" className="mt-4" asChild>
-                    <a href="/upgrade">
-                      <Download className="h-4 w-4 mr-2" />
-                      View Plans
-                    </a>
-                  </Button>
-                </div>
+                {loadingPayments ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">Loading payment history...</p>
+                  </div>
+                ) : payments.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No payment history yet</p>
+                    <Button variant="outline" className="mt-4" asChild>
+                      <a href="/upgrade">
+                        <Download className="h-4 w-4 mr-2" />
+                        View Plans
+                      </a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {payments.map((payment) => (
+                      <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium capitalize">{payment.plan.replace(/_/g, " ")} Plan</h4>
+                            <Badge variant={payment.status === "paid" ? "default" : payment.status === "pending" ? "secondary" : "destructive"}>
+                              {payment.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(payment.createdAt).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                          {payment.orderId && (
+                            <p className="text-xs text-muted-foreground mt-1">Order ID: {payment.orderId}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">₹{payment.amount.toFixed(2)}</p>
+                          {payment.paymentId && (
+                            <p className="text-xs text-muted-foreground">ID: {payment.paymentId.slice(0, 12)}...</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
