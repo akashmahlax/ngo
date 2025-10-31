@@ -63,7 +63,8 @@ import {
   User,
   HelpCircle,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
@@ -119,8 +120,20 @@ export function UniversalNavbar() {
   const user = session?.user as any
   const role = (session as any)?.role
   const plan = (session as any)?.plan
-  const isPlusUser = plan === "volunteer_plus" || plan === "ngo_plus"
+  const isAdmin = (session as any)?.isAdmin || false
   const isAuthenticated = status === "authenticated"
+  const hasMemberRole = role === "volunteer" || role === "ngo"
+  const normalizedRole = hasMemberRole ? (role as "volunteer" | "ngo") : undefined
+  const isPureAdmin = isAdmin && !hasMemberRole
+  const isPlusUser = hasMemberRole && (plan === "volunteer_plus" || plan === "ngo_plus")
+  const dashboardHref = isPureAdmin ? "/admin" : getDashboardBase(normalizedRole)
+  const profileHref = normalizedRole ? getDashboardProfilePath(normalizedRole) : null
+  const billingHref = normalizedRole ? `/${normalizedRole}/billing` : null
+  const applicationsHref = normalizedRole === "volunteer" ? "/volunteer/applications" : null
+  const secondaryAction = profileHref
+    ? { href: profileHref, label: "Profile", Icon: User }
+    : { href: normalizedRole ? `/${normalizedRole}/settings` : "/settings", label: "Settings", Icon: Settings }
+  const SecondaryActionIcon = secondaryAction.Icon
 
   // Command palette shortcuts
   React.useEffect(() => {
@@ -134,12 +147,18 @@ export function UniversalNavbar() {
       if (cmdOpen) {
         if (e.key === "d" && isAuthenticated) {
           e.preventDefault()
-          router.push(getDashboardBase(role))
+          router.push(dashboardHref)
           setCmdOpen(false)
         }
-        if (e.key === "p" && isAuthenticated) {
+        if (e.key === "p" && isAuthenticated && profileHref) {
           e.preventDefault()
-          router.push(getDashboardProfilePath(role))
+          router.push(profileHref)
+          setCmdOpen(false)
+        }
+        // Admin shortcut
+        if (e.key === "a" && isAuthenticated && isAdmin) {
+          e.preventDefault()
+          router.push("/admin")
           setCmdOpen(false)
         }
       }
@@ -147,7 +166,7 @@ export function UniversalNavbar() {
     
     document.addEventListener("keydown", onKeyDown)
     return () => document.removeEventListener("keydown", onKeyDown)
-  }, [cmdOpen, isAuthenticated, role, router])
+  }, [cmdOpen, isAuthenticated, isAdmin, dashboardHref, profileHref, router])
 
   return (
     <>
@@ -176,20 +195,28 @@ export function UniversalNavbar() {
 
                     {/* User Section */}
                     {isAuthenticated && (
-                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-2 border-purple-200 dark:border-purple-800 rounded-2xl p-4">
+                      <div className={`${isAdmin ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-2 border-red-200 dark:border-red-800' : 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-2 border-purple-200 dark:border-purple-800'} rounded-2xl p-4`}>
                         <div className="flex items-center gap-3 mb-3">
-                          <Avatar className="h-10 w-10 ring-2 ring-purple-400 dark:ring-purple-600">
+                          <Avatar className={`h-10 w-10 ring-2 ${isAdmin ? 'ring-red-400 dark:ring-red-600' : 'ring-purple-400 dark:ring-purple-600'}`}>
                             <AvatarImage src={user?.avatarUrl} />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
+                            <AvatarFallback className={`${isAdmin ? 'bg-gradient-to-br from-red-600 to-orange-600' : 'bg-gradient-to-br from-purple-600 to-pink-600'} text-white font-bold`}>
                               {user?.name?.slice(0,2)?.toUpperCase() || "ME"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <p className="font-semibold text-sm">{user?.name}</p>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs capitalize border-purple-300 dark:border-purple-700">
-                                {role}
-                              </Badge>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {isAdmin && (
+                                <Badge className="bg-gradient-to-r from-red-600 to-orange-600 text-white border-0 text-xs">
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Admin
+                                </Badge>
+                              )}
+                              {role && (
+                                <Badge variant="outline" className={`text-xs capitalize ${isAdmin ? 'border-red-300 dark:border-red-700' : 'border-purple-300 dark:border-purple-700'}`}>
+                                  {role}
+                                </Badge>
+                              )}
                               {isPlusUser && (
                                 <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 text-xs">
                                   <Crown className="h-3 w-3 mr-1" />
@@ -200,32 +227,61 @@ export function UniversalNavbar() {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30" 
-                            onClick={() => {
-                              router.push(getDashboardBase(role))
-                              setMobileOpen(false)
-                            }}
-                          >
-                            <Home className="h-4 w-4 mr-2" />
-                            Dashboard
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30"
-                            onClick={() => {
-                              router.push(getDashboardProfilePath(role))
-                              setMobileOpen(false)
-                            }}
-                          >
-                            <User className="h-4 w-4 mr-2" />
-                            Profile
-                          </Button>
-                        </div>
+                        {isPureAdmin ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white" 
+                              onClick={() => {
+                                router.push("/admin")
+                                setMobileOpen(false)
+                              }}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              Admin Panel
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              onClick={() => {
+                                router.push("/")
+                                setMobileOpen(false)
+                              }}
+                            >
+                              <Home className="h-4 w-4 mr-2" />
+                              Home
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30" 
+                              onClick={() => {
+                                router.push(dashboardHref)
+                                setMobileOpen(false)
+                              }}
+                            >
+                              <Home className="h-4 w-4 mr-2" />
+                              Dashboard
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                              onClick={() => {
+                                router.push(secondaryAction.href)
+                                setMobileOpen(false)
+                              }}
+                            >
+                              <SecondaryActionIcon className="h-4 w-4 mr-2" />
+                              {secondaryAction.label}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -281,7 +337,7 @@ export function UniversalNavbar() {
                           Sign up
                         </Button>
                         <Button
-                          className="rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white border-0"
+                          className="rounded-xl bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white border-0"
                           onClick={() => {
                             router.push("/signin")
                             setMobileOpen(false)
@@ -451,8 +507,16 @@ export function UniversalNavbar() {
 
                   {isAuthenticated ? (
                     <div className="flex items-center gap-2">
+                      {/* Admin Badge */}
+                      {isAdmin && (
+                        <Badge className="bg-gradient-to-r from-red-600 to-orange-600 text-white border-0 hidden xl:flex shadow-lg">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Admin
+                        </Badge>
+                      )}
+                      
                       {/* Plus Badge */}
-                      {isPlusUser && (
+                      {isPlusUser && !isPureAdmin && (
                         <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 hidden xl:flex shadow-lg">
                           <Crown className="h-3 w-3 mr-1" />
                           Plus
@@ -462,14 +526,19 @@ export function UniversalNavbar() {
                       {/* User Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="relative p-1 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30">
-                            <Avatar className="h-8 w-8 ring-2 ring-purple-400 dark:ring-purple-600 hover:ring-purple-500 dark:hover:ring-purple-500 transition-all">
+                          <Button variant="ghost" className={`relative p-1 rounded-xl ${isAdmin ? 'hover:bg-red-100 dark:hover:bg-red-900/30' : 'hover:bg-purple-100 dark:hover:bg-purple-900/30'}`}>
+                            <Avatar className={`h-8 w-8 ring-2 ${isAdmin ? 'ring-red-400 dark:ring-red-600 hover:ring-red-500 dark:hover:ring-red-500' : 'ring-purple-400 dark:ring-purple-600 hover:ring-purple-500 dark:hover:ring-purple-500'} transition-all`}>
                               <AvatarImage src={user?.avatarUrl} />
-                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-bold">
+                              <AvatarFallback className={`${isAdmin ? 'bg-gradient-to-br from-red-600 to-orange-600' : 'bg-gradient-to-br from-purple-600 to-pink-600'} text-white font-bold`}>
                                 {user?.name?.slice(0,2)?.toUpperCase() || "ME"}
                               </AvatarFallback>
                             </Avatar>
-                            {isPlusUser && (
+                            {isAdmin && (
+                              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gradient-to-r from-red-600 to-orange-600 border-2 border-background flex items-center justify-center shadow-lg">
+                                <Shield className="h-2.5 w-2.5 text-white" />
+                              </div>
+                            )}
+                            {isPlusUser && !isPureAdmin && (
                               <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-2 border-background flex items-center justify-center shadow-lg">
                                 <Sparkles className="h-2.5 w-2.5 text-white" />
                               </div>
@@ -482,61 +551,109 @@ export function UniversalNavbar() {
                               <p className="font-semibold">{user?.name}</p>
                               <p className="text-xs text-muted-foreground">{user?.email}</p>
                             </div>
-                            {isPlusUser && (
-                              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
-                                Plus
-                              </Badge>
-                            )}
-                          </DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          
-                          <DropdownMenuItem onClick={() => router.push(getDashboardBase(role))}>
-                            <Home className="h-4 w-4 mr-2" />
-                            <div className="flex items-center justify-between w-full">
-                              <span>Dashboard</span>
-                              <Kbd>D</Kbd>
-                            </div>
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuItem onClick={() => router.push(getDashboardProfilePath(role))}>
-                            <User className="h-4 w-4 mr-2" />
-                            <div className="flex items-center justify-between w-full">
-                              <span>Profile</span>
-                              <Kbd>P</Kbd>
-                            </div>
-                          </DropdownMenuItem>
-                          
-                          {role === "volunteer" && (
-                            <DropdownMenuItem onClick={() => router.push("/volunteer/applications")}>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Applications
-                            </DropdownMenuItem>
-                          )}
-                          
-                          <DropdownMenuItem onClick={() => router.push(`/${role}/billing`)}>
-                            <TrendingUp className="h-4 w-4 mr-2" />
-                            <div className="flex items-center justify-between w-full">
-                              <span>Billing</span>
-                              {!isPlusUser && (
-                                <Badge variant="outline" className="text-xs">Free</Badge>
+                            <div className="flex gap-1">
+                              {isAdmin && (
+                                <Badge className="bg-gradient-to-r from-red-600 to-orange-600 text-white border-0 text-xs">
+                                  <Shield className="h-3 w-3" />
+                                </Badge>
+                              )}
+                              {isPlusUser && !isPureAdmin && (
+                                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 text-xs">
+                                  Plus
+                                </Badge>
                               )}
                             </div>
-                          </DropdownMenuItem>
-                          
+                          </DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          
-                          <DropdownMenuItem onClick={() => router.push("/settings")}>
+
+                          {isAdmin && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => router.push("/admin")}
+                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 mb-1"
+                              >
+                                <Shield className="h-4 w-4 mr-2 text-red-600" />
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="font-semibold text-red-600 dark:text-red-400">Admin Panel</span>
+                                </div>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+
+                          {normalizedRole ? (
+                            <>
+                              <DropdownMenuItem onClick={() => router.push(dashboardHref)}>
+                                <Home className="h-4 w-4 mr-2" />
+                                <div className="flex items-center justify-between w-full">
+                                  <span>Dashboard</span>
+                                  <Kbd>D</Kbd>
+                                </div>
+                              </DropdownMenuItem>
+
+                              {profileHref && (
+                                <DropdownMenuItem onClick={() => router.push(profileHref)}>
+                                  <User className="h-4 w-4 mr-2" />
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Profile</span>
+                                    <Kbd>P</Kbd>
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                              {applicationsHref && (
+                                <DropdownMenuItem onClick={() => router.push(applicationsHref)}>
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Applications
+                                </DropdownMenuItem>
+                              )}
+
+                              {billingHref && (
+                                <DropdownMenuItem onClick={() => router.push(billingHref)}>
+                                  <TrendingUp className="h-4 w-4 mr-2" />
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Billing</span>
+                                    {!isPlusUser && (
+                                      <Badge variant="outline" className="text-xs">Free</Badge>
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : isPureAdmin ? (
+                            <>
+                              <DropdownMenuItem onClick={() => router.push("/ngo")}>
+                                <Building2 className="h-4 w-4 mr-2" />
+                                View NGO Dashboard
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/volunteer")}>
+                                <Users className="h-4 w-4 mr-2" />
+                                View Volunteer Dashboard
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : null}
+
+                          <DropdownMenuItem
+                            onClick={() => router.push(
+                              isPureAdmin ? "/admin/settings" : normalizedRole ? `/${normalizedRole}/settings` : "/settings"
+                            )}
+                          >
                             <Settings className="h-4 w-4 mr-2" />
                             Settings
                           </DropdownMenuItem>
-                          
+
                           <DropdownMenuItem onClick={() => router.push("/help")}>
                             <HelpCircle className="h-4 w-4 mr-2" />
                             Help Center
                           </DropdownMenuItem>
-                          
+
                           <DropdownMenuSeparator />
-                          
+
                           <DropdownMenuItem className="text-destructive focus:text-destructive">
                             <LogOut className="h-4 w-4 mr-2" />
                             <SignOut />
@@ -546,10 +663,17 @@ export function UniversalNavbar() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" className="rounded-xl border-purple-300 dark:border-purple-700" onClick={() => router.push("/signup")}>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl border-purple-300 dark:border-purple-700"
+                        onClick={() => router.push("/signup")}
+                      >
                         Sign up
                       </Button>
-                      <Button className="rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white shadow-lg" onClick={() => router.push("/signin")}>
+                      <Button
+                        className="rounded-xl bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white shadow-lg"
+                        onClick={() => router.push("/signin")}
+                      >
                         Sign in
                       </Button>
                     </div>
@@ -575,22 +699,30 @@ export function UniversalNavbar() {
           
           {isAuthenticated && (
             <CommandGroup heading="Quick Actions">
-              {navData.quickActions.map((action) => (
-                <CommandItem
-                  key={action.title}
-                  onSelect={() => {
-                    if (action.title === "Dashboard") router.push(getDashboardBase(role))
-                    else if (action.title === "Profile") router.push(getDashboardProfilePath(role))
-                    else if (action.title === "Applications" && role === "volunteer") router.push("/volunteer/applications")
-                    else if (action.title === "Settings") router.push("/settings")
-                    setCmdOpen(false)
-                  }}
-                >
-                  <action.icon className="mr-2 h-4 w-4" />
-                  <span className="flex-1">{action.title}</span>
-                  <Kbd>{action.shortcut}</Kbd>
-                </CommandItem>
-              ))}
+              {navData.quickActions
+                .filter((action) => {
+                  if (action.title === "Profile" && !profileHref) return false
+                  if (action.title === "Applications" && applicationsHref === null) return false
+                  return true
+                })
+                .map((action) => (
+                  <CommandItem
+                    key={action.title}
+                    onSelect={() => {
+                      if (action.title === "Dashboard") router.push(dashboardHref)
+                      else if (action.title === "Profile" && profileHref) router.push(profileHref)
+                      else if (action.title === "Applications" && applicationsHref) router.push(applicationsHref)
+                      else if (action.title === "Settings") router.push(
+                        isPureAdmin ? "/admin/settings" : normalizedRole ? `/${normalizedRole}/settings` : "/settings"
+                      )
+                      setCmdOpen(false)
+                    }}
+                  >
+                    <action.icon className="mr-2 h-4 w-4" />
+                    <span className="flex-1">{action.title}</span>
+                    <Kbd>{action.shortcut}</Kbd>
+                  </CommandItem>
+                ))}
             </CommandGroup>
           )}
           

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
@@ -28,7 +27,6 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { navItems, getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
@@ -43,6 +41,7 @@ import {
   Linkedin,
   Heart,
   LogOut,
+  ShieldCheck,
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -51,7 +50,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
-function AppSidebar({ role, plan, isPlus, daysUntilExpiry }: { role: string, plan: string, isPlus: boolean, daysUntilExpiry: number | null }) {
+function AppSidebar({ role, plan, isPlus, daysUntilExpiry, isPureAdmin }: { role: "volunteer" | "ngo", plan: string, isPlus: boolean, daysUntilExpiry: number | null, isPureAdmin: boolean }) {
   const pathname = usePathname()
   const userNavItems = navItems[role as keyof typeof navItems] || navItems.volunteer
 
@@ -99,7 +98,7 @@ function AppSidebar({ role, plan, isPlus, daysUntilExpiry }: { role: string, pla
       </SidebarContent>
 
       <SidebarFooter>
-        {isPlus && daysUntilExpiry !== null && daysUntilExpiry <= 7 && (
+  {isPlus && !isPureAdmin && daysUntilExpiry !== null && daysUntilExpiry <= 7 && (
           <div className="rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-3 mx-2 mb-2 group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold">Plus Plan</span>
@@ -113,7 +112,7 @@ function AppSidebar({ role, plan, isPlus, daysUntilExpiry }: { role: string, pla
           </div>
         )}
         
-        {!isPlus && (
+  {!isPlus && !isPureAdmin && (
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
@@ -138,21 +137,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!session?.user) return null
 
-  const role = session.role || "volunteer"
-  const plan = session.plan
+  // Handle admin users viewing dashboards
+  const rawRole = session.role as string | null
+  const isAdmin = Boolean((session as any).isAdmin || rawRole === "admin")
+  const isPureAdmin = isAdmin && (!rawRole || rawRole === "admin")
+
+  let viewRole: "volunteer" | "ngo" = rawRole === "ngo" ? "ngo" : "volunteer"
+
+  if (isAdmin) {
+    if (pathname.startsWith("/ngo")) {
+      viewRole = "ngo"
+    } else if (pathname.startsWith("/volunteer")) {
+      viewRole = "volunteer"
+    } else if (rawRole === "ngo") {
+      viewRole = "ngo"
+    }
+  }
+
+  const plan = session.plan || "free"
   const planExpiresAt = session.planExpiresAt ? new Date(session.planExpiresAt) : null
   const isPlus = plan?.includes("plus") || false
-  const isExpired = planExpiresAt && new Date() > planExpiresAt
   const daysUntilExpiry = planExpiresAt 
     ? Math.ceil((planExpiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
 
-  const userNavItems = navItems[role as keyof typeof navItems] || navItems.volunteer
+  const userNavItems = navItems[viewRole as keyof typeof navItems] || navItems.volunteer
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
-        <AppSidebar role={role} plan={plan || "free"} isPlus={isPlus} daysUntilExpiry={daysUntilExpiry} />
+        <AppSidebar
+          role={viewRole}
+          plan={plan || "free"}
+          isPlus={isPlus}
+          daysUntilExpiry={daysUntilExpiry}
+          isPureAdmin={isPureAdmin}
+        />
         
         <main className="flex-1 flex flex-col">
           {/* Creative Floating Navbar */}
@@ -165,20 +185,40 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="flex-1">
                   <nav className="text-sm breadcrumbs flex items-center gap-2">
                     <Link 
-                      href={getDashboardBase(role)} 
+                      href={getDashboardBase(viewRole)} 
                       className="text-muted-foreground hover:text-foreground transition-colors rounded-md px-2 py-1 hover:bg-accent/50"
                     >
-                      {role === "ngo" ? "NGO Portal" : "Volunteer Hub"}
+                      {viewRole === "ngo" ? "NGO Portal" : "Volunteer Hub"}
                     </Link>
                     <div className="w-1 h-1 bg-muted-foreground/50 rounded-full"></div>
                     <div className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent font-semibold">
                       {userNavItems.find((item) => item.href === pathname)?.name || "Dashboard"}
                     </div>
+                    {isAdmin && (
+                      <>
+                        <div className="w-1 h-1 bg-muted-foreground/50 rounded-full"></div>
+                        <Badge variant="default" className="bg-red-600 hover:bg-red-700 text-white">
+                          Admin View
+                        </Badge>
+                      </>
+                    )}
                   </nav>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <ThemeToggle />
+
+                  {isAdmin && (
+                    <>
+                      <Separator orientation="vertical" className="h-6 mx-2" />
+                      <Button asChild variant="default" size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                        <Link href="/admin">
+                          <Settings className="h-3 w-3 mr-1" />
+                          Back to Admin
+                        </Link>
+                      </Button>
+                    </>
+                  )}
 
                   {/* <Button variant="ghost" size="icon" className="relative hover:bg-accent/50 rounded-lg transition-colors">
                     <Bell className="h-4 w-4" />
@@ -201,13 +241,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             {session.user.name || "User"}
                           </span>
                           <div className="flex items-center gap-1 mt-0.5">
-                            {isPlus ? (
+                            {isPureAdmin ? (
+                              <ShieldCheck className="h-3 w-3 text-red-500" />
+                            ) : isPlus ? (
                               <Crown className="h-3 w-3 text-amber-500" />
                             ) : (
                               <div className="h-3 w-3 rounded-full bg-muted" />
                             )}
                             <span className="text-xs text-muted-foreground">
-                              {isPlus ? "Plus Member" : "Free Member"}
+                              {isPureAdmin ? "Admin Access" : isPlus ? "Plus Member" : "Free Member"}
                             </span>
                           </div>
                         </div>
@@ -231,13 +273,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             </p>
                             <div className="flex gap-1 mt-1">
                               <Badge variant="outline" className="text-xs capitalize px-2 py-0.5">
-                                {role}
+                                {isPureAdmin ? "Admin" : (rawRole || viewRole)}
                               </Badge>
-                              <Badge 
-                                variant={isPlus ? "default" : "secondary"} 
-                                className={`text-xs px-2 py-0.5 ${isPlus ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white" : ""}`}
+                              <Badge
+                                variant={isPureAdmin ? "destructive" : isPlus ? "default" : "secondary"}
+                                className={cn(
+                                  "text-xs px-2 py-0.5",
+                                  isPlus && !isPureAdmin ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white" : undefined
+                                )}
                               >
-                                {isPlus ? (
+                                {isPureAdmin ? (
+                                  <div className="flex items-center gap-1">
+                                    <ShieldCheck className="h-3 w-3" />
+                                    Admin
+                                  </div>
+                                ) : isPlus ? (
                                   <div className="flex items-center gap-1">
                                     <Crown className="h-3 w-3" />
                                     Plus
@@ -250,7 +300,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href={getDashboardProfilePath(role)} className="flex items-center gap-3 p-3">
+                        <Link href={getDashboardProfilePath(viewRole)} className="flex items-center gap-3 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
                             <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           </div>
@@ -261,7 +311,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href={`/${role}/settings`} className="flex items-center gap-3 p-3">
+                        <Link href={`/${viewRole}/settings`} className="flex items-center gap-3 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-900/20">
                             <Settings className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                           </div>
@@ -272,7 +322,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href={`/${role}/billing`} className="flex items-center gap-3 p-3">
+                        <Link href={`/${viewRole}/billing`} className="flex items-center gap-3 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
                             <CreditCard className="h-4 w-4 text-green-600 dark:text-green-400" />
                           </div>

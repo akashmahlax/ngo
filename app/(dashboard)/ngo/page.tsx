@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { getCollections, type ApplicationDoc, type JobDoc, type UserDoc } from "@/lib/models"
+import { getPlatformSettings, getJobQuota } from "@/lib/platform-settings"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +30,8 @@ import {
   Activity,
   Zap,
   Sparkles,
+  Settings,
+  Building2,
 } from "lucide-react"
 import Link from "next/link"
 import { ObjectId } from "mongodb"
@@ -50,7 +53,7 @@ export default async function NgoDashboard() {
   const session = await auth()
   if (!session?.user) redirect("/signin")
 
-  const sessionData = session as { userId?: string; plan?: string; role?: "volunteer" | "ngo" }
+  const sessionData = session as { userId?: string; plan?: string; role?: "volunteer" | "ngo"; isAdmin?: boolean }
   if (!sessionData.userId) redirect("/signin")
 
   const ngoId = new ObjectId(sessionData.userId)
@@ -61,9 +64,120 @@ export default async function NgoDashboard() {
   const ngo = await users.findOne({ _id: ngoId })
   if (!ngo) redirect("/signin")
   
-  const plan = sessionData.plan
+  // If admin viewing, show demo data or check if they have NGO role
+  const isAdmin = sessionData.isAdmin || false
+  
+  // If admin and not an NGO user, show demo interface
+  if (isAdmin && (!ngo.role || ngo.role !== "ngo")) {
+    // Admin viewing without NGO role - show demo/empty state with sample data
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 shadow-lg">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-full bg-yellow-500 dark:bg-yellow-600 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-yellow-900 dark:text-yellow-100 mb-1">Admin Preview Mode</h3>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                You are viewing the NGO dashboard as an admin. This account doesn't have NGO role data. 
+                To see actual NGO data:
+              </p>
+              <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 mb-4 ml-4 list-disc">
+                <li>Create a test NGO account from the admin panel</li>
+                <li>Or assign NGO role to your admin account in the database</li>
+                <li>Or use an existing NGO user's credentials</li>
+              </ul>
+              <div className="flex gap-2">
+                <Button asChild variant="default" size="sm">
+                  <Link href="/admin">
+                    <Settings className="h-3 w-3 mr-1" />
+                    Return to Admin Panel
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/users">View NGO Users</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Demo Dashboard Preview */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Applications</CardTitle>
+              <Send className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>NGO Dashboard Preview</CardTitle>
+            <CardDescription>
+              This is what NGO users see when they log in. Switch to an NGO account to see real data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center py-12 text-muted-foreground">
+            <Building2 className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-semibold mb-2">NGO Dashboard Features</p>
+            <ul className="text-sm space-y-1 max-w-md mx-auto">
+              <li>• Post and manage job opportunities</li>
+              <li>• Review volunteer applications</li>
+              <li>• Track engagement analytics</li>
+              <li>• Manage organization profile</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  
+  const plan = sessionData.plan || "free"
   const isPlus = plan?.includes("plus")
-  const baseJobLimit = 3
+  
+  // Get job quota from platform settings
+  const settings = await getPlatformSettings()
+  const baseJobLimit = getJobQuota(plan)
 
   // Get all jobs with application counts
   const allJobs = await jobs

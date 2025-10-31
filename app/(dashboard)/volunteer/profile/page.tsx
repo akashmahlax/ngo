@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
 import { ImageUploader } from "@/components/upload/image-uploader"
-import { Save, Plus, X, Globe, Lock, User, MapPin, Briefcase, GraduationCap } from "lucide-react"
+import { Save, Plus, X, Globe, Lock, User, MapPin, Briefcase, GraduationCap, DollarSign } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 
@@ -43,7 +43,13 @@ export default function VolunteerProfile() {
       description: string
     }>,
     profileVisibility: "public" as "public" | "private",
-    avatarUrl: ""
+    avatarUrl: "",
+    // Pricing fields
+    hourlyRate: undefined as number | undefined,
+    ngoHourlyRate: undefined as number | undefined,
+    currency: "INR" as string,
+    rateType: "negotiable" as "hourly" | "daily" | "project" | "negotiable" | "free",
+    willingToVolunteerFree: false
   })
   const [newSkill, setNewSkill] = useState("")
 
@@ -68,7 +74,13 @@ export default function VolunteerProfile() {
             experience: data.experience || [],
             education: data.education || [],
             profileVisibility: data.profileVisibility || "public",
-            avatarUrl: data.avatarUrl || session?.user?.image || session?.user?.avatarUrl || ""
+            avatarUrl: data.avatarUrl || session?.user?.image || session?.user?.avatarUrl || "",
+            // Pricing fields
+            hourlyRate: data.hourlyRate,
+            ngoHourlyRate: data.ngoHourlyRate,
+            currency: data.currency || "INR",
+            rateType: data.rateType || "negotiable",
+            willingToVolunteerFree: data.willingToVolunteerFree || false
           }))
         }
       } catch (error: unknown) {
@@ -341,6 +353,88 @@ export default function VolunteerProfile() {
                 <p className="text-muted-foreground whitespace-pre-line">{profile.bio || "No bio provided."}</p>
               </CardContent>
             </Card>
+            {/* Pricing & Rates Card */}
+            {profile.rateType && profile.rateType !== "free" && (profile.hourlyRate || profile.ngoHourlyRate) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Pricing & Rates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="capitalize">{profile.rateType}</Badge>
+                    <span className="text-sm text-muted-foreground">Rate Type</span>
+                  </div>
+                  {profile.hourlyRate && (
+                    <div className="border rounded-lg p-3">
+                      <div className="text-sm text-muted-foreground mb-1">Standard Rate (Companies)</div>
+                      <div className="text-2xl font-bold">
+                        {profile.currency || "INR"} {profile.hourlyRate}
+                        <span className="text-sm font-normal text-muted-foreground ml-1">
+                          {profile.rateType === "hourly" ? "/hour" : profile.rateType === "daily" ? "/day" : "/project"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {profile.ngoHourlyRate && (
+                    <div className="border-2 border-green-500 bg-green-50 dark:bg-green-950/20 rounded-lg p-3">
+                      <div className="text-sm text-green-700 dark:text-green-400 mb-1 flex items-center gap-1">
+                        NGO Discounted Rate
+                        {profile.hourlyRate && profile.ngoHourlyRate < profile.hourlyRate && (
+                          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                            {Math.round(((profile.hourlyRate - profile.ngoHourlyRate) / profile.hourlyRate) * 100)}% OFF
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                        {profile.currency || "INR"} {profile.ngoHourlyRate}
+                        <span className="text-sm font-normal text-green-600 dark:text-green-500 ml-1">
+                          {profile.rateType === "hourly" ? "/hour" : profile.rateType === "daily" ? "/day" : "/project"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {profile.willingToVolunteerFree && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground border-t pt-3">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        Free Volunteering Available
+                      </Badge>
+                      <span>Open to pro-bono work for selected causes</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            {profile.rateType === "free" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Pricing & Rates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Badge className="bg-blue-500 text-white">Free - Volunteering Only</Badge>
+                  <p className="text-sm text-muted-foreground mt-2">This volunteer offers their services for free to support good causes.</p>
+                </CardContent>
+              </Card>
+            )}
+            {profile.rateType === "negotiable" && !profile.hourlyRate && !profile.ngoHourlyRate && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Pricing & Rates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant="outline">Negotiable</Badge>
+                  <p className="text-sm text-muted-foreground mt-2">Rates are flexible and can be discussed based on project scope and requirements.</p>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle>Social Links</CardTitle>
@@ -479,6 +573,107 @@ export default function VolunteerProfile() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Pricing & Rates Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Pricing & Rates
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Set your rates. NGOs will see discounted rates you offer them.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="rateType">Rate Type</Label>
+                  <select
+                    id="rateType"
+                    value={profile.rateType}
+                    onChange={(e) => setProfile(prev => ({ ...prev, rateType: e.target.value as any }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="project">Per Project</option>
+                    <option value="negotiable">Negotiable</option>
+                    <option value="free">Free/Volunteer Only</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="currency">Currency</Label>
+                  <select
+                    id="currency"
+                    value={profile.currency}
+                    onChange={(e) => setProfile(prev => ({ ...prev, currency: e.target.value }))}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                  </select>
+                </div>
+              </div>
+
+              {profile.rateType !== "free" && (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="hourlyRate">
+                        Your Standard Rate
+                        <span className="text-xs text-muted-foreground ml-1">(for companies)</span>
+                      </Label>
+                      <Input
+                        id="hourlyRate"
+                        type="number"
+                        value={profile.hourlyRate || ""}
+                        onChange={(e) => setProfile(prev => ({ 
+                          ...prev, 
+                          hourlyRate: e.target.value ? parseFloat(e.target.value) : undefined 
+                        }))}
+                        placeholder={profile.rateType === "daily" ? "Daily rate" : "Hourly rate"}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ngoHourlyRate" className="text-green-600">
+                        NGO Discounted Rate
+                        <span className="text-xs text-muted-foreground ml-1">(lower for NGOs)</span>
+                      </Label>
+                      <Input
+                        id="ngoHourlyRate"
+                        type="number"
+                        value={profile.ngoHourlyRate || ""}
+                        onChange={(e) => setProfile(prev => ({ 
+                          ...prev, 
+                          ngoHourlyRate: e.target.value ? parseFloat(e.target.value) : undefined 
+                        }))}
+                        placeholder="Lower rate for NGOs"
+                        className="border-green-200 focus:border-green-400"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    💡 Tip: Offering a lower rate for NGOs helps you support good causes while maintaining your value.
+                  </p>
+                </>
+              )}
+
+              <div className="flex items-center space-x-2 pt-2 border-t">
+                <Switch
+                  id="willingToVolunteerFree"
+                  checked={profile.willingToVolunteerFree}
+                  onCheckedChange={(checked) => setProfile(prev => ({ ...prev, willingToVolunteerFree: checked }))}
+                />
+                <Label htmlFor="willingToVolunteerFree" className="cursor-pointer">
+                  I'm willing to volunteer for free for certain causes
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* ...existing code for skills, social links, experience, education, privacy... */}
           <Card>
             <CardHeader>

@@ -30,6 +30,7 @@ export default async function AdminLayout({
     { href: "/admin/jobs", icon: Briefcase, label: "Jobs" },
     { href: "/admin/billing", icon: DollarSign, label: "Billing" },
     { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/admin/team", icon: Shield, label: "Team" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
   ]
 
@@ -44,15 +45,22 @@ export default async function AdminLayout({
               <span className="font-bold text-xl">Admin Panel</span>
             </Link>
             <Badge variant="default">
-              {authResult.admin?.level === "super" ? "Super Admin" : "Moderator"}
+              {authResult.admin?.level === "super" ? "Super Admin" : 
+               authResult.admin?.level === "moderator" ? "Moderator" : "Support"}
             </Badge>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
               {authResult.admin?.email}
             </span>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/ngo">View NGO</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/volunteer">View Volunteer</Link>
+            </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href="/">Exit Admin</Link>
+              <Link href="/">Home</Link>
             </Button>
           </div>
         </div>

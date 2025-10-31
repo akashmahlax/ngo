@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
+import { invalidateSettingsCache } from "@/lib/platform-settings"
 import clientPromise from "@/lib/db"
 
 export async function GET() {
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
       },
       { upsert: true }
     )
+
+    // Invalidate cache so new settings take effect immediately
+    await invalidateSettingsCache()
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

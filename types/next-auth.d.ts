@@ -3,7 +3,9 @@ import NextAuth from "next-auth"
 declare module "next-auth" {
   interface Session {
     userId: string
-    role: "volunteer" | "ngo" | null
+  role: "volunteer" | "ngo" | "admin" | null
+  isAdmin: boolean
+  adminLevel?: "super" | "moderator" | "support" | null
     plan: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
     planExpiresAt: string | null
     onboardingStep?: "role" | "profile" | "plan" | "completed"
@@ -14,5 +16,14 @@ declare module "next-auth" {
       image: string | null
       avatarUrl?: string | null
     }
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    userId?: string
+    role?: "volunteer" | "ngo" | "admin" | null
+    isAdmin?: boolean
+    adminLevel?: "super" | "moderator" | "support" | null
   }
 }

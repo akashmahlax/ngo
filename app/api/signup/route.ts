@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import client from "@/lib/db"
+import { canRegister } from "@/lib/platform-settings"
 import { hash } from "bcryptjs"
 import { z } from "zod"
 
@@ -12,6 +13,15 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  // Check if registration is enabled
+  const registrationEnabled = await canRegister()
+  if (!registrationEnabled) {
+    return NextResponse.json(
+      { error: "Registration is currently disabled" },
+      { status: 403 }
+    )
+  }
+
   const body = await req.json().catch(() => null)
   const parsed = schema.safeParse(body)
   if (!parsed.success) {

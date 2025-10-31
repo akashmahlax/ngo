@@ -46,6 +46,14 @@ export async function GET() {
         projectsCompleted: 0,
         peopleImpacted: 0,
       },
+      // Pricing fields
+      hourlyRate: user.hourlyRate,
+      ngoHourlyRate: user.ngoHourlyRate,
+      dailyRate: user.dailyRate,
+      projectRate: user.projectRate,
+      currency: user.currency,
+      rateType: user.rateType,
+      willingToVolunteerFree: user.willingToVolunteerFree,
     })
   } catch (error) {
     console.error("Profile fetch error:", error)
@@ -90,7 +98,25 @@ export async function PATCH(request: NextRequest) {
       teamSize: body.teamSize,
       verified: body.verified,
       impactStats: body.impactStats,
+      // Pricing fields
+      hourlyRate: body.hourlyRate,
+      ngoHourlyRate: body.ngoHourlyRate,
+      dailyRate: body.dailyRate,
+      projectRate: body.projectRate,
+      currency: body.currency,
+      rateType: body.rateType,
+      willingToVolunteerFree: body.willingToVolunteerFree,
       updatedAt: new Date(),
+    }
+
+    // Validate rates if provided
+    if (body.hourlyRate !== undefined && body.ngoHourlyRate !== undefined) {
+      if (body.ngoHourlyRate > body.hourlyRate) {
+        return NextResponse.json(
+          { error: "NGO rate cannot be higher than standard rate" },
+          { status: 400 }
+        )
+      }
     }
 
     // Remove undefined values

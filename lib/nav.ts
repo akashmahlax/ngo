@@ -71,9 +71,12 @@ export const navItems: NavItems = {
 
 export function getDashboardBase(role?: string) {
   if (role === "ngo") return "/ngo"
+  if (role === "volunteer") return "/volunteer"
+  if (role === "admin") return "/admin"
   return "/volunteer"
 }
 
 export function getDashboardProfilePath(role?: string) {
+  if (role === "admin") return "/admin"
   return `${getDashboardBase(role)}/profile`
 }

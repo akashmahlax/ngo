@@ -34,6 +34,111 @@ export default async function VolunteerDashboard() {
   const user = await users.findOne({ _id: userId })
   if (!user) redirect("/signin")
 
+  // If admin viewing, show demo data or check if they have volunteer role
+  const isAdmin = (session as any).isAdmin || false
+  if (isAdmin && (!user.role || user.role !== "volunteer")) {
+    // Admin viewing without volunteer role - show demo/empty state
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 shadow-lg">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-full bg-yellow-500 dark:bg-yellow-600 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-yellow-900 dark:text-yellow-100 mb-1">Admin Preview Mode</h3>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                You are viewing the Volunteer dashboard as an admin. This account doesn't have Volunteer role data.
+                To see actual volunteer data:
+              </p>
+              <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 mb-4 ml-4 list-disc">
+                <li>Create a test Volunteer account from the admin panel</li>
+                <li>Or assign Volunteer role to your admin account in the database</li>
+                <li>Or use an existing Volunteer user's credentials</li>
+              </ul>
+              <div className="flex gap-2">
+                <Button asChild variant="default" size="sm">
+                  <Link href="/admin">
+                    Return to Admin Panel
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/users">View Volunteer Users</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Demo Dashboard Preview */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Applications</CardTitle>
+              <Send className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dashed border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Profile Completion</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">---</div>
+              <p className="text-xs text-muted-foreground mt-1">No data (admin view)</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Volunteer Dashboard Preview</CardTitle>
+            <CardDescription>
+              This is what Volunteer users see when they log in. Switch to a Volunteer account to see real data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center py-12 text-muted-foreground">
+            <User className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-semibold mb-2">Volunteer Dashboard Features</p>
+            <ul className="text-sm space-y-1 max-w-md mx-auto">
+              <li>• Browse and apply to job opportunities</li>
+              <li>• Track application status</li>
+              <li>• Build and manage profile</li>
+              <li>• Connect with NGOs</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const isPlus = (session as any).plan?.includes("plus")
   const monthlyQuota = user.monthlyApplicationCount || 0
   const quotaLimit = 1

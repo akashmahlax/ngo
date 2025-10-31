@@ -63,9 +63,14 @@ async function getVolunteer(id: string) {
       education: volunteer.education || [],
       availability: (volunteer as any).availability || "Not specified",
       interests: (volunteer as any).interests || [],
-      // New professional fields
-      hourlyRate: volunteer.hourlyRate || 0,
-      ngoHourlyRate: volunteer.ngoHourlyRate || 0,
+      // Professional fields
+      hourlyRate: volunteer.hourlyRate,
+      ngoHourlyRate: volunteer.ngoHourlyRate,
+      dailyRate: volunteer.dailyRate,
+      projectRate: volunteer.projectRate,
+      currency: volunteer.currency || "INR",
+      rateType: volunteer.rateType || "negotiable",
+      willingToVolunteerFree: volunteer.willingToVolunteerFree || false,
       successRate: volunteer.successRate || 0,
       responseTime: volunteer.responseTime || "Not specified",
       currentWorkStatus: volunteer.currentWorkStatus || "Not specified",
@@ -99,6 +104,9 @@ export default async function VolunteerPublicProfile({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      {/* Spacer for fixed navbar - desktop only */}
+      <div className="hidden md:block h-20"></div>
+      
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/70 dark:via-primary/80 dark:to-primary/70 text-primary-foreground">
         <div className="container mx-auto px-4 py-12">
@@ -351,38 +359,112 @@ export default async function VolunteerPublicProfile({
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
               {/* Pricing & Rates */}
-              <Card className="shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Hourly Rates
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Volunteer Rate */}
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Volunteer Rate</p>
-                    <p className="text-3xl font-bold text-primary">
-                      ₹{volunteer.hourlyRate}
-                      <span className="text-sm text-muted-foreground">/hr</span>
-                    </p>
-                  </div>
+              {volunteer.rateType && volunteer.rateType !== "free" && (volunteer.hourlyRate || volunteer.ngoHourlyRate || volunteer.dailyRate || volunteer.projectRate) && (
+                <Card className="shadow-lg bg-gradient-to-br from-green-50 to-primary/5 dark:from-green-950/20 dark:to-primary/5 border-2 border-green-200 dark:border-green-900">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      Pricing & Rates
+                      <Badge variant="outline" className="ml-auto capitalize">{volunteer.rateType}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Standard Rate */}
+                    {volunteer.hourlyRate && (
+                      <div className="border rounded-lg p-3 bg-white dark:bg-background">
+                        <p className="text-sm text-muted-foreground mb-1">Standard Rate (Companies)</p>
+                        <p className="text-3xl font-bold text-primary">
+                          {volunteer.currency} {volunteer.hourlyRate}
+                          <span className="text-sm text-muted-foreground font-normal ml-1">
+                            {volunteer.rateType === "hourly" ? "/hour" : volunteer.rateType === "daily" ? "/day" : "/project"}
+                          </span>
+                        </p>
+                      </div>
+                    )}
 
-                  {/* NGO Rate */}
-                  {volunteer.ngoHourlyRate > 0 && (
-                    <div className="border-t pt-3">
-                      <p className="text-sm text-muted-foreground mb-1">NGO Pays</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        ₹{volunteer.ngoHourlyRate}
-                        <span className="text-sm">/hr</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Inclusive of platform fee
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    {/* NGO Discounted Rate - Highlighted */}
+                    {volunteer.ngoHourlyRate && (
+                      <div className="border-2 border-green-500 rounded-lg p-4 bg-green-50 dark:bg-green-950/30 shadow-md">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-green-700 dark:text-green-400">NGO Discounted Rate 🎉</p>
+                          {volunteer.hourlyRate && volunteer.ngoHourlyRate < volunteer.hourlyRate && (
+                            <Badge className="bg-green-600 text-white dark:bg-green-700">
+                              {Math.round(((volunteer.hourlyRate - volunteer.ngoHourlyRate) / volunteer.hourlyRate) * 100)}% OFF
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-3xl font-bold text-green-700 dark:text-green-400">
+                          {volunteer.currency} {volunteer.ngoHourlyRate}
+                          <span className="text-sm font-normal text-green-600 dark:text-green-500 ml-1">
+                            {volunteer.rateType === "hourly" ? "/hour" : volunteer.rateType === "daily" ? "/day" : "/project"}
+                          </span>
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                          ✨ Special rate for NGOs and nonprofit organizations
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Additional Rate Types */}
+                    {volunteer.dailyRate && volunteer.rateType !== "daily" && (
+                      <div className="text-sm text-muted-foreground border-t pt-3">
+                        <span className="font-medium">Daily Rate:</span> {volunteer.currency} {volunteer.dailyRate}/day
+                      </div>
+                    )}
+                    
+                    {volunteer.projectRate && volunteer.rateType !== "project" && (
+                      <div className="text-sm text-muted-foreground border-t pt-3">
+                        <span className="font-medium">Project Rate:</span> {volunteer.currency} {volunteer.projectRate}
+                      </div>
+                    )}
+
+                    {volunteer.willingToVolunteerFree && (
+                      <div className="flex items-center gap-2 text-sm border-t pt-3">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                          Pro-Bono Available
+                        </Badge>
+                        <span className="text-muted-foreground">Open to free volunteering for selected causes</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Free Volunteering Only */}
+              {volunteer.rateType === "free" && (
+                <Card className="shadow-lg bg-gradient-to-br from-blue-50 to-primary/5 dark:from-blue-950/20 dark:to-primary/5 border-2 border-blue-200 dark:border-blue-900">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      Pricing & Rates
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Badge className="bg-blue-600 text-white dark:bg-blue-700">Free - Volunteering Only</Badge>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      This volunteer generously offers their services for free to support NGOs and nonprofit causes. 🙏
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Negotiable Rates (no specific rates set) */}
+              {volunteer.rateType === "negotiable" && !volunteer.hourlyRate && !volunteer.ngoHourlyRate && !volunteer.dailyRate && !volunteer.projectRate && (
+                <Card className="shadow-lg bg-gradient-to-br from-amber-50 to-primary/5 dark:from-amber-950/20 dark:to-primary/5 border-2 border-amber-200 dark:border-amber-900">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      Pricing & Rates
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Badge variant="outline" className="text-amber-700 dark:text-amber-400 border-amber-500">Negotiable</Badge>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Rates are flexible and can be discussed based on project scope, duration, and your organization's needs.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Current Work Status */}
               {volunteer.currentWorkStatus && volunteer.currentWorkStatus !== "Not specified" && (
@@ -518,7 +600,7 @@ export default async function VolunteerPublicProfile({
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Hourly Rates</span>
-                    <CheckCircle className={`h-4 w-4 ${volunteer.hourlyRate > 0 ? 'text-green-600' : 'text-gray-300'}`} />
+                    <CheckCircle className={`h-4 w-4 ${(volunteer.hourlyRate || 0) > 0 ? 'text-green-600' : 'text-gray-300'}`} />
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Work Status</span>

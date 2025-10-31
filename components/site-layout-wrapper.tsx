@@ -7,9 +7,8 @@ import { UniversalFooter } from "@/components/universal-footer"
 export function SiteLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  // Check if we're in a dashboard route
-  // Dashboard routes: /ngo, /ngo/*, /volunteer, /volunteer/*
-  // Public routes: /ngos, /ngos/*, /volunteers, /volunteers/*
+  // Routes that should NOT show universal navbar/footer
+  const isAdminRoute = pathname?.startsWith("/admin")
   const isDashboardRoute = (
     (pathname === "/ngo" || pathname?.startsWith("/ngo/")) &&
     !pathname?.startsWith("/ngos")
@@ -18,13 +17,15 @@ export function SiteLayoutWrapper({ children }: { children: React.ReactNode }) {
     !pathname?.startsWith("/volunteers")
   )
   
+  const hideNavAndFooter = isAdminRoute || isDashboardRoute
+  
   return (
     <>
-      {/* Universal navbar shows on all pages except dashboard pages */}
-      {!isDashboardRoute && <UniversalNavbar />}
-      <main className={isDashboardRoute ? "" : "pt-0"}>{children}</main>
-      {/* Universal footer shows everywhere except dashboard pages */}
-      {!isDashboardRoute && <UniversalFooter />}
+      {/* Universal navbar shows on public pages only */}
+      {!hideNavAndFooter && <UniversalNavbar />}
+      <main className={hideNavAndFooter ? "" : ""}>{children}</main>
+      {/* Universal footer shows on public pages only */}
+      {!hideNavAndFooter && <UniversalFooter />}
     </>
   )
 }

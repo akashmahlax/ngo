@@ -18,8 +18,10 @@ type AppUser = {
   name?: string | null
   email?: string | null
   passwordHash?: string | null
-  role?: "volunteer" | "ngo"
-  plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
+  role?: "volunteer" | "ngo" | "admin"
+  isAdmin?: boolean
+  adminLevel?: "super" | "moderator" | "support" | null
+  plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
   planExpiresAt?: Date | null
   onboardingStep?: "role" | "profile" | "plan" | "completed" | null
   emailVerified?: Date | null
@@ -102,6 +104,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             plan: user.plan ?? null,
             planExpiresAt: user.planExpiresAt?.toISOString() ?? null,
             onboardingStep: user.onboardingStep ?? null,
+            isAdmin: user.isAdmin ?? false,
+            adminLevel: user.adminLevel ?? null,
           }
         } catch (error) {
           console.error("Credentials auth error:", error)
@@ -161,6 +165,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.plan = u.plan ?? null
         if (u.planExpiresAt) token.planExpiresAt = u.planExpiresAt.toISOString()
         token.onboardingStep = u.onboardingStep ?? null
+        token.isAdmin = u.isAdmin ?? false
+        token.adminLevel = u.adminLevel ?? null
       }
 
       // Refresh token data from DB to ensure consistency
@@ -179,9 +185,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         
         // Update token with latest DB values
-  token.userId = dbUser._id.toString()
-  token.role = dbUser.role ?? null
-  token.onboardingStep = dbUser.onboardingStep ?? token.onboardingStep ?? null
+    token.userId = dbUser._id.toString()
+    token.role = dbUser.role ?? null
+    token.isAdmin = !!dbUser.isAdmin
+    token.adminLevel = dbUser.adminLevel ?? token.adminLevel ?? null
+    token.onboardingStep = dbUser.onboardingStep ?? token.onboardingStep ?? null
         
         const extendedUser = dbUser as AppUser & { avatarUrl?: string; coverPhotoUrl?: string }
         token.avatarUrl = extendedUser.avatarUrl ?? token.avatarUrl
@@ -206,7 +214,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           currentPlan = freePlan
         }
         
-  token.plan = currentPlan ?? null
+    token.plan = currentPlan ?? null
         token.planExpiresAt = dbUser.planExpiresAt?.toISOString() ?? token.planExpiresAt
         token.profileComplete = (token.onboardingStep === "completed")
       } catch (error) {
@@ -219,15 +227,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         const extendedSession = session as typeof session & {
           userId: string
-          role?: "volunteer" | "ngo" | null
+          role?: "volunteer" | "ngo" | "admin" | null
           plan?: "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
           planExpiresAt?: string | null
           onboardingStep?: "role" | "profile" | "plan" | "completed" | null
           profileComplete: boolean
+          isAdmin: boolean
+          adminLevel?: "super" | "moderator" | "support" | null
         }
         
         extendedSession.userId = token.userId as string
-        extendedSession.role = token.role as "volunteer" | "ngo" | null
+  extendedSession.role = token.role as "volunteer" | "ngo" | "admin" | null
+        extendedSession.isAdmin = Boolean(token.isAdmin)
+        extendedSession.adminLevel = (token.adminLevel as "super" | "moderator" | "support" | null) ?? null
         extendedSession.plan = token.plan as "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus" | null
         extendedSession.planExpiresAt = token.planExpiresAt as string | null
         extendedSession.profileComplete = token.profileComplete as boolean

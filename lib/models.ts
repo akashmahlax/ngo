@@ -55,8 +55,13 @@ export type UserDoc = {
   emailVerificationExpiry?: Date
   // Volunteer-specific fields
   expectedSalary?: string // e.g., "₹15,000 - ₹20,000/month"
-  hourlyRate?: number // e.g., 500 (₹500/hour)
-  ngoHourlyRate?: number // Rate NGO pays (may be different from volunteer rate)
+  hourlyRate?: number // Volunteer's standard hourly rate
+  ngoHourlyRate?: number // Discounted rate for NGOs (lower than standard rate)
+  dailyRate?: number // Daily rate
+  projectRate?: number // Per project rate
+  currency?: string // Currency code: USD, INR, EUR, etc.
+  rateType?: "hourly" | "daily" | "project" | "negotiable" | "free"
+  willingToVolunteerFree?: boolean // Willing to work for free for certain causes
   availability?: "full-time" | "part-time" | "flexible" | "weekends"
   totalEarnings?: number // Total earned through platform
   hoursWorked?: number // Total hours worked

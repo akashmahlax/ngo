@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useSession } from "next-auth/react"
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import { 
   Heart, 
   Mail, 
@@ -27,7 +29,6 @@ import {
   Zap,
   Sparkles
 } from "lucide-react"
-import image from "next/image"
 
 const footerSections = {
   platform: {
@@ -100,6 +101,41 @@ export function UniversalFooter() {
   const plan = (session as any)?.plan
   const isPlusUser = plan === "volunteer_plus" || plan === "ngo_plus"
   const isAuthenticated = !!session
+
+  const [email, setEmail] = useState("")
+  const [subscribing, setSubscribing] = useState(false)
+
+  async function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address")
+      return
+    }
+
+    setSubscribing(true)
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success(data.message || "Successfully subscribed!")
+        setEmail("")
+      } else {
+        toast.error(data.error || "Failed to subscribe")
+      }
+    } catch (error) {
+      console.error("Subscribe error:", error)
+      toast.error("Failed to subscribe. Please try again.")
+    } finally {
+      setSubscribing(false)
+    }
+  }
 
   return (
     <footer className="bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-neutral-950 dark:via-purple-950/10 dark:to-pink-950/10 border-t-2 border-purple-200 dark:border-purple-800">
@@ -179,16 +215,25 @@ export function UniversalFooter() {
               <p className="text-white/90 mb-6 text-lg">
                 Get the latest opportunities, success stories, and platform updates delivered to your inbox
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <Input 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address..." 
                   className="rounded-2xl border-2 border-white/30 focus:border-white bg-white/20 backdrop-blur-sm text-white placeholder:text-white/70"
+                  disabled={subscribing}
+                  required
                 />
-                <Button className="rounded-2xl bg-white text-purple-600 hover:bg-white/90 px-6 font-semibold shadow-lg">
-                  Subscribe
+                <Button 
+                  type="submit"
+                  disabled={subscribing}
+                  className="rounded-2xl bg-white text-purple-600 hover:bg-white/90 px-6 font-semibold shadow-lg"
+                >
+                  {subscribing ? "Subscribing..." : "Subscribe"}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
-              </div>
+              </form>
               <p className="text-xs text-white/70 mt-3">
                 Join 10,000+ changemakers. Unsubscribe anytime.
               </p>

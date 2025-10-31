@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { getCollections, type JobDoc } from "@/lib/models"
+import { getPlatformSettings, getJobQuota } from "@/lib/platform-settings"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,12 +48,13 @@ export default async function NgoJobsPage() {
   // Get NGO data
   const ngo = await users.findOne({ _id: ngoId })
   if (!ngo) redirect("/signin")
-  
-  const plan = sessionData.plan
-  const isPlus = plan?.includes("plus")
-  const baseJobLimit = 3
 
-  // Get all jobs with application counts
+  const plan = sessionData.plan || "free"
+  const isPlus = plan?.includes("plus")
+  
+  // Get job quota from platform settings
+  const settings = await getPlatformSettings()
+  const baseJobLimit = getJobQuota(plan)  // Get all jobs with application counts
   const allJobs = await jobs
     .aggregate<JobWithMetrics>([
       { $match: { ngoId } },
