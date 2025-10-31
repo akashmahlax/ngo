@@ -138,6 +138,13 @@ export type JobDoc = {
   applicationCount?: number
   viewCount?: number
   status: "open" | "closed"
+  featured?: boolean
+  featuredAt?: Date | null
+  moderationStatus?: "pending" | "approved" | "rejected"
+  moderatedBy?: ObjectId | null
+  moderatedAt?: Date | null
+  moderationNotes?: string
+  reportCount?: number
   createdAt: Date
   updatedAt: Date
 }
