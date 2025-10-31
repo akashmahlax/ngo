@@ -1,7 +1,7 @@
 import client from "@/lib/db"
 import { ObjectId } from "mongodb"
 
-export type UserRole = "volunteer" | "ngo"
+export type UserRole = "volunteer" | "ngo" | "admin"
 export type UserPlan = "volunteer_free" | "volunteer_plus" | "ngo_base" | "ngo_plus"
 
 export type UserDoc = {
@@ -11,6 +11,10 @@ export type UserDoc = {
   passwordHash?: string | null
   role: UserRole
   plan: UserPlan
+  // Admin-specific fields
+  isAdmin?: boolean
+  adminLevel?: "super" | "moderator" | "support"
+  adminPermissions?: string[]
   planExpiresAt: Date | null
   planActivatedAt?: Date | null
   planCancelled?: boolean
@@ -98,6 +102,10 @@ export type UserDoc = {
   lastPasswordChangeAt?: Date
   failedLoginAttempts?: number
   accountLockedUntil?: Date | null
+  banned?: boolean
+  bannedAt?: Date | null
+  bannedReason?: string
+  bannedBy?: ObjectId | null
   // Metadata
   createdAt: Date
   updatedAt: Date
