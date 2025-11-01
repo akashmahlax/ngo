@@ -10,7 +10,9 @@ import {
   DollarSign,
   BarChart3,
   Settings,
-  Shield
+  Shield,
+  Building2,
+  UserCircle
 } from "lucide-react"
 
 export default async function AdminLayout({
@@ -26,11 +28,13 @@ export default async function AdminLayout({
 
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/admin/users", icon: Users, label: "Users" },
+    { href: "/admin/users", icon: Users, label: "All Users" },
+    { href: "/admin/volunteers", icon: UserCircle, label: "Volunteers" },
+    { href: "/admin/ngos", icon: Building2, label: "NGOs" },
     { href: "/admin/jobs", icon: Briefcase, label: "Jobs" },
     { href: "/admin/billing", icon: DollarSign, label: "Billing" },
     { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/admin/team", icon: Shield, label: "Team" },
+    { href: "/admin/team", icon: Shield, label: "Team" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },
   ]
 
@@ -53,12 +57,6 @@ export default async function AdminLayout({
             <span className="text-sm text-muted-foreground">
               {authResult.admin?.email}
             </span>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/ngo">View NGO</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/volunteer">View Volunteer</Link>
-            </Button>
             <Button asChild variant="outline" size="sm">
               <Link href="/">Home</Link>
             </Button>

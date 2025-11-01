@@ -64,7 +64,11 @@ import {
   HelpCircle,
   TrendingUp,
   Sparkles,
-  Shield
+  Shield,
+  LayoutDashboard,
+  UserCircle,
+  DollarSign,
+  BarChart3
 } from "lucide-react"
 import SignOut from "@/components/auth/sign-out"
 import { getDashboardBase, getDashboardProfilePath } from "@/lib/nav"
@@ -566,11 +570,61 @@ export function UniversalNavbar() {
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
 
-                          {isAdmin && (
+                          {isPureAdmin ? (
                             <>
                               <DropdownMenuItem
                                 onClick={() => router.push("/admin")}
-                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 mb-1"
+                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20"
+                              >
+                                <LayoutDashboard className="h-4 w-4 mr-2 text-red-600" />
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="font-semibold text-red-600 dark:text-red-400">Admin Dashboard</span>
+                                  <Kbd>D</Kbd>
+                                </div>
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/users")}>
+                                <Users className="h-4 w-4 mr-2" />
+                                All Users
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/volunteers")}>
+                                <UserCircle className="h-4 w-4 mr-2" />
+                                Volunteers
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/ngos")}>
+                                <Building2 className="h-4 w-4 mr-2" />
+                                NGOs
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/jobs")}>
+                                <Briefcase className="h-4 w-4 mr-2" />
+                                Jobs
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/billing")}>
+                                <DollarSign className="h-4 w-4 mr-2" />
+                                Billing
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/analytics")}>
+                                <BarChart3 className="h-4 w-4 mr-2" />
+                                Analytics
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => router.push("/admin/team")}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                Team
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : isAdmin && normalizedRole ? (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => router.push("/admin")}
+                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20"
                               >
                                 <Shield className="h-4 w-4 mr-2 text-red-600" />
                                 <div className="flex items-center justify-between w-full">
@@ -578,11 +632,7 @@ export function UniversalNavbar() {
                                 </div>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                            </>
-                          )}
 
-                          {normalizedRole ? (
-                            <>
                               <DropdownMenuItem onClick={() => router.push(dashboardHref)}>
                                 <Home className="h-4 w-4 mr-2" />
                                 <div className="flex items-center justify-between w-full">
@@ -622,17 +672,44 @@ export function UniversalNavbar() {
 
                               <DropdownMenuSeparator />
                             </>
-                          ) : isPureAdmin ? (
+                          ) : normalizedRole ? (
                             <>
-                              <DropdownMenuItem onClick={() => router.push("/ngo")}>
-                                <Building2 className="h-4 w-4 mr-2" />
-                                View NGO Dashboard
+                              <DropdownMenuItem onClick={() => router.push(dashboardHref)}>
+                                <Home className="h-4 w-4 mr-2" />
+                                <div className="flex items-center justify-between w-full">
+                                  <span>Dashboard</span>
+                                  <Kbd>D</Kbd>
+                                </div>
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem onClick={() => router.push("/volunteer")}>
-                                <Users className="h-4 w-4 mr-2" />
-                                View Volunteer Dashboard
-                              </DropdownMenuItem>
+                              {profileHref && (
+                                <DropdownMenuItem onClick={() => router.push(profileHref)}>
+                                  <User className="h-4 w-4 mr-2" />
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Profile</span>
+                                    <Kbd>P</Kbd>
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                              {applicationsHref && (
+                                <DropdownMenuItem onClick={() => router.push(applicationsHref)}>
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Applications
+                                </DropdownMenuItem>
+                              )}
+
+                              {billingHref && (
+                                <DropdownMenuItem onClick={() => router.push(billingHref)}>
+                                  <TrendingUp className="h-4 w-4 mr-2" />
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Billing</span>
+                                    {!isPlusUser && (
+                                      <Badge variant="outline" className="text-xs">Free</Badge>
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
 
                               <DropdownMenuSeparator />
                             </>
