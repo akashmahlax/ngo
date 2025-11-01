@@ -79,6 +79,10 @@ export async function PATCH(
 
     const updated = await users.findOne({ _id: userId })
 
+    if (!updated) {
+      return NextResponse.json({ error: "User not found after update" }, { status: 404 })
+    }
+
     return NextResponse.json({
       user: {
         id: updated._id.toString(),
