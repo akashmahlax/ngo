@@ -222,23 +222,23 @@ export default async function VolunteerDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user.name || "Volunteer"}! 👋</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Welcome back, {user.name || "Volunteer"}! 👋</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Track your applications and discover new opportunities
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/jobs">
               <Briefcase className="h-4 w-4 mr-2" />
               Browse Jobs
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/volunteer/profile">
               <User className="h-4 w-4 mr-2" />
               Edit Profile
@@ -250,19 +250,19 @@ export default async function VolunteerDashboard() {
       {/* Profile Completion Alert */}
       {profileCompletion < 80 && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-medium text-amber-900 dark:text-amber-100">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+              <div className="flex-1 w-full">
+                <h3 className="font-medium text-sm sm:text-base text-amber-900 dark:text-amber-100">
                   Complete your profile to stand out
                 </h3>
-                <p className="text-sm text-amber-700 dark:text-amber-200 mt-1">
+                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-200 mt-1">
                   Your profile is {profileCompletion}% complete. Add more details to increase your chances of getting selected.
                 </p>
-                <div className="mt-3 flex items-center gap-4">
+                <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
                   <Progress value={profileCompletion} className="flex-1 h-2" />
-                  <Button asChild size="sm" variant="outline" className="border-amber-600">
+                  <Button asChild size="sm" variant="outline" className="border-amber-600 w-full sm:w-auto shrink-0">
                     <Link href="/volunteer/profile">Complete Now</Link>
                   </Button>
                 </div>
@@ -275,22 +275,22 @@ export default async function VolunteerDashboard() {
       {/* Application Quota */}
       {!isPlus && (
         <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Free Plan - Monthly Applications</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
+                <h3 className="font-medium text-sm sm:text-base">Free Plan - Monthly Applications</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   {monthlyQuota} of {quotaLimit} applications used this month
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="w-32">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex-1 sm:w-32">
                   <Progress 
                     value={(monthlyQuota / quotaLimit) * 100} 
                     className="h-2" 
                   />
                 </div>
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="shrink-0 w-full sm:w-auto">
                   <Link href="/upgrade">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Upgrade
@@ -303,7 +303,7 @@ export default async function VolunteerDashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Total Applications"
           value={totalApplications}
@@ -336,16 +336,16 @@ export default async function VolunteerDashboard() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Recent Applications */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle>Recent Applications</CardTitle>
-                <CardDescription>Track your latest submissions</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Recent Applications</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Track your latest submissions</CardDescription>
               </div>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="w-full sm:w-auto">
                 <Link href="/volunteer/applications">
                   View All
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -353,26 +353,26 @@ export default async function VolunteerDashboard() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             {applicationsList.length === 0 ? (
-              <div className="text-center py-12">
-                <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No applications yet</h3>
-                <p className="text-muted-foreground mb-4">
+              <div className="text-center py-8 sm:py-12">
+                <Briefcase className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium mb-2">No applications yet</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                   Start applying to jobs and track your progress here
                 </p>
-                <Button asChild>
+                <Button asChild className="w-full sm:w-auto">
                   <Link href="/jobs">Browse Open Positions</Link>
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {applicationsList.map((app: any) => (
                   <div
                     key={app._id.toString()}
-                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
                       <AvatarImage src={app.ngo.avatarUrl} />
                       <AvatarFallback>
                         {(app.ngo.orgName || app.ngo.name || "NGO").charAt(0)}
@@ -380,23 +380,26 @@ export default async function VolunteerDashboard() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <Link 
                             href={`/volunteer/applications/${app._id}`}
-                            className="font-medium hover:text-primary line-clamp-1"
+                            className="font-medium hover:text-primary line-clamp-1 text-sm sm:text-base"
                           >
                             {app.job.title}
                           </Link>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
                             {app.ngo.orgName || app.ngo.name}
                           </p>
                         </div>
-                        {getStatusBadge(app.status)}
+                        <div className="shrink-0">
+                          {getStatusBadge(app.status)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(app.createdAt).toLocaleDateString()}
+                          <span className="hidden sm:inline">{new Date(app.createdAt).toLocaleDateString()}</span>
+                          <span className="sm:hidden">{new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         </div>
                         {app.job.category && (
                           <Badge variant="outline" className="text-xs">
@@ -413,20 +416,20 @@ export default async function VolunteerDashboard() {
         </Card>
 
         {/* Quick Actions & Stats */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Application Breakdown */}
           <Card>
-            <CardHeader>
-              <CardTitle>Application Status</CardTitle>
-              <CardDescription>Current breakdown</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Application Status</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Current breakdown</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-blue-500" />
-                  <span className="text-sm">Applied</span>
+                  <div className="h-3 w-3 rounded-full bg-blue-500 shrink-0" />
+                  <span className="text-xs sm:text-sm">Applied</span>
                 </div>
-                <span className="text-sm font-medium">{appliedCount}</span>
+                <span className="text-xs sm:text-sm font-medium">{appliedCount}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

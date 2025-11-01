@@ -130,74 +130,74 @@ export default async function NgoPublicProfile({
         <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-white/20 blur-3xl"></div>
         <div className="absolute -right-20 top-10 h-96 w-96 rounded-full bg-white/10 blur-3xl"></div>
         
-        <div className="relative container mx-auto px-4 py-12 sm:py-16">
+        <div className="relative container mx-auto px-3 sm:px-4 py-8 sm:py-12 lg:py-16">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-6 sm:gap-8 items-start">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-8 items-start">
               {/* Avatar */}
-              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-white/50 shadow-2xl flex-shrink-0">
+              <Avatar className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 border-4 border-white/50 shadow-2xl shrink-0">
                 <AvatarImage src={ngo.avatarUrl} alt={ngo.name} />
-                <AvatarFallback className="text-4xl font-bold bg-white/90 text-purple-600">
+                <AvatarFallback className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-white/90 text-purple-600">
                   {ngo.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
 
               {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="flex-1 min-w-0 w-full">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                   {ngo.verified && (
-                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm">
+                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-xs">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
                   )}
                   {ngo.category && (
-                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm">
+                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm text-xs">
                       {ngo.category}
                     </Badge>
                   )}
                   {ngo.orgType && (
-                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm capitalize">
+                    <Badge className="bg-white/20 text-white border-white/40 backdrop-blur-sm capitalize text-xs">
                       {ngo.orgType.replace("-", " ")}
                     </Badge>
                   )}
                 </div>
                 
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 break-words drop-shadow-lg">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 break-words drop-shadow-lg">
                   {ngo.name}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-3 text-white/90 mb-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm sm:text-base text-white/90 mb-3 sm:mb-4">
                   {ngo.location && (
                     <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{ngo.location}</span>
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">{ngo.location}</span>
                     </div>
                   )}
-                  <span className="text-white/60">•</span>
+                  <span className="text-white/60 hidden sm:inline">•</span>
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Established {memberSince}</span>
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                    <span className="whitespace-nowrap">Established {memberSince}</span>
                   </div>
                   {ngo.teamSize && ngo.teamSize !== "Not specified" && (
                     <>
-                      <span className="text-white/60">•</span>
+                      <span className="text-white/60 hidden sm:inline">•</span>
                       <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>{ngo.teamSize} members</span>
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                        <span className="whitespace-nowrap">{ngo.teamSize} members</span>
                       </div>
                     </>
                   )}
                 </div>
 
                 {ngo.bio && (
-                  <p className="text-white/90 text-base sm:text-lg mb-4 max-w-3xl leading-relaxed">
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg mb-3 sm:mb-4 max-w-3xl leading-relaxed line-clamp-3 sm:line-clamp-none">
                     {ngo.bio}
                   </p>
                 )}
 
                 {/* Focus Areas */}
                 {ngo.focusAreas && ngo.focusAreas.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {ngo.focusAreas.slice(0, 6).map((area: string, index: number) => (
                       <Badge 
                         key={index} 
@@ -211,12 +211,12 @@ export default async function NgoPublicProfile({
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
                 {ngo.email && (
                   <Button 
                     asChild 
                     size="lg" 
-                    className="bg-white text-purple-600 hover:bg-white/90 font-semibold"
+                    className="bg-white text-purple-600 hover:bg-white/90 font-semibold w-full sm:w-auto"
                   >
                     <Link href={`mailto:${ngo.email}`}>
                       <Mail className="h-4 w-4 mr-2" />
@@ -227,7 +227,7 @@ export default async function NgoPublicProfile({
                 <ShareButton 
                   title={`${ngo.name} - NGO Profile`}
                   text={ngo.bio || `Check out ${ngo.name}'s profile`}
-                  className="border-white/40 text-white hover:bg-white/10 backdrop-blur-sm"
+                  className="border-white/40 text-white hover:bg-white/10 backdrop-blur-sm w-full sm:w-auto"
                 />
               </div>
             </div>
@@ -236,57 +236,57 @@ export default async function NgoPublicProfile({
       </div>
 
       {/* Stats Cards */}
-      <div className="container mx-auto px-4 -mt-8 sm:-mt-12 relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 -mt-6 sm:-mt-8 lg:-mt-12 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
             {/* Total Jobs */}
             <Card className="shadow-xl bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm border-2">
-              <CardContent className="p-4 sm:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-2">
-                    <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-1.5 sm:mb-2">
+                    <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-purple-600" />
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold">{ngo.totalJobs}</p>
-                  <p className="text-xs text-muted-foreground">Total Opportunities</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{ngo.totalJobs}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Total Opportunities</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Active Jobs */}
             <Card className="shadow-xl bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm border-2">
-              <CardContent className="p-4 sm:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2">
-                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-1.5 sm:mb-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{ngo.activeJobs.length}</p>
-                  <p className="text-xs text-muted-foreground">Active Now</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">{ngo.activeJobs.length}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Active Now</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Completed Jobs */}
             <Card className="shadow-xl bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm border-2">
-              <CardContent className="p-4 sm:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-2">
-                    <Target className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center mb-1.5 sm:mb-2">
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-pink-600" />
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold">{ngo.closedJobs}</p>
-                  <p className="text-xs text-muted-foreground">Completed</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{ngo.closedJobs}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Completed</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Impact */}
             <Card className="shadow-xl bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm border-2">
-              <CardContent className="p-4 sm:p-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-2">
-                    <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-1.5 sm:mb-2">
+                    <Heart className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-orange-600" />
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold">{ngo.focusAreas.length}</p>
-                  <p className="text-xs text-muted-foreground">Focus Areas</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{ngo.focusAreas.length}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Focus Areas</p>
                 </div>
               </CardContent>
             </Card>
@@ -295,8 +295,8 @@ export default async function NgoPublicProfile({
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Left Column - Active Opportunities */}
           <div className="lg:col-span-2 space-y-6">
             <div>

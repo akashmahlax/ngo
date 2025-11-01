@@ -164,41 +164,41 @@ export function JobDetailPageClient({ jobId }: { jobId: string }) {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
-        <div className="container mx-auto px-4 py-6 max-w-7xl">
-          <Button variant="ghost" asChild className="mb-4">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
+          <Button variant="ghost" asChild className="mb-3 sm:mb-4">
             <Link href="/jobs">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Jobs
             </Link>
           </Button>
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
             {/* Job Title & Company */}
             <div className="flex-1">
-              <div className="flex items-start gap-4 mb-4">
-                <Avatar className="h-16 w-16 border-2 border-background shadow-lg">
+              <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-2 border-background shadow-lg shrink-0">
                   <AvatarImage src={job.ngo.logoUrl} alt={job.ngo.name} />
-                  <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+                  <AvatarFallback className="text-lg sm:text-xl font-bold bg-primary text-primary-foreground">
                     {job.ngo.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-3xl lg:text-4xl font-bold mb-2 break-words">{job.title}</h1>
+                  <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-2 break-words">{job.title}</h1>
                   <div className="flex flex-wrap items-center gap-2">
                     <Link 
                       href={`/ngos/${job.ngo._id}`}
-                      className="text-lg text-primary hover:underline font-medium"
+                      className="text-sm sm:text-base lg:text-lg text-primary hover:underline font-medium"
                     >
                       {job.ngo.name}
                     </Link>
                     {job.ngo.verified && (
-                      <Badge variant="default" className="flex items-center gap-1">
+                      <Badge variant="default" className="flex items-center gap-1 text-xs">
                         <CheckCircle2 className="h-3 w-3" />
                         Verified
                       </Badge>
                     )}
                     {job.ngo.plan?.endsWith('plus') && (
-                      <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-500">
+                      <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-xs">
                         <Star className="h-3 w-3" />
                         Plus
                       </Badge>
@@ -208,43 +208,43 @@ export function JobDetailPageClient({ jobId }: { jobId: string }) {
               </div>
 
               {/* Key Info Pills */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {job.location && (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background border shadow-sm">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background border shadow-sm">
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium">
                       {job.locationType === "remote" ? "Remote" : job.location}
                     </span>
                   </div>
                 )}
                 {job.commitment && (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background border shadow-sm">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium capitalize">{job.commitment}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background border shadow-sm">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium capitalize">{job.commitment}</span>
                   </div>
                 )}
                 {job.duration && (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background border shadow-sm">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">{job.duration}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background border shadow-sm">
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium">{job.duration}</span>
                   </div>
                 )}
                 {job.applicationCount !== undefined && (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background border shadow-sm">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">{job.applicationCount} Applied</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background border shadow-sm">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium">{job.applicationCount} Applied</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:min-w-[200px]">
+            <div className="flex flex-col gap-2 sm:gap-3">
               <ApplyButton jobId={job._id} />
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 sm:flex-none"
+                  className="w-full"
                   onClick={() => setIsBookmarked(!isBookmarked)}
                 >
                   <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-current" : ""}`} />
@@ -252,7 +252,7 @@ export function JobDetailPageClient({ jobId }: { jobId: string }) {
                 </Button>
                 <Button 
                   variant="outline"
-                  className="flex-1 sm:flex-none"
+                  className="w-full"
                   onClick={handleShare}
                 >
                   <Share2 className="h-4 w-4 mr-2" />
@@ -263,26 +263,26 @@ export function JobDetailPageClient({ jobId }: { jobId: string }) {
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-6">
+          <div className="flex flex-wrap gap-2 mt-4 sm:mt-6">
             {job.category && (
-              <Badge variant="secondary" className="px-3 py-1">
+              <Badge variant="secondary" className="px-2 sm:px-3 py-1 text-xs">
                 {job.category}
               </Badge>
             )}
             {job.locationType && (
-              <Badge variant="outline" className="px-3 py-1">
+              <Badge variant="outline" className="px-2 sm:px-3 py-1 text-xs">
                 {job.locationType === "onsite" && "On-site"}
                 {job.locationType === "remote" && "Remote"}
                 {job.locationType === "hybrid" && "Hybrid"}
               </Badge>
             )}
             {job.compensationType && (
-              <Badge className="px-3 py-1 capitalize bg-green-500">
+              <Badge className="px-2 sm:px-3 py-1 capitalize bg-green-500 text-xs">
                 {job.compensationType}
               </Badge>
             )}
             {job.createdAt && (
-              <Badge variant="outline" className="px-3 py-1">
+              <Badge variant="outline" className="px-2 sm:px-3 py-1 text-xs">
                 Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
               </Badge>
             )}
@@ -291,10 +291,10 @@ export function JobDetailPageClient({ jobId }: { jobId: string }) {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Tabs for Content Organization */}
             <Card className="border-2 shadow-lg">
               <CardContent className="p-0">

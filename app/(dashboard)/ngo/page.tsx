@@ -394,23 +394,23 @@ export default async function NgoDashboard() {
   const qualityProgress = averageRating !== null ? Math.min(100, (averageRating / 5) * 100) : 0
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">NGO Dashboard 📊</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">NGO Dashboard 📊</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Welcome, {ngo.orgName || ngo.name || "Organization"}!
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/ngos/post">
               <Plus className="h-4 w-4 mr-2" />
               Post New Job
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/ngo/profile">
               <Eye className="h-4 w-4 mr-2" />
               View Profile
@@ -422,17 +422,17 @@ export default async function NgoDashboard() {
       {/* Job Limit Alert */}
       {!isPlus && activeJobs.length >= baseJobLimit && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
               <div className="flex-1">
-                <h3 className="font-medium text-amber-900 dark:text-amber-100">
+                <h3 className="font-medium text-sm sm:text-base text-amber-900 dark:text-amber-100">
                   Job Posting Limit Reached
                 </h3>
-                <p className="text-sm text-amber-700 dark:text-amber-200 mt-1">
+                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-200 mt-1">
                   You&apos;ve reached the limit of {baseJobLimit} active jobs on the free plan.
                 </p>
-                <Button asChild size="sm" variant="outline" className="mt-3 border-amber-600">
+                <Button asChild size="sm" variant="outline" className="mt-3 border-amber-600 w-full sm:w-auto">
                   <Link href="/upgrade">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Upgrade to Post More
@@ -445,7 +445,7 @@ export default async function NgoDashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Active Jobs"
           value={activeJobs.length}
@@ -479,26 +479,26 @@ export default async function NgoDashboard() {
       </div>
 
       {/* Analytics Dashboard */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <div className="flex items-center justify-between">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="applications" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Applications</span>
+            <TabsTrigger value="applications" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Applications</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Insights</span>
+            <TabsTrigger value="insights" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Insights</span>
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             {/* Application Status Distribution */}
             <PieChart
               title="Application Status Distribution"
@@ -507,7 +507,7 @@ export default async function NgoDashboard() {
                 { name: 'Shortlisted', value: shortlistedApplications, color: '#f59e0b' },
                 { name: 'Accepted', value: acceptedApplications, color: '#10b981' },
               ]}
-              className="h-[350px]"
+              className="h-[300px] sm:h-[350px]"
             />
 
             {/* Job Performance */}
@@ -520,7 +520,7 @@ export default async function NgoDashboard() {
               bars={[
                 { dataKey: 'applications', fill: '#8b5cf6', name: 'Applications' }
               ]}
-              className="h-[350px]"
+              className="h-[300px] sm:h-[350px]"
             />
           </div>
 
@@ -531,23 +531,23 @@ export default async function NgoDashboard() {
             lines={[
               { dataKey: 'applications', stroke: '#06b6d4', name: 'Applications Received' }
             ]}
-            className="h-[300px]"
+            className="h-[250px] sm:h-[300px]"
           />
 
         </TabsContent>
 
-        <TabsContent value="applications" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-3">
+        <TabsContent value="applications" className="space-y-4 sm:space-y-6">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
             {/* Application Processing Metrics */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
+              <CardHeader className="pb-3 p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-500 shrink-0" />
                   Avg. Response Time
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{responseLabel}</div>
+              <CardContent className="p-4 sm:p-6">
+                <div className="text-xl sm:text-2xl font-bold">{responseLabel}</div>
                 <div className="text-xs text-muted-foreground mt-1">
                   Average time from application to decision
                 </div>
@@ -556,14 +556,14 @@ export default async function NgoDashboard() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Target className="h-4 w-4 text-green-500" />
+              <CardHeader className="pb-3 p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Target className="h-4 w-4 text-green-500 shrink-0" />
                   Conversion Rate
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{acceptanceRate}%</div>
+              <CardContent className="p-4 sm:p-6">
+                <div className="text-xl sm:text-2xl font-bold">{acceptanceRate}%</div>
                 <div className="text-xs text-muted-foreground mt-1">
                   Applied → Accepted
                 </div>
@@ -572,9 +572,9 @@ export default async function NgoDashboard() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="h-4 w-4 text-purple-500" />
+              <CardHeader className="pb-3 p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Award className="h-4 w-4 text-purple-500 shrink-0" />
                   Quality Score
                 </CardTitle>
               </CardHeader>
