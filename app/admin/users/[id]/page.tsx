@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { RoleManager } from "@/components/admin/role-manager"
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -351,6 +352,16 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
               )}
             </CardContent>
           </Card>
+
+          {/* Role Management */}
+          <RoleManager
+            userId={userId}
+            currentRole={user.role}
+            isAdmin={user.isAdmin || false}
+            adminLevel={user.adminLevel}
+            adminPermissions={user.adminPermissions}
+            onUpdate={loadUserData}
+          />
 
           {/* Actions */}
           <Card>

@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     const permissions: string[] = Array.isArray(body.permissions)
       ? body.permissions.map((p: unknown) => String(p))
       : []
+    const makePureAdmin = body.makePureAdmin === true // If true, change role to 'admin'
 
     const { users } = await getCollections()
     let query: Record<string, unknown> | null = null
@@ -93,16 +94,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Banned users cannot be promoted" }, { status: 400 })
     }
 
+    // Prepare update object
+    const updateFields: any = {
+      isAdmin: true,
+      adminLevel: level,
+      adminPermissions: permissions,
+      updatedAt: new Date(),
+    }
+
+    // If makePureAdmin is true, change their role to 'admin'
+    if (makePureAdmin) {
+      updateFields.role = "admin"
+    }
+
     await users.updateOne(
       { _id: user._id },
-      {
-        $set: {
-          isAdmin: true,
-          adminLevel: level,
-          adminPermissions: permissions,
-          updatedAt: new Date(),
-        },
-      }
+      { $set: updateFields }
     )
 
     const updated = await users.findOne({ _id: user._id })

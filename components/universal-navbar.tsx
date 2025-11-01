@@ -369,7 +369,7 @@ export function UniversalNavbar() {
                   alt="Just Because Asia"
                   width={28}
                   height={28}
-                  className="rounded-lg"
+                  className="rounded-lg h-12 w-12"
                 />
                 <span className="font-bold text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   JBA
@@ -411,7 +411,7 @@ export function UniversalNavbar() {
                         alt="Just Because Asia"
                         width={32}
                         height={32}
-                        className="rounded-xl group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300"
+                        className="rounded-4xl h-11 w-11 group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300"
                       />
                       <div>
                         <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">

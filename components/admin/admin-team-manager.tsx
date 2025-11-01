@@ -59,6 +59,7 @@ export function AdminTeamManager({ initialAdmins }: AdminTeamManagerProps) {
   const [promotePermissions, setPromotePermissions] = useState<string[]>([
     "manage_users",
   ])
+  const [makePureAdmin, setMakePureAdmin] = useState(false)
   const [promoteLoading, setPromoteLoading] = useState(false)
 
   const sortedAdmins = useMemo(() => {
@@ -91,6 +92,7 @@ export function AdminTeamManager({ initialAdmins }: AdminTeamManagerProps) {
           email: promoteEmail.trim().toLowerCase(),
           level: promoteLevel,
           permissions: promotePermissions,
+          makePureAdmin,
         }),
       })
 
@@ -104,6 +106,7 @@ export function AdminTeamManager({ initialAdmins }: AdminTeamManagerProps) {
       setPromoteEmail("")
       setPromoteLevel("moderator")
       setPromotePermissions(["manage_users"])
+      setMakePureAdmin(false)
       toast.success("Admin added to the team")
     } catch (error: any) {
       toast.error(error.message || "Failed to promote admin")
@@ -215,6 +218,22 @@ export function AdminTeamManager({ initialAdmins }: AdminTeamManagerProps) {
                 </label>
               ))}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={makePureAdmin}
+                onCheckedChange={(checked) => setMakePureAdmin(checked === true)}
+                disabled={promoteLoading}
+              />
+              <div className="space-y-1">
+                <div className="text-sm font-medium">Make Pure Admin</div>
+                <div className="text-xs text-muted-foreground">
+                  Change user's role to "admin" (removes volunteer/NGO role). Leave unchecked to keep their current role.
+                </div>
+              </div>
+            </label>
           </div>
 
           <Button className="mt-6" onClick={handlePromote} disabled={promoteLoading}>
