@@ -104,46 +104,44 @@ export default async function VolunteerPublicProfile({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Spacer for fixed navbar - desktop only */}
-      <div className="hidden md:block h-20"></div>
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/90 dark:from-primary/70 dark:via-primary/80 dark:to-primary/70 text-primary-foreground">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-3 sm:px-4 py-8 sm:py-12">
           <div className="max-w-5xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
               {/* Avatar */}
-              <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-primary-foreground/20 dark:border-primary-foreground/30 shadow-2xl">
+              <div className="relative shrink-0">
+                <Avatar className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 border-4 border-primary-foreground/20 dark:border-primary-foreground/30 shadow-2xl">
                   <AvatarImage src={volunteer.avatarUrl} alt={volunteer.name} />
-                  <AvatarFallback className="text-4xl font-bold bg-primary-foreground/90 dark:bg-primary-foreground text-primary dark:text-primary">
+                  <AvatarFallback className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-primary-foreground/90 dark:bg-primary-foreground text-primary dark:text-primary">
                     {volunteer.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-2 -right-2 bg-green-500 dark:bg-green-600 rounded-full p-2 shadow-lg">
-                  <CheckCircle className="h-5 w-5 text-white" />
+                <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-green-500 dark:bg-green-600 rounded-full p-1.5 sm:p-2 shadow-lg">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{volunteer.name}</h1>
+              <div className="flex-1 min-w-0 w-full">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 break-words">{volunteer.name}</h1>
                 
                 {volunteer.title && (
-                  <p className="text-xl text-primary-foreground/95 font-semibold mb-2">
+                  <p className="text-base sm:text-lg lg:text-xl text-primary-foreground/95 font-semibold mb-1 sm:mb-2">
                     {volunteer.title}
                   </p>
                 )}
                 
                 {volunteer.location && (
-                  <div className="flex items-center text-primary-foreground/90 mb-3">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    <span className="text-lg">{volunteer.location}</span>
+                  <div className="flex items-center text-primary-foreground/90 mb-2 sm:mb-3">
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 shrink-0" />
+                    <span className="text-sm sm:text-base lg:text-lg truncate">{volunteer.location}</span>
                   </div>
                 )}
 
                 {volunteer.bio && (
-                  <p className="text-primary-foreground/90 text-lg mb-4 max-w-2xl">
+                  <p className="text-primary-foreground/90 text-sm sm:text-base lg:text-lg mb-3 sm:mb-4 max-w-2xl line-clamp-3 sm:line-clamp-none">
                     {volunteer.bio}
                   </p>
                 )}
