@@ -42,24 +42,24 @@ export default async function UpgradePage({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 rounded-full blur-3xl opacity-10" />
       </div>
 
-      <div className="relative container mx-auto px-4 py-12 max-w-7xl">
+      <div className="relative container mx-auto px-4 py-8 sm:py-12 max-w-7xl">
         {/* Header */}
-        <div className="text-center mb-12">
-          <Badge className="mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white border-none px-4 py-2 text-sm">
-            <Sparkles className="h-4 w-4 mr-1" />
+        <div className="text-center mb-8 sm:mb-12">
+          <Badge className="mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white border-none px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             Special Launch Pricing - ₹1/month
           </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent px-2">
             Unlock Your Full Potential
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             {isVolunteer && "Apply to unlimited opportunities and stand out with premium features"}
             {isNGO && "Post unlimited jobs and reach the best volunteers with advanced tools"}
             {!isVolunteer && !isNGO && "Choose the perfect plan for your journey"}
           </p>
           {reason && (
-            <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-900/50 rounded-xl max-w-md mx-auto shadow-lg">
-              <p className="text-sm text-purple-800 dark:text-purple-200 font-medium">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-purple-50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-900/50 rounded-xl max-w-md mx-auto shadow-lg">
+              <p className="text-xs sm:text-sm text-purple-800 dark:text-purple-200 font-medium">
                 {reason === "plan_expired" && "⏰ Your plan has expired. Renew to continue accessing premium features."}
                 {reason === "post_job" && "🚀 Upgrade to NGO Plus to post jobs and reach volunteers."}
                 {reason === "dashboard_access" && "✨ Upgrade to access your full dashboard and features."}
@@ -70,7 +70,7 @@ export default async function UpgradePage({
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto mb-12 sm:mb-16 px-2 sm:px-0">
           {/* Volunteer Free Plan */}
           {isVolunteer && (
             <Card className={`relative transition-all hover:shadow-xl ${

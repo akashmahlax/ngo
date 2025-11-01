@@ -176,28 +176,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         <main className="flex-1 flex flex-col">
           {/* Creative Floating Navbar */}
-          <div className="sticky top-0 z-30 p-4 pb-0">
-            <header className="bg-card/80 backdrop-blur-xl border rounded-2xl shadow-lg px-6 py-3 mx-4">
-              <div className="flex items-center gap-4">
+          <div className="sticky top-0 z-30 p-2 sm:p-4 pb-0">
+            <header className="bg-card/80 backdrop-blur-xl border rounded-2xl shadow-lg px-3 sm:px-6 py-3 mx-2 sm:mx-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <SidebarTrigger className="-ml-2 hover:bg-accent/50 rounded-lg transition-colors" />
-                <Separator orientation="vertical" className="h-6" />
+                <Separator orientation="vertical" className="h-6 hidden sm:block" />
                 
-                <div className="flex-1">
-                  <nav className="text-sm breadcrumbs flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <nav className="text-xs sm:text-sm breadcrumbs flex items-center gap-1 sm:gap-2 overflow-hidden">
                     <Link 
                       href={getDashboardBase(viewRole)} 
-                      className="text-muted-foreground hover:text-foreground transition-colors rounded-md px-2 py-1 hover:bg-accent/50"
+                      className="text-muted-foreground hover:text-foreground transition-colors rounded-md px-1 sm:px-2 py-1 hover:bg-accent/50 whitespace-nowrap"
                     >
-                      {viewRole === "ngo" ? "NGO Portal" : "Volunteer Hub"}
+                      <span className="hidden sm:inline">{viewRole === "ngo" ? "NGO Portal" : "Volunteer Hub"}</span>
+                      <span className="sm:hidden">{viewRole === "ngo" ? "NGO" : "Vol"}</span>
                     </Link>
                     <div className="w-1 h-1 bg-muted-foreground/50 rounded-full"></div>
-                    <div className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent font-semibold">
+                    <div className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent font-semibold truncate">
                       {userNavItems.find((item) => item.href === pathname)?.name || "Dashboard"}
                     </div>
                     {isAdmin && (
                       <>
-                        <div className="w-1 h-1 bg-muted-foreground/50 rounded-full"></div>
-                        <Badge variant="default" className="bg-red-600 hover:bg-red-700 text-white">
+                        <div className="w-1 h-1 bg-muted-foreground/50 rounded-full hidden sm:block"></div>
+                        <Badge variant="default" className="bg-red-600 hover:bg-red-700 text-white text-xs hidden sm:inline-flex">
                           Admin View
                         </Badge>
                       </>
@@ -205,13 +206,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </nav>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-1">
                   <ThemeToggle />
 
                   {isAdmin && (
                     <>
-                      <Separator orientation="vertical" className="h-6 mx-2" />
-                      <Button asChild variant="default" size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                      <Separator orientation="vertical" className="h-6 mx-1 sm:mx-2 hidden sm:block" />
+                      <Button asChild variant="default" size="sm" className="bg-red-600 hover:bg-red-700 text-white text-xs hidden sm:inline-flex">
                         <Link href="/admin">
                           <Settings className="h-3 w-3 mr-1" />
                           Back to Admin
@@ -225,18 +226,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-pulse"></span>
                   </Button> */}
 
-                  <Separator orientation="vertical" className="h-6 mx-2" />
+                  <Separator orientation="vertical" className="h-6 mx-1 sm:mx-2 hidden sm:block" />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-3 px-3 hover:bg-accent/50 rounded-xl transition-all duration-200 hover:scale-105">
-                        <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                      <Button variant="ghost" className="gap-2 sm:gap-3 px-2 sm:px-3 hover:bg-accent/50 rounded-xl transition-all duration-200 hover:scale-105">
+                        <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20">
                           <AvatarImage src={session.user.avatarUrl || session.user.image || undefined} />
                           <AvatarFallback className="bg-gradient-to-br from-primary via-primary/80 to-primary/60 text-white text-xs font-bold">
                             {session.user.name?.slice(0, 2).toUpperCase() || "ME"}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="hidden md:flex flex-col items-start">
+                        <div className="hidden lg:flex flex-col items-start">
                           <span className="text-sm font-semibold leading-none">
                             {session.user.name || "User"}
                           </span>
@@ -364,14 +365,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-3 sm:p-4 lg:p-6">
             {children}
           </div>
 
           {/* Dashboard Footer */}
           <footer className="border-t bg-card/50 backdrop-blur-sm mt-auto">
-            <div className="container mx-auto px-6 py-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-sm">
                 {/* Brand */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -435,9 +436,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               <Separator className="my-4" />
 
-              <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-                <p>© 2025 Just Because Asia. All rights reserved.</p>
-                <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
+                <p className="text-center sm:text-left">© 2025 Just Because Asia. All rights reserved.</p>
+                <div className="flex gap-3 sm:gap-4">
                   <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
                   <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
                   <Link href="#" className="hover:text-foreground transition-colors">Cookies</Link>

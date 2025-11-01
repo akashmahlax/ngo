@@ -81,6 +81,7 @@ export default function JobsPage() {
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("newest")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch jobs from API
   useEffect(() => {
@@ -289,13 +290,33 @@ export default function JobsPage() {
       </div>
 
       <div className="container mx-auto px-4 pb-12">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <Button 
+            variant="outline" 
+            className="w-full justify-between"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <span className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+              {hasActiveFilters && (
+                <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-xs">
+                  {selectedCategories.length + selectedLocationTypes.length}
+                </Badge>
+              )}
+            </span>
+            {showFilters ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Filter Sidebar */}
-          <div className="lg:col-span-1">
+          <div className={`lg:col-span-1 ${showFilters ? 'block' : 'hidden lg:block'}`}>
             <Card className="sticky top-4 bg-white/80 dark:bg-neutral-900/90 border-neutral-200 dark:border-neutral-800 shadow-lg">
-              <CardHeader>
+              <CardHeader className="pb-3 sm:pb-6">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Filter className="h-4 w-4" />
                     Filters
                   </CardTitle>
@@ -304,7 +325,7 @@ export default function JobsPage() {
                       variant="ghost" 
                       size="sm" 
                       onClick={clearFilters}
-                      className="text-xs h-8"
+                      className="text-xs h-7 sm:h-8"
                     >
                       <X className="h-3 w-3 mr-1" />
                       Clear
@@ -312,10 +333,10 @@ export default function JobsPage() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 sm:space-y-6">
                 {/* Categories */}
                 <div>
-                  <h3 className="font-medium mb-3 text-sm">Categories</h3>
+                  <h3 className="font-medium mb-2 sm:mb-3 text-sm">Categories</h3>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {CATEGORIES.map((category) => (
                       <div key={category} className="flex items-center">
@@ -326,7 +347,7 @@ export default function JobsPage() {
                         />
                         <Label
                           htmlFor={`category-${category}`}
-                          className="ml-2 text-sm font-normal cursor-pointer"
+                          className="ml-2 text-xs sm:text-sm font-normal cursor-pointer"
                         >
                           {category}
                         </Label>
@@ -337,7 +358,7 @@ export default function JobsPage() {
 
                 {/* Location Type */}
                 <div>
-                  <h3 className="font-medium mb-3 text-sm">Location Type</h3>
+                  <h3 className="font-medium mb-2 sm:mb-3 text-sm">Location Type</h3>
                   <div className="space-y-2">
                     {LOCATION_TYPES.map((type) => (
                       <div key={type.id} className="flex items-center">
@@ -348,7 +369,7 @@ export default function JobsPage() {
                         />
                         <Label
                           htmlFor={`location-${type.id}`}
-                          className="ml-2 text-sm font-normal cursor-pointer"
+                          className="ml-2 text-xs sm:text-sm font-normal cursor-pointer"
                         >
                           {type.label}
                         </Label>
@@ -363,15 +384,15 @@ export default function JobsPage() {
           {/* Job Listings */}
           <div className="lg:col-span-3">
             {/* Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between mb-4 sm:mb-6">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Showing <span className="font-semibold text-foreground">{filteredJobs.length}</span> of <span className="font-semibold text-foreground">{jobs.length}</span> opportunities
                 </p>
               </div>
               <div className="flex gap-2">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -383,6 +404,7 @@ export default function JobsPage() {
                 <Button 
                   variant="outline" 
                   size="icon"
+                  className="flex-shrink-0"
                   onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
                 >
                   {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
@@ -393,10 +415,10 @@ export default function JobsPage() {
             {/* Empty State */}
             {filteredJobs.length === 0 ? (
               <Card className="bg-white/80 dark:bg-neutral-900/90">
-                <CardContent className="py-16 text-center">
-                  <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                  <h3 className="text-xl font-semibold mb-2">No opportunities found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                <CardContent className="py-12 sm:py-16 text-center px-4">
+                  <Search className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">No opportunities found</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">
                     {hasActiveFilters 
                       ? "Try adjusting your search or filters to find more opportunities"
                       : "No volunteer opportunities are currently available"}

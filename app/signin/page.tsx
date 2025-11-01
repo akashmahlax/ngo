@@ -175,7 +175,7 @@ function SignInPageInner() {
       </div>
 
       {/* Content */}
-      <div className="relative container mx-auto px-4 py-12 min-h-screen flex items-center justify-center">
+      <div className="relative container mx-auto px-4 py-8 sm:py-12 min-h-screen flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -183,19 +183,19 @@ function SignInPageInner() {
           className="w-full max-w-md"
         >
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-linear-to-br from-purple-600 to-pink-600 text-white mb-4 shadow-xl"
+              className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-linear-to-br from-purple-600 to-pink-600 text-white mb-4 shadow-xl"
             >
-              <LogIn className="h-8 w-8" />
+              <LogIn className="h-7 w-7 sm:h-8 sm:w-8" />
             </motion.div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-linear-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
               Welcome Back
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Sign in to continue your journey
             </p>
           </div>

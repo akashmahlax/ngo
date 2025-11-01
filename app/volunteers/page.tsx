@@ -246,55 +246,60 @@ export default function VolunteersDirectory() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters & Controls */}
-        <div className="bg-card/80 dark:bg-[#0B0B1C]/80 backdrop-blur-xl border border-border/60 dark:border-white/10 rounded-2xl shadow-xl p-6 mb-10 transition-all">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
+        <div className="bg-card/80 dark:bg-[#0B0B1C]/80 backdrop-blur-xl border border-border/60 dark:border-white/10 rounded-2xl shadow-xl p-3 sm:p-6 mb-10 transition-all">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex-shrink-0"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                  {hasActiveFilters && (
+                    <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-xs">
+                      {(selectedSkills.length + (locationFilter ? 1 : 0))}
+                    </Badge>
+                  )}
+                </Button>
+                
                 {hasActiveFilters && (
-                  <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-xs">
-                    {(selectedSkills.length + (locationFilter ? 1 : 0))}
-                  </Badge>
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="flex-shrink-0">
+                    <X className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Clear All</span>
+                    <span className="sm:hidden">Clear</span>
+                  </Button>
                 )}
-              </Button>
-              
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X className="h-4 w-4 mr-2" />
-                  Clear All
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span className="font-medium">{filteredVolunteers.length}</span>
-                <span>of {totalCount} volunteers</span>
               </div>
-              
-              <div className="flex gap-1 border rounded-md p-1">
-                <Button 
-                  variant={viewMode === "grid" ? "secondary" : "ghost"} 
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className="px-3"
-                >
-                  <Grid className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === "list" ? "secondary" : "ghost"} 
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className="px-3"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
+
+              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span className="font-medium">{filteredVolunteers.length}</span>
+                  <span className="hidden sm:inline">of {totalCount} volunteers</span>
+                  <span className="sm:hidden">/ {totalCount}</span>
+                </div>
+                
+                <div className="flex gap-1 border rounded-md p-1">
+                  <Button 
+                    variant={viewMode === "grid" ? "secondary" : "ghost"} 
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="px-2 sm:px-3"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant={viewMode === "list" ? "secondary" : "ghost"} 
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="px-2 sm:px-3"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -304,7 +309,7 @@ export default function VolunteersDirectory() {
             <div className="border-t pt-4 space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Location</label>
-                <div className="relative max-w-md">
+                <div className="relative w-full sm:max-w-md">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Filter by location..."
@@ -325,7 +330,7 @@ export default function VolunteersDirectory() {
                         variant={selectedSkills.includes(skill) ? "default" : "outline"}
                         size="sm"
                         onClick={() => toggleSkillFilter(skill)}
-                        className="rounded-full"
+                        className="rounded-full text-xs sm:text-sm"
                       >
                         {skill}
                       </Button>

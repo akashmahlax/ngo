@@ -167,12 +167,12 @@ export default function NgosDirectory() {
       <div className="container mx-auto px-4 py-8">
         {/* Filters Panel */}
         <Card className="mb-6 bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
-          <CardHeader>
+          <CardHeader className="pb-3 sm:pb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg">Filters</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Filters</CardTitle>
                 {activeFilterCount > 0 && (
-                  <Badge variant="default" className="rounded-full">
+                  <Badge variant="default" className="rounded-full text-xs">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -181,17 +181,17 @@ export default function NgosDirectory() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="hover:bg-primary/10"
+                className="hover:bg-primary/10 text-xs sm:text-sm"
               >
                 {showFilters ? (
                   <>
                     <ChevronUp className="h-4 w-4 mr-1" />
-                    Hide
+                    <span className="hidden sm:inline">Hide</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown className="h-4 w-4 mr-1" />
-                    Show
+                    <span className="hidden sm:inline">Show</span>
                   </>
                 )}
               </Button>
@@ -202,12 +202,12 @@ export default function NgosDirectory() {
             <CardContent className="space-y-4">
               {/* Location Filter */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Location</label>
+                <label className="text-xs sm:text-sm font-medium mb-2 block">Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Filter by location..."
-                    className="pl-10"
+                    className="pl-10 text-sm"
                     value={locationFilter}
                     onChange={(e) => setLocationFilter(e.target.value)}
                   />
@@ -217,7 +217,7 @@ export default function NgosDirectory() {
               {/* Focus Areas */}
               {allFocusAreas.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Focus Areas</label>
+                  <label className="text-xs sm:text-sm font-medium mb-2 block">Focus Areas</label>
                   <div className="flex flex-wrap gap-2">
                     {allFocusAreas.map((area) => (
                       <Button
@@ -225,7 +225,7 @@ export default function NgosDirectory() {
                         variant={selectedFocusAreas.includes(area) ? "default" : "outline"}
                         size="sm"
                         onClick={() => toggleFocusAreaFilter(area)}
-                        className="transition-all"
+                        className="transition-all text-xs sm:text-sm"
                       >
                         {area}
                       </Button>
@@ -236,7 +236,7 @@ export default function NgosDirectory() {
 
               {/* Clear Filters */}
               {activeFilterCount > 0 && (
-                <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto text-sm">
                   <X className="h-4 w-4 mr-2" />
                   Clear All Filters
                 </Button>
@@ -248,56 +248,58 @@ export default function NgosDirectory() {
         {/* Loading State */}
         {loading ? (
           <Card className="bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
-            <CardContent className="py-16 text-center">
-              <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin mb-4" />
-              <p className="text-lg font-medium">Loading organizations...</p>
-              <p className="text-muted-foreground mt-2">Discovering amazing nonprofits for you</p>
+            <CardContent className="py-12 sm:py-16 text-center">
+              <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-primary animate-spin mb-4" />
+              <p className="text-base sm:text-lg font-medium">Loading organizations...</p>
+              <p className="text-sm sm:text-base text-muted-foreground mt-2">Discovering amazing nonprofits for you</p>
             </CardContent>
           </Card>
         ) : (
           <>
             {/* View Controls & Stats */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <p className="text-lg font-medium">
-                  {filteredNgos.length} Organization{filteredNgos.length !== 1 ? 's' : ''}
-                </p>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Building2 className="h-4 w-4" />
-                  <span className="text-sm">{totalCount} total</span>
+            <div className="flex flex-col gap-3 sm:gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                  <p className="text-base sm:text-lg font-medium">
+                    {filteredNgos.length} Organization{filteredNgos.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span className="text-xs sm:text-sm">{totalCount} total</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* View Toggle */}
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={viewMode !== "grid" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}
-                >
-                  <Grid className="h-4 w-4 mr-2" />
-                  Grid
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={viewMode !== "list" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  List
-                </Button>
+                {/* View Toggle */}
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className={`flex-1 sm:flex-initial ${viewMode !== "grid" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}`}
+                  >
+                    <Grid className="h-4 w-4 mr-2" />
+                    Grid
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className={`flex-1 sm:flex-initial ${viewMode !== "list" ? "border-border/50 dark:border-white/20 hover:bg-primary/10" : ""}`}
+                  >
+                    <List className="h-4 w-4 mr-2" />
+                    List
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Empty State */}
             {filteredNgos.length === 0 ? (
               <Card className="bg-card/90 dark:bg-[#0F0F23]/80 border border-border/50 dark:border-white/10 backdrop-blur-xl shadow-2xl">
-                <CardContent className="py-16 text-center">
-                  <Search className="h-16 w-16 mx-auto text-muted-foreground/60 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No organizations found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                <CardContent className="py-12 sm:py-16 text-center px-4">
+                  <Search className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-muted-foreground/60 mb-4" />
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">No organizations found</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">
                     {searchQuery || activeFilterCount > 0
                       ? "Try adjusting your search or filters to discover more organizations"
                       : "There are no organizations available at the moment"}

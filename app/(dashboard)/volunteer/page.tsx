@@ -39,30 +39,30 @@ export default async function VolunteerDashboard() {
   if (isAdmin && (!user.role || user.role !== "volunteer")) {
     // Admin viewing without volunteer role - show demo/empty state
     return (
-      <div className="space-y-8">
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 shadow-lg">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-yellow-500 dark:bg-yellow-600 flex items-center justify-center flex-shrink-0">
+      <div className="space-y-6 sm:space-y-8">
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-4 sm:p-6 shadow-lg">
+          <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="h-10 w-10 rounded-full bg-yellow-500 dark:bg-yellow-600 flex items-center justify-center shrink-0">
               <AlertCircle className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-lg text-yellow-900 dark:text-yellow-100 mb-1">Admin Preview Mode</h3>
-              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+              <h3 className="font-bold text-base sm:text-lg text-yellow-900 dark:text-yellow-100 mb-1">Admin Preview Mode</h3>
+              <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200 mb-3">
                 You are viewing the Volunteer dashboard as an admin. This account doesn't have Volunteer role data.
                 To see actual volunteer data:
               </p>
-              <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 mb-4 ml-4 list-disc">
+              <ul className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 space-y-1 mb-4 ml-4 list-disc">
                 <li>Create a test Volunteer account from the admin panel</li>
                 <li>Or assign Volunteer role to your admin account in the database</li>
                 <li>Or use an existing Volunteer user's credentials</li>
               </ul>
-              <div className="flex gap-2">
-                <Button asChild variant="default" size="sm">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button asChild variant="default" size="sm" className="w-full sm:w-auto">
                   <Link href="/admin">
                     Return to Admin Panel
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                   <Link href="/admin/users">View Volunteer Users</Link>
                 </Button>
               </div>
@@ -71,7 +71,7 @@ export default async function VolunteerDashboard() {
         </div>
 
         {/* Demo Dashboard Preview */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="border-dashed border-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Applications</CardTitle>
